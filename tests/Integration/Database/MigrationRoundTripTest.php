@@ -33,7 +33,7 @@ final class MigrationRoundTripTest extends IntegrationTestCase
     private function console(string $command): void
     {
         $root = dirname(__DIR__, 3);
-        exec(sprintf('php %s %s --no-interaction 2>&1', escapeshellarg($root . '/yii'), $command), $output, $exitCode);
+        exec(sprintf('APP_ENV=test php %s %s --no-interaction 2>&1', escapeshellarg($root . '/yii'), $command), $output, $exitCode);
 
         assertSame(0, $exitCode, implode("\n", $output));
     }
