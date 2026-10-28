@@ -15,7 +15,8 @@ Construction Work Manager is a work management module for construction sites. Ad
 This repository contains the whole app, which runs in Docker Compose:
 
 - `config/`: application configuration, split into `common`, `web`, `console` and per-environment parameters.
-- `src/`: application code. `src/Web/` holds the pages, each with its action and Twig template.
+- `src/`: application code. `src/Web/` holds the pages, each with its action and Twig template. `src/Migration/` holds the migrations and the runner that executes the SQL scripts.
+- `SQL/`: T-SQL scripts that define the schema and seed data, run in numbered order by the migrations. `SQL/down/` holds the matching rollback scripts. They also run unchanged in SSMS or sqlcmd.
 - `public/`: web root with the front controller `index.php`. The app is served at `http://localhost:8080`.
 - `assets/`: CSS published by the asset manager.
 - `tests/`: `Unit/` tests without a database and `Integration/` tests against SQL Server.
@@ -34,13 +35,13 @@ The database passwords in `compose.yaml` and `docker/dev.env` are dev-only crede
 
 ## Setup
 
-Build and start the containers and install the Composer dependencies from the repository root:
+Build and start the containers, install the Composer dependencies and apply the migrations from the repository root:
 
 ```
 make up
 ```
 
-This runs `docker compose up -d --build` and then `docker compose exec app composer install`. It starts SQL Server, creates the app database and the database logins, and starts the app. SQL Server keeps its data in a Docker volume between restarts.
+This runs `docker compose up -d --build`, `docker compose exec app composer install` and `docker compose exec app ./yii migrate:up`. It starts SQL Server, creates the app database and the database logins, starts the app and brings the schema up to date. SQL Server keeps its data in a Docker volume between restarts.
 
 ## Running the app
 
@@ -49,7 +50,7 @@ This runs `docker compose up -d --build` and then `docker compose exec app compo
 
 ## Running tests
 
-- All tests: `make test` (`docker compose exec app composer test`). This runs the unit suite, recreates the `construction_work_manager_test` database and runs the integration suite.
+- All tests: `make test` (`docker compose exec app composer test`). This runs the unit suite, recreates the `construction_work_manager_test` database, applies the migrations to it and runs the integration suite.
 - Unit tests only: `docker compose exec app composer test:unit`.
 - Integration tests only: `docker compose exec app composer test:integration`.
 
@@ -57,6 +58,7 @@ This runs `docker compose up -d --build` and then `docker compose exec app compo
 
 Run these from the repository root, with the containers running:
 
+- `make migrate` (`docker compose exec app ./yii migrate:up`) applies pending migrations. `docker compose exec app ./yii migrate:down` reverts the latest one, and `./yii migrate:history` lists the applied ones.
 - `make check` (`docker compose exec app composer check`) runs code style, static analysis and all tests, the same checks as CI.
 - `docker compose exec app composer cs` checks the code style, and `docker compose exec app composer cs-fix` fixes it.
 - `docker compose exec app composer stan` runs PHPStan.
