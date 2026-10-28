@@ -1,12 +1,18 @@
 /vendor/
-/runtime/
-/public/assets/
 /.env
-/.phpunit.cache/
-/.php-cs-fixer.cache
-/.idea/
-/.vscode/
+/docker/dev.override.env
+/.claude/worktrees/
+
+.idea/
+.vscode/
+nbproject/
+.buildpath
+.project
+.settings/
+*.sublime-project
+*.sublime-workspace
 .DS_Store
+Thumbs.db
 
 /specs/personal/*
 !/specs/personal/.keep

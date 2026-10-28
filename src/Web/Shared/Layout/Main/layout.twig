@@ -1,0 +1,39 @@
+{% do assetManager.register('App\\Web\\Shared\\Layout\\Main\\MainAsset') %}
+{% do this.addCssFiles(assetManager.getCssFiles()) %}
+{% do this.addCssStrings(assetManager.getCssStrings()) %}
+{% do this.addJsFiles(assetManager.getJsFiles()) %}
+{% do this.addJsStrings(assetManager.getJsStrings()) %}
+{% do this.addJsVars(assetManager.getJsVars()) %}
+{% do this.beginPage() %}
+<!DOCTYPE html>
+<html lang="{{ applicationParams.locale }}">
+<head>
+    <meta charset="{{ applicationParams.charset }}">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="{{ aliases.get('@baseUrl/favicon.svg') }}" type="image/svg+xml">
+    <title>{{ this.getTitle() }}</title>
+    {% do this.head() %}
+</head>
+<body class="d-flex flex-column bg-light">
+{% do this.beginBody() %}
+<header>
+    <nav class="navbar navbar-dark bg-dark">
+        <div class="container">
+            <a class="navbar-brand" href="{{ aliases.get('@baseUrl') }}">{{ applicationParams.name }}</a>
+        </div>
+    </nav>
+</header>
+
+<main class="container flex-grow-1 py-5">
+    {{ content|raw }}
+</main>
+
+<footer class="border-top py-3">
+    <div class="container text-center text-secondary small">
+        &copy; {{ 'now'|date('Y') }} {{ applicationParams.name }}
+    </div>
+</footer>
+{% do this.endBody() %}
+</body>
+</html>
+{% do this.endPage() %}

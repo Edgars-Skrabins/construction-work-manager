@@ -1,0 +1,48 @@
+FROM composer/composer:2-bin AS composer
+
+FROM dunglas/frankenphp:1.13.4-php8.4-bookworm AS dev
+ARG USER_ID=10001
+ARG GROUP_ID=10001
+ARG USER_NAME=appuser
+ARG GROUP_NAME=appuser
+
+RUN apt update && apt -y install \
+    unzip
+
+RUN install-php-extensions \
+    opcache \
+    mbstring \
+    intl \
+    dom \
+    ctype \
+    curl \
+    phar \
+    openssl \
+    xml \
+    xmlwriter \
+    simplexml \
+    pdo \
+    pdo_sqlsrv \
+    sqlsrv \
+    xdebug
+
+ENV LC_ALL=C.UTF-8
+
+COPY --from=composer /composer /usr/bin/composer
+
+# Based on https://frankenphp.dev/docs/docker/#running-as-a-non-root-user
+RUN \
+	groupadd --gid ${GROUP_ID} ${GROUP_NAME}; \
+    useradd --gid ${GROUP_ID} --uid ${USER_ID} ${GROUP_NAME}; \
+	# Add additional capability to bind to port 80 and 443 \
+	setcap CAP_NET_BIND_SERVICE=+eip /usr/local/bin/frankenphp; \
+	# Give write access to /data/caddy and /config/caddy \
+	chown -R ${USER_NAME}:${GROUP_NAME} /data/caddy && chown -R ${USER_NAME}:${GROUP_NAME} /config/caddy
+
+COPY docker/php/app.ini $PHP_INI_DIR/conf.d/app.ini
+COPY docker/Caddyfile /etc/frankenphp/Caddyfile
+
+RUN php -r 'exit(version_compare(PHP_VERSION, "8.4.27", "<") ? 1 : 0);' \
+ && php -r 'exit(ini_get("session.upload_progress.enabled") ? 1 : 0);'
+
+USER ${USER_NAME}
