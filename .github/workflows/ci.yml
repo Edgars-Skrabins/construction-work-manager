@@ -1,0 +1,62 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  lint:
+    name: lint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: ./.github/actions/setup
+      - name: Code style
+        run: docker compose run --rm --no-deps -T app composer cs
+      - name: Static analysis
+        run: docker compose run --rm --no-deps -T app composer stan
+      - name: Security audit
+        run: docker compose run --rm --no-deps -T app composer audit
+
+  unit:
+    name: unit
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: ./.github/actions/setup
+      - name: Unit tests
+        run: docker compose run --rm --no-deps -T app composer test:unit
+
+  integration:
+    name: integration
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: ./.github/actions/setup
+      - name: Start SQL Server
+        run: docker compose up -d --wait sqlserver
+      - name: Create database and logins
+        run: docker compose run --rm -T db-init
+      - name: Integration tests
+        run: docker compose run --rm --no-deps -T app composer test:integration
+      - name: SQL Server logs
+        if: failure()
+        run: docker compose logs sqlserver
+
+  ci:
+    name: ci
+    if: always()
+    needs: [lint, unit, integration]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Fail unless every job succeeded
+        if: contains(needs.*.result, 'failure') || contains(needs.*.result, 'cancelled') || contains(needs.*.result, 'skipped')
+        run: exit 1
