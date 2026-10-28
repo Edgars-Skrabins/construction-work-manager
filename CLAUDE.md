@@ -19,7 +19,7 @@ Construction Work Manager is a work management module for construction sites. Ad
 - `config/` holds the Yii configuration: `common/`, `web/` and `console/` DI definitions and parameters, plus per-environment parameters in `environments/`. Run `composer yii-config-rebuild` after adding or removing config files.
 - `src/` holds the application code under the `App\` namespace. `src/Web/<Page>/` keeps a page's action and its Twig template together. `src/Web/Shared/Layout/Main/` holds the layout and the asset bundles. `src/Environment.php` is the only place that reads environment variables.
 - `public/` is the web root, `assets/` holds CSS published by the asset manager, and `runtime/` holds caches and is not committed.
-- `tests/Unit/` holds tests without a database. `tests/Integration/` holds tests that boot the real application in the `test` environment.
+- `tests/Unit/` holds tests without a database. `tests/Integration/` holds tests that boot the real application in the `test` environment and extend `IntegrationTestCase`, which provides services from the app's container.
 - `docker/` holds the Dockerfile, Caddyfile, PHP settings, the SQL Server init script and the dev environment file `dev.env`.
 - `SQL/` holds the T-SQL scripts that define the schema and seed data, numbered in execution order.
 - `specs/` holds the feature and fix specs.

@@ -41,7 +41,7 @@ Build and start the containers, install the Composer dependencies and apply the 
 make up
 ```
 
-This runs `docker compose up -d --build`, `docker compose exec app composer install` and `docker compose exec app ./yii migrate:up`. It starts SQL Server, creates the app database and the database logins, starts the app and brings the schema up to date. SQL Server keeps its data in a Docker volume between restarts.
+This runs `docker compose up -d --build`, `docker compose exec app composer install` and `docker compose exec app ./yii migrate:up`. It starts SQL Server, creates the app database and the database logins, starts the app, brings the schema up to date and loads the seed data: 8 employees (an admin, two managers and their employees), 4 construction sites and 5 work items. SQL Server keeps its data in a Docker volume between restarts.
 
 ## Running the app
 
