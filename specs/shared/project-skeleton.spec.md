@@ -1,7 +1,7 @@
 # Project skeleton — Spec
 
 **Type:** feature
-**Status:** in progress
+**Status:** done
 **Last updated:** 2026-10-28
 
 # Part 1 — Business logic and usage
@@ -346,5 +346,5 @@ Baseline before starting: no code and no tests.
 - [x] H2. Update `CLAUDE.md`'s Layout and add a Commands section with the composer scripts and make targets.
 
 ### Z. Wrap-up
-- [ ] Z1. `make check` passes locally, and every CI job is green on the pull request.
+- [x] Z1. `make check` passes locally, and every CI job is green on the pull request.
 - [x] Z2. Manual check: after `docker compose down -v` (a clean volume), `make up` starts everything, `http://localhost:8080` shows the home page with no certificate warning, and `make check` passes twice in a row, because the test database is recreated each run.
