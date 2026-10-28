@@ -1,0 +1,72 @@
+name: construction-work-manager
+
+services:
+  sqlserver:
+    image: mcr.microsoft.com/mssql/server:2022-CU27-GDR1-ubuntu-22.04
+    platform: linux/amd64
+    environment:
+      ACCEPT_EULA: "Y"
+      MSSQL_PID: Developer
+      MSSQL_SA_PASSWORD: &sa-password DevOnly-Sa-Passw0rd
+    ports:
+      - "127.0.0.1:1433:1433"
+    volumes:
+      - sqlserver_data:/var/opt/mssql
+    healthcheck:
+      test: ["CMD-SHELL", "/opt/mssql-tools18/bin/sqlcmd -C -S localhost -U sa -P \"$$MSSQL_SA_PASSWORD\" -Q \"SELECT 1\" -b -o /dev/null"]
+      interval: 5s
+      timeout: 5s
+      retries: 30
+      start_period: 20s
+
+  db-init:
+    image: mcr.microsoft.com/mssql/server:2022-CU27-GDR1-ubuntu-22.04
+    platform: linux/amd64
+    env_file:
+      - path: docker/dev.env
+    environment:
+      MSSQL_SA_PASSWORD: *sa-password
+    volumes:
+      - ./docker/sqlserver/init.sql:/init/init.sql:ro
+    entrypoint:
+      - /bin/bash
+      - -c
+      - >-
+        /opt/mssql-tools18/bin/sqlcmd -C -b -S sqlserver -U sa -P "$$MSSQL_SA_PASSWORD"
+        -v DB_NAME="$$DB_NAME" DB_USER="$$DB_USER" DB_PASSWORD="$$DB_PASSWORD"
+        DB_TEST_USER="$$DB_TEST_USER" DB_TEST_PASSWORD="$$DB_TEST_PASSWORD"
+        -i /init/init.sql
+    depends_on:
+      sqlserver:
+        condition: service_healthy
+    restart: "no"
+
+  app:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile
+      target: dev
+      args:
+        USER_ID: ${USER_ID:-1000}
+        GROUP_ID: ${GROUP_ID:-1000}
+    env_file:
+      - path: docker/dev.env
+      - path: docker/dev.override.env
+        required: false
+    ports:
+      - "127.0.0.1:${APP_PORT:-8080}:80"
+    volumes:
+      - ./:/app
+      - caddy_data:/data
+      - caddy_config:/config
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    tty: true
+    depends_on:
+      db-init:
+        condition: service_completed_successfully
+
+volumes:
+  sqlserver_data:
+  caddy_data:
+  caddy_config:
