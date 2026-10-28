@@ -4,8 +4,8 @@ $(eval $(sort $(subst :,\:,$(CLI_ARGS))):;@:)
 .DEFAULT_GOAL := help
 .PHONY: up down test check composer shell help
 
-up: ## Build and start the environment.
-	docker compose up -d --build
+up: ## Build and start the environment and install dependencies.
+	docker compose up -d --build && docker compose exec app composer install --no-interaction
 
 down: ## Stop the environment.
 	docker compose down
