@@ -9,7 +9,7 @@ use RuntimeException;
 use function in_array;
 use function sprintf;
 
-final class Environment
+final  class Environment
 {
     public const DEV = 'dev';
     public const TEST = 'test';
