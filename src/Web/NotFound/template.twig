@@ -1,0 +1,10 @@
+{% do this.setTitle('404') %}
+<div class="text-center">
+    <h1 class="display-1 fw-bold">404</h1>
+    <p class="lead">
+        The page <strong>{{ currentRoute.getUri() ? currentRoute.getUri().getPath() : 'unknown' }}</strong> was not found.
+    </p>
+    <p>
+        <a class="btn btn-primary" href="{{ urlGenerator.generate('home') }}">Go back home</a>
+    </p>
+</div>
