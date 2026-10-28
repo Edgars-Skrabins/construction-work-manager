@@ -4,22 +4,20 @@ declare(strict_types=1);
 
 namespace App\Tests\Integration\Migration;
 
-use App\Environment;
 use App\Migration\SqlBatchSplitter;
 use App\Migration\SqlFileMigration;
-use PHPUnit\Framework\TestCase;
+use App\Tests\Integration\IntegrationTestCase;
 use RuntimeException;
 use Yiisoft\Aliases\Aliases;
 use Yiisoft\Db\Connection\ConnectionInterface;
 use Yiisoft\Db\Migration\Informer\NullMigrationInformer;
 use Yiisoft\Db\Migration\MigrationBuilder;
-use Yiisoft\Yii\Runner\Http\HttpApplicationRunner;
 
 use function PHPUnit\Framework\assertFalse;
 use function PHPUnit\Framework\assertSame;
 use function PHPUnit\Framework\assertTrue;
 
-final class SqlFileMigrationTest extends TestCase
+final class SqlFileMigrationTest extends IntegrationTestCase
 {
     private ConnectionInterface $db;
     private Aliases $aliases;
@@ -27,19 +25,9 @@ final class SqlFileMigrationTest extends TestCase
 
     protected function setUp(): void
     {
-        $container = (new HttpApplicationRunner(
-            rootPath: dirname(__DIR__, 3),
-            environment: Environment::appEnv(),
-        ))->getContainer();
-
-        $db = $container->get(ConnectionInterface::class);
-        $aliases = $container->get(Aliases::class);
-        self::assertInstanceOf(ConnectionInterface::class, $db);
-        self::assertInstanceOf(Aliases::class, $aliases);
-
-        $this->db = $db;
-        $this->aliases = $aliases;
-        $this->builder = new MigrationBuilder($db, new NullMigrationInformer());
+        $this->db = $this->db();
+        $this->aliases = $this->service(Aliases::class);
+        $this->builder = new MigrationBuilder($this->db, new NullMigrationInformer());
     }
 
     protected function tearDown(): void
