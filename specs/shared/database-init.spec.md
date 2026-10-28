@@ -1,7 +1,7 @@
 # Database init — Spec
 
 **Type:** feature
-**Status:** ready for implementation
+**Status:** in progress
 **Last updated:** 2026-10-29
 
 # Part 1 — Business logic and usage
@@ -135,6 +135,8 @@ Each migration class extends `SqlFileMigration` and only returns its script name
 8. **Fixed seed IDs:** `IDENTITY_INSERT` with fixed IDs makes the seed predictable for tests, for the manager references, and for the down script, which deletes exactly those rows.
 9. **`AREA_M2` as `DECIMAL(10, 2)`:** "kvadratūra" is the area in square metres. The unit is in the column name so it's never ambiguous.
 10. **`NO ACTION` on delete:** SQL Server can't cascade a self-reference, and silent cascades would hide business decisions. Delete behaviour is decided in the admin management spec.
+11. **Shared integration test base (2026-10-29):** with five integration test classes booting the app the same way, `tests/Integration/IntegrationTestCase` provides `service()` and `db()` from the app's container. The existing integration tests were moved onto it, so there is one way to boot the app in tests.
+12. **Extra constraint cases (2026-10-29):** `ConstraintsTest` also proves that `NO ACTION` holds: deleting a referenced access level, or a manager who still has employees, is rejected. It also covers an unknown site access level and a duplicate work item name.
 
 # Part 3 — Implementation TODO
 
@@ -143,25 +145,25 @@ Read Part 1 and Part 2 before starting. Work through the tasks in order and tick
 Baseline before starting: unit 25 tests, integration 8 tests, all passing.
 
 ### A. Schema scripts and migrations
-- [ ] A1. Add `SQL/001_create_access_level.sql` and its down script, and `M261029000001CreateAccessLevel`.
-- [ ] A2. Add `SQL/002_create_employee.sql` and its down script, and `M261029000002CreateEmployee`.
-- [ ] A3. Add `SQL/003_create_construction_site.sql` and its down script, and `M261029000003CreateConstructionSite`.
-- [ ] A4. Add `SQL/004_create_work_item.sql` and its down script, and `M261029000004CreateWorkItem`.
-- [ ] A5. Run `make migrate`, and check the tables and constraints in the dev database.
+- [x] A1. Add `SQL/001_create_access_level.sql` and its down script, and `M261029000001CreateAccessLevel`.
+- [x] A2. Add `SQL/002_create_employee.sql` and its down script, and `M261029000002CreateEmployee`.
+- [x] A3. Add `SQL/003_create_construction_site.sql` and its down script, and `M261029000003CreateConstructionSite`.
+- [x] A4. Add `SQL/004_create_work_item.sql` and its down script, and `M261029000004CreateWorkItem`.
+- [x] A5. Run `make migrate`, and check the tables and constraints in the dev database.
 
 ### B. Seed data
-- [ ] B1. Add `SQL/005_seed_initial_data.sql` and its down script, and `M261029000005SeedInitialData`.
-- [ ] B2. Run `make migrate`, then check the seed rows and that the diacritics are stored correctly.
+- [x] B1. Add `SQL/005_seed_initial_data.sql` and its down script, and `M261029000005SeedInitialData`.
+- [x] B2. Run `make migrate`, then check the seed rows and that the diacritics are stored correctly.
 
 ### C. Tests
-- [ ] C1. Add `SchemaTest`.
-- [ ] C2. Add `ConstraintsTest`.
-- [ ] C3. Add `MigrationRoundTripTest`.
-- [ ] C4. Run `make check`. All suites pass, and PHPStan level max reports no errors.
+- [x] C1. Add `SchemaTest`.
+- [x] C2. Add `ConstraintsTest`.
+- [x] C3. Add `MigrationRoundTripTest`.
+- [x] C4. Run `make check`. All suites pass, and PHPStan level max reports no errors.
 
 ### D. Documentation
-- [ ] D1. Update the README's Project structure if needed, and mention in Setup that `make up` seeds the database.
+- [x] D1. Update the README's Project structure if needed, and mention in Setup that `make up` seeds the database.
 
 ### Z. Wrap-up
 - [ ] Z1. `make check` passes locally, and CI is green on the pull request.
-- [ ] Z2. Manual check: after `docker compose down -v`, `make up` creates and seeds all tables, and the scripts run by hand in order through sqlcmd on a fresh database produce the same result.
+- [x] Z2. Manual check: after `docker compose down -v`, `make up` creates and seeds all tables, and the scripts run by hand in order through sqlcmd on a fresh database produce the same result.
