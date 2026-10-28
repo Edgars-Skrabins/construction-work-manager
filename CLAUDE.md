@@ -51,7 +51,7 @@ All commands run inside Docker. Each make target wraps `docker compose`, and eac
 - A schema change is a numbered script `SQL/NNN_name.sql`, its rollback `SQL/down/NNN_name.sql`, and a migration class `src/Migration/M<YYMMDDHHMMSS><Name>.php` that extends `SqlFileMigration` and only returns the script name. Each file runs in one transaction.
 - In SQL scripts, `GO` separates batches only when it stands alone on a line. Never put a bare `GO` line inside a string or comment, and don't use sqlcmd-only syntax (`GO n`, `:setvar`, `:r`).
 - `CREATE DATABASE` and `ALTER DATABASE` never go into `SQL/`. Database creation belongs to the Docker init step.
-- Tests are split into a `unit` suite with no database and an `integration` suite that runs against SQL Server. Integration tests run inside a transaction that is rolled back.
+- Tests are split into a `unit` suite with no database and an `integration` suite that runs against SQL Server. Integration tests that change data run inside a transaction that is rolled back. Tests that change the schema clean up after themselves.
 - Code must pass PHP-CS-Fixer and PHPStan before it is committed.
 
 ## Workflow
