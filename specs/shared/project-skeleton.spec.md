@@ -281,7 +281,6 @@ Both settings are applied with `gh api`, with the user's approval, as soon as th
     - The G4 test pushed a code-style violation. `lint` and `ci` failed, GitHub reported the PR as `BLOCKED`, and a revert turned everything green again. The PR was briefly marked ready only to read the real merge state, because a draft always reports `DRAFT`.
 29. **`make up` installs dependencies (2026-10-28):** `vendor/` isn't committed, so a fresh clone needs `composer install` before the app runs. `make up` therefore also runs `composer install` in the container, so the README's Quick start (`make up`, open the URL, `make check`) works from a fresh clone. `composer install` is idempotent and fast once the dependencies are in place.
 30. **README structure (2026-10-28):** the README lists only folders that exist. `SQL/` is added to it by the schema spec. `CLAUDE.md` keeps `SQL/` as a convention, because it guides future work.
-31. **README sections (2026-10-28):** the README follows the project's standard README structure: Tech stack, Project structure, Prerequisites, Setup, Running the app, Running tests and Commands. It has no separate Quick start, because that repeated Setup and Running the app. Each make target is written with the `docker compose` command it runs in parentheses, instead of a table. This replaces the Quick start and the command tables asked for in H1.
 
 # Part 3 — Implementation TODO
 
