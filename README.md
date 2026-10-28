@@ -1,35 +1,22 @@
 # Construction Work Manager
 
-A work management module for construction sites. Admins manage employees, construction sites and work items, managers assign work to their employees within each employee's access level, employees see their assigned work, and external pass systems query an API for who needs access to a site.
-
-## Quick start
-
-```bash
-make up
-```
-
-Open http://localhost:8080, then run all checks:
-
-```bash
-make check
-```
-
-Without `make`, run `docker compose up -d --build`, `docker compose exec app composer install` and `docker compose exec app composer check`.
+Construction Work Manager is a work management module for construction sites. Admins manage employees, construction sites and work items, managers assign work to their employees within each employee's access level, employees see their assigned work, and external pass systems query an API for who needs access to a site.
 
 ## Tech stack
 
 - **Frontend:** server-rendered Twig views with Bootstrap 5
 - **Backend:** PHP 8.4 with Yii 3, served by FrankenPHP
-- **Database:** Microsoft SQL Server 2022, running in Docker Compose
+- **Database:** Microsoft SQL Server 2022, run with Docker Compose
 - **API:** versioned JSON API under `/api/v1`, authenticated with per-client API keys
-- **Authorization:** role-based access control with admin, manager and employee roles
-- **Quality:** PHPUnit, PHPStan (level max) and PHP-CS-Fixer, run in GitHub Actions on every push and pull request
+- **Auth:** role-based access control with admin, manager and employee roles
 
 ## Project structure
 
+This repository contains the whole app, which runs in Docker Compose:
+
 - `config/`: application configuration, split into `common`, `web`, `console` and per-environment parameters.
 - `src/`: application code. `src/Web/` holds the pages, each with its action and Twig template.
-- `public/`: web root with the front controller `index.php`.
+- `public/`: web root with the front controller `index.php`. The app is served at `http://localhost:8080`.
 - `assets/`: CSS published by the asset manager.
 - `tests/`: `Unit/` tests without a database and `Integration/` tests against SQL Server.
 - `docker/`: Dockerfile, Caddyfile, PHP settings, SQL Server init script and the dev environment file.
@@ -37,60 +24,42 @@ Without `make`, run `docker compose up -d --build`, `docker compose exec app com
 
 ## Prerequisites
 
-- Docker with Docker Compose
+- Docker with Compose, which runs the app and SQL Server
 - Git
+- `make` (optional): every make target below also lists the plain `docker compose` command it runs
 
-PHP, Composer and the SQL Server drivers run inside the containers. On Apple Silicon, SQL Server runs as `linux/amd64` under emulation, so its first start takes a little longer.
+PHP, Composer and the SQL Server drivers run inside the containers, so nothing else is needed on the host. On Apple Silicon, SQL Server runs as `linux/amd64` under emulation, so its first start takes a little longer.
 
-The database passwords in `compose.yaml` and `docker/dev.env` are fixed development values. They only protect the local containers, and every port is published on `127.0.0.1` only.
+The database passwords in `compose.yaml` and `docker/dev.env` are dev-only credentials, committed so no extra setup is needed. They only protect the local containers, and every port is published on `127.0.0.1` only. Before any deployment, real credentials must come from the deployment platform as environment variables and must never be committed.
 
 ## Setup
 
-1. Clone the repository and change into it.
-2. Build and start the containers:
-   ```bash
-   make up
-   ```
-   This starts SQL Server, creates the app database and the database logins, starts the app and installs the Composer dependencies inside the container.
+Build and start the containers and install the Composer dependencies from the repository root:
 
-To use another port than 8080, set `APP_PORT`, e.g. `APP_PORT=9000 make up`.
+```
+make up
+```
+
+This runs `docker compose up -d --build` and then `docker compose exec app composer install`. It starts SQL Server, creates the app database and the database logins, and starts the app. SQL Server keeps its data in a Docker volume between restarts.
 
 ## Running the app
 
-Open http://localhost:8080. Stop the containers with:
-
-```bash
-make down
-```
-
-To remove the database volume as well, run `docker compose down -v`.
+1. Make sure the containers are running (`make up`), then open `http://localhost:8080`. To use another port, start them with `APP_PORT=9000 make up`.
+2. Stop the containers with `make down` (`docker compose down`). `docker compose down -v` also deletes the database volume.
 
 ## Running tests
 
-```bash
-make test
-```
-
-This runs the unit suite, recreates the `construction_work_manager_test` database and runs the integration suite. Both suites run inside the app container.
+- All tests: `make test` (`docker compose exec app composer test`). This runs the unit suite, recreates the `construction_work_manager_test` database and runs the integration suite.
+- Unit tests only: `docker compose exec app composer test:unit`.
+- Integration tests only: `docker compose exec app composer test:integration`.
 
 ## Commands
 
-| Make target | Raw command | What it does |
-|---|---|---|
-| `make up` | `docker compose up -d --build`, then `docker compose exec app composer install` | Build and start the environment and install dependencies |
-| `make down` | `docker compose down` | Stop the environment |
-| `make test` | `docker compose exec app composer test` | Unit and integration tests |
-| `make check` | `docker compose exec app composer check` | Code style, static analysis and all tests |
-| `make composer <args>` | `docker compose exec app composer <args>` | Run Composer in the app container |
-| `make shell` | `docker compose exec app bash` | Open a shell in the app container |
+Run these from the repository root, with the containers running:
 
-The checks are Composer scripts, which CI runs the same way:
-
-| Script | What it does |
-|---|---|
-| `composer cs` | Check code style |
-| `composer cs-fix` | Fix code style |
-| `composer stan` | Run PHPStan |
-| `composer test:unit` | Run the unit tests |
-| `composer test:integration` | Recreate the test database and run the integration tests |
-| `composer check` | Run everything above except `cs-fix` |
+- `make check` (`docker compose exec app composer check`) runs code style, static analysis and all tests, the same checks as CI.
+- `docker compose exec app composer cs` checks the code style, and `docker compose exec app composer cs-fix` fixes it.
+- `docker compose exec app composer stan` runs PHPStan.
+- `make composer <args>` (`docker compose exec app composer <args>`) runs Composer in the app container.
+- `make shell` (`docker compose exec app bash`) opens a shell in the app container.
+- `make help` lists all make targets.
