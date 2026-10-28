@@ -1,7 +1,7 @@
 # Database init — Spec
 
 **Type:** feature
-**Status:** in progress
+**Status:** done
 **Last updated:** 2026-10-29
 
 # Part 1 — Business logic and usage
@@ -165,5 +165,5 @@ Baseline before starting: unit 25 tests, integration 8 tests, all passing.
 - [x] D1. Update the README's Project structure if needed, and mention in Setup that `make up` seeds the database.
 
 ### Z. Wrap-up
-- [ ] Z1. `make check` passes locally, and CI is green on the pull request.
+- [x] Z1. `make check` passes locally, and CI is green on the pull request.
 - [x] Z2. Manual check: after `docker compose down -v`, `make up` creates and seeds all tables, and the scripts run by hand in order through sqlcmd on a fresh database produce the same result.
