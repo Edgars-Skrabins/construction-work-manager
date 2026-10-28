@@ -1,7 +1,7 @@
 # Project skeleton — Spec
 
 **Type:** feature
-**Status:** ready for implementation
+**Status:** in progress
 **Last updated:** 2026-10-28
 
 # Part 1 — Business logic and usage
@@ -43,6 +43,7 @@ New runtime dependencies:
 - `yiisoft/view-twig` ^3.0 for Twig templates.
 - `yiisoft/db-mssql` ^2.0 for the SQL Server connection.
 - `yiisoft/cache` ^3.2 to provide the PSR-16 cache that the `yiisoft/db` schema cache needs.
+- `twbs/bootstrap` ^5.3.8 for Bootstrap 5, published by a Yii asset bundle (added 2026-10-28, decision 22).
 - `ext-pdo_sqlsrv`, declared in `require`.
 
 Development dependencies, replacing the template's set:
@@ -85,7 +86,7 @@ Infrastructure:
 - `sqlserver`:
   - `mcr.microsoft.com/mssql/server:<pinned 2022 CU tag>` with `platform: linux/amd64`.
   - Environment: `ACCEPT_EULA=Y`, `MSSQL_SA_PASSWORD` (dev-only value), `MSSQL_PID=Developer`.
-  - A named volume for `/var/opt/mssql`, and port 1433 published to the host.
+  - A named volume for `/var/opt/mssql`, and port 1433 published on `127.0.0.1` only.
   - A healthcheck running `/opt/mssql-tools18/bin/sqlcmd -C -S localhost -U sa -P "$MSSQL_SA_PASSWORD" -Q "SELECT 1"`.
 - `db-init`:
   - The same image, run once.
@@ -94,7 +95,7 @@ Infrastructure:
 - `app`:
   - Built from `docker/Dockerfile`, target `dev`.
   - `env_file: docker/dev.env`, plus an optional `docker/dev.override.env` (`required: false`, gitignored).
-  - Mounts the project at `/app` and publishes `${APP_PORT:-8080}:80`. Port 8080 avoids clashing with IIS or another local web server that already holds port 80.
+  - Mounts the project at `/app` and publishes `127.0.0.1:${APP_PORT:-8080}:80`. Port 8080 avoids clashing with IIS or another local web server that already holds port 80.
   - `depends_on: db-init: condition: service_completed_successfully`.
   - Keeps the template's `extra_hosts` and Caddy volumes.
 
@@ -112,7 +113,7 @@ The default collation is kept. Unicode text is handled by `NVARCHAR` in the sche
 
 Committed and marked dev-only at the top. It contains:
 - `APP_ENV=dev`, `APP_DEBUG=true`, `SERVER_NAME=:80`, `XDEBUG_MODE=develop`, `COMPOSER_CACHE_DIR=/app/runtime/cache/composer`
-- `DB_HOST=sqlserver`, `DB_PORT=1433`, `DB_NAME=construction_work_manager`, `DB_USER=cwm_app`, `DB_PASSWORD=<dev-only value>`
+- `DB_HOST=sqlserver`, `DB_PORT=1433`, `DB_TRUST_SERVER_CERTIFICATE=true`, `DB_NAME=construction_work_manager`, `DB_USER=cwm_app`, `DB_PASSWORD=<dev-only value>`
 - `DB_TEST_NAME=construction_work_manager_test`, `DB_TEST_USER=cwm_test`, `DB_TEST_PASSWORD=<dev-only value>`
 
 `SERVER_NAME=:80` makes Caddy serve plain HTTP with no automatic HTTPS and no local CA, so the browser shows no certificate warning.
@@ -141,15 +142,15 @@ The SA password lives only in `compose.yaml`, because only `sqlserver` and `db-i
 - Remove the C3 code coverage hooks: the `Environment::appC3()` branch in `public/index.php` and the `APP_C3` handling in `src/Environment.php`.
 - Database connection:
   - A DI definition in `config/common/di/db.php` registers `Yiisoft\Db\Connection\ConnectionInterface` as a `Yiisoft\Db\Mssql\Connection`.
-  - Its `Yiisoft\Db\Mssql\Driver` is built from `DB_HOST`, `DB_PORT`, `DB_NAME`, `DB_USER` and `DB_PASSWORD`, read through `src/Environment.php`, with `TrustServerCertificate=true` for the self-signed dev certificate.
+  - Its `Yiisoft\Db\Mssql\Driver` is built from `DB_HOST`, `DB_PORT`, `DB_NAME`, `DB_USER` and `DB_PASSWORD`, read through `src/Environment.php`. `TrustServerCertificate` follows `DB_TRUST_SERVER_CERTIFICATE`, which defaults to false and is true only in the dev environment, because the dev SQL Server uses a self-signed certificate.
   - It uses a `Yiisoft\Db\Cache\SchemaCache` backed by `yiisoft/cache`'s `ArrayCache`.
   - In the `test` environment, the connection uses `DB_TEST_NAME`, `DB_TEST_USER` and `DB_TEST_PASSWORD` instead of the app values.
 - Twig:
   - Configure `yiisoft/view-twig` as the renderer for `.twig` files in `config/common/di/` or `config/web/di/`, following the package's documented setup.
   - Port `src/Web/Shared/Layout/Main/layout.php`, `src/Web/HomePage/template.php` and `src/Web/NotFound/template.php` to `.twig` files in the same folders, then delete the `.php` templates.
   - The layout uses Bootstrap 5 and shows the title Construction Work Manager. The home page shows a short welcome text naming the app.
-- Bootstrap 5: added the way the template adds assets, by extending `MainAsset` with Bootstrap 5's CSS and JS bundle from a pinned version.
-- `config/common/params.php`: the application name is `Construction Work Manager`.
+- Bootstrap 5: `src/Web/Shared/Layout/Main/BootstrapAsset.php` publishes `bootstrap.min.css` and `bootstrap.bundle.min.js` from `vendor/twbs/bootstrap/dist`, and `MainAsset` depends on it. The template's `site.css` is reduced to the few rules Bootstrap doesn't cover.
+- `config/common/application.php`: the application name is `Construction Work Manager`.
 - `.php-cs-fixer.php`: keep the template's rules (`@PER-CS`, `no_unused_imports`) and paths.
 
 ### Tests
@@ -249,6 +250,30 @@ Both settings are applied with `gh api`, with the user's approval, as soon as th
     - Rejected: resetting with SA from the app container.
 17. **Security baseline check:** the Dockerfile fails the build if PHP is older than 8.4.27 or if `session.upload_progress` is on. The image tag's claim is verified on every build, locally and in CI. Rejected: trusting the tag.
 18. **Named tests:** the spec lists the exact tests it delivers, so passing suites can't be empty suites.
+19. **Application name file (2026-10-28):** the template keeps the application name in `config/common/application.php`, not in `config/common/params.php`, so C5 changes that file.
+20. **Schema cache (2026-10-28):** `yiisoft/db` already registers `SchemaCache`, and `yiisoft/cache` binds the PSR-16 cache to `ArrayCache`, so `config/common/di/db.php` only defines the connection and driver.
+21. **Dependency constraints (2026-10-28):** the template's `bump-after-update` setting raised the constraints in `composer.json` to the installed versions after `composer update`. This is kept, because it records the versions the project was tested with.
+22. **Bootstrap delivery (2026-10-28):** Bootstrap 5.3 comes from the Composer package `twbs/bootstrap` and is published by a Yii asset bundle, `BootstrapAsset`.
+    - No runtime dependency: pages are styled from the app's own origin, so they work offline, behind firewalls and when a CDN is down.
+    - It's tracked like every other dependency, through `composer.lock`, Dependabot alerts and `composer audit`.
+    - No visitor data goes to a third party, which keeps the app GDPR-clean and lets a future Content Security Policy stay at `'self'`.
+    - No second toolchain is needed, and no minified files sit in git.
+    - Rejected: a CDN with SRI, vendored minified files, and npm with Vite.
+23. **Twig wiring (2026-10-28):**
+    - `yiisoft/view` 12 selects the template extension through `fallbackExtension` (the view-twig README's `defaultExtension` is outdated), so it is set to `twig`.
+    - The view `basePath` is `@src`, and the Twig `FilesystemLoader` is rooted at `@src`, because the renderer strips the base path from template paths.
+    - The Twig cache is `runtime/cache/twig`, and `strict_variables` is on, so typos in templates fail loudly.
+24. **PHPStan level max fixes (2026-10-28):**
+    - Template code that PHPStan rejected at level max is fixed with native checks where possible (`is_string` on `REQUEST_URI`, `is_scalar` on `$_ENV` values).
+    - Elsewhere, precise PHPDoc type tags (`@var` shapes for the config `$params` and the routes, `list<string>` for asset bundle arrays) are used, because PHP has no native syntax for array shapes. These are type declarations for the analyser, not explanatory comments.
+    - The template's Psalm-only `@psalm-var` block in `public/index.php` is removed.
+25. **PHPUnit strictness (2026-10-28):** `phpunit.xml.dist` sets `failOnRisky`, `failOnWarning`, `failOnEmptyTestSuite` and `beStrictAboutOutputDuringTests`, so an empty suite or a test without assertions fails instead of passing silently.
+26. **CI setup reuse (2026-10-28):** the steps shared by `lint`, `unit` and `integration` live in a local composite action, `.github/actions/setup`. It matches the container user to the runner, builds the dev image with the buildx GitHub Actions cache, caches Composer downloads by `composer.lock`, and runs `composer install`. Every job sets up the same way, defined once. Actions are pinned to their current major versions: checkout v7, setup-buildx v4, build-push v7 and cache v6.
+27. **Security review fixes (2026-10-28):**
+    - SQL Server and the app are published on `127.0.0.1` only, because the committed dev SA password must never be reachable from the local network.
+    - `TrustServerCertificate` is a setting (`DB_TRUST_SERVER_CERTIFICATE`, default false) instead of being hard-coded, so certificate validation stays on anywhere but the self-signed dev server.
+    - The SQL logins follow the server's password policy (no `CHECK_POLICY = OFF`), because the dev passwords already comply.
+    - Deferred by the user: security headers, SHA-pinned actions, removing template comments and leftovers, Xdebug off in CI, and Dockerfile apt cleanup.
 
 # Part 3 — Implementation TODO
 
@@ -257,50 +282,50 @@ Read Part 1 and Part 2 before starting. Work through the tasks in order and tick
 Baseline before starting: no code and no tests.
 
 ### A. Template import
-- [ ] A1. Create `yiisoft/app` 1.4.0 in a temporary folder outside the repository with `docker run --rm -v <tmp>:/work -w /work composer:2 create-project --no-install --no-scripts yiisoft/app:1.4.0 app`.
-- [ ] A2. Copy the template's files into the worktree, except those listed in "Files removed from the template". Keep the existing `README.md`, `CLAUDE.md`, `.gitignore`, `.editorconfig` and `specs/`.
-- [ ] A3. Merge the template's `.gitignore` entries into ours (`/vendor`, `.env`, IDE folders, `runtime` contents via the template's own `runtime/.gitignore`). Add `/docker/dev.override.env` and `/.claude/worktrees/`. Drop the C3 entry.
-- [ ] A4. Compare the template's `.editorconfig` with ours and keep ours, adding any rule it has that ours lacks.
-- [ ] A5. Add `LICENSE` with the MIT text, year 2026, copyright Edgars Skrabiņš.
+- [x] A1. Create `yiisoft/app` 1.4.0 in a temporary folder outside the repository with `docker run --rm -v <tmp>:/work -w /work composer:2 create-project --no-install --no-scripts yiisoft/app:1.4.0 app`.
+- [x] A2. Copy the template's files into the worktree, except those listed in "Files removed from the template". Keep the existing `README.md`, `CLAUDE.md`, `.gitignore`, `.editorconfig` and `specs/`.
+- [x] A3. Merge the template's `.gitignore` entries into ours (`/vendor`, `.env`, IDE folders, `runtime` contents via the template's own `runtime/.gitignore`). Add `/docker/dev.override.env` and `/.claude/worktrees/`. Drop the C3 entry.
+- [x] A4. Compare the template's `.editorconfig` with ours and keep ours, adding any rule it has that ours lacks.
+- [x] A5. Add `LICENSE` with the MIT text, year 2026, copyright Edgars Skrabiņš.
 
 ### B. Docker environment
-- [ ] B1. Rewrite `docker/Dockerfile` with a single `dev` target on `dunglas/frankenphp:1.13.4-php8.4-bookworm`. Keep the template's base extensions, Xdebug, Composer copy and non-root user. Add `pdo_sqlsrv` and `sqlsrv` via `install-php-extensions`, and copy `docker/php/app.ini` into the PHP `conf.d` directory and `docker/Caddyfile` to `/etc/frankenphp/Caddyfile`. End with the security baseline check from 2.2. Confirm the tag exists first. Then temporarily set the version threshold to `8.99.0` and confirm the build fails, and restore it.
-- [ ] B2. Add `docker/php/app.ini` with `session.upload_progress.enabled = 0`.
-- [ ] B3. Move the template's `docker/dev/Caddyfile` to `docker/Caddyfile`, unchanged (classic mode, no `worker`).
-- [ ] B4. Add `docker/sqlserver/init.sql` as described in 2.2.
-- [ ] B5. Add `docker/dev.env` as described in 2.2, with a dev-only comment at the top.
-- [ ] B6. Add the root `compose.yaml` with `sqlserver`, `db-init` and `app` as described in 2.2. Pick the newest SQL Server 2022 CU tag from the Microsoft Artifact Registry and pin it.
-- [ ] B7. Run `docker compose up -d --build`. Check that `db-init` exits with 0, that `docker compose exec app php -v` reports PHP 8.4.27 or newer, that `docker compose exec app php -m` lists `pdo_sqlsrv` and `sqlsrv`, and that `php -i` shows `session.upload_progress.enabled => Off`. If the ODBC driver isn't available for arm64, add `platform: linux/amd64` to `app` and note it in the README.
+- [x] B1. Rewrite `docker/Dockerfile` with a single `dev` target on `dunglas/frankenphp:1.13.4-php8.4-bookworm`. Keep the template's base extensions, Xdebug, Composer copy and non-root user. Add `pdo_sqlsrv` and `sqlsrv` via `install-php-extensions`, and copy `docker/php/app.ini` into the PHP `conf.d` directory and `docker/Caddyfile` to `/etc/frankenphp/Caddyfile`. End with the security baseline check from 2.2. Confirm the tag exists first. Then temporarily set the version threshold to `8.99.0` and confirm the build fails, and restore it.
+- [x] B2. Add `docker/php/app.ini` with `session.upload_progress.enabled = 0`.
+- [x] B3. Move the template's `docker/dev/Caddyfile` to `docker/Caddyfile`, unchanged (classic mode, no `worker`).
+- [x] B4. Add `docker/sqlserver/init.sql` as described in 2.2.
+- [x] B5. Add `docker/dev.env` as described in 2.2, with a dev-only comment at the top.
+- [x] B6. Add the root `compose.yaml` with `sqlserver`, `db-init` and `app` as described in 2.2. Pick the newest SQL Server 2022 CU tag from the Microsoft Artifact Registry and pin it.
+- [x] B7. Run `docker compose up -d --build`. Check that `db-init` exits with 0, that `docker compose exec app php -v` reports PHP 8.4.27 or newer, that `docker compose exec app php -m` lists `pdo_sqlsrv` and `sqlsrv`, and that `php -i` shows `session.upload_progress.enabled => Off`. If the ODBC driver isn't available for arm64, add `platform: linux/amd64` to `app` and note it in the README.
 
 ### C. Composer and application config
-- [ ] C1. Update `composer.json` as described in 2.2: name, description, license, PHP constraint, dependencies, scripts, and the removed template metadata and plugins.
-- [ ] C2. Remove the C3 hooks from `public/index.php` and `src/Environment.php`.
-- [ ] C3. Add the DB environment accessors to `src/Environment.php`, following its existing style.
-- [ ] C4. Add `config/common/di/db.php` with the MSSQL connection, driver and schema cache, using `DB_TEST_NAME`, `DB_TEST_USER` and `DB_TEST_PASSWORD` in the test environment.
-- [ ] C5. Set the application name in `config/common/params.php` to `Construction Work Manager`.
-- [ ] C6. Run `docker compose exec app composer update` to install and lock the dependencies. Commit `composer.lock`.
+- [x] C1. Update `composer.json` as described in 2.2: name, description, license, PHP constraint, dependencies, scripts, and the removed template metadata and plugins.
+- [x] C2. Remove the C3 hooks from `public/index.php` and `src/Environment.php`.
+- [x] C3. Add the DB environment accessors to `src/Environment.php`, following its existing style.
+- [x] C4. Add `config/common/di/db.php` with the MSSQL connection, driver and schema cache, using `DB_TEST_NAME`, `DB_TEST_USER` and `DB_TEST_PASSWORD` in the test environment.
+- [x] C5. Set the application name in `config/common/application.php` to `Construction Work Manager`.
+- [x] C6. Run `docker compose exec app composer update` to install and lock the dependencies. Commit `composer.lock`.
 
 ### D. Twig and Bootstrap
-- [ ] D1. Register `yiisoft/view-twig` as the renderer for `.twig` files, following the package README.
-- [ ] D2. Add Bootstrap 5 to `MainAsset` from a pinned version.
-- [ ] D3. Port the main layout, the home page and the 404 page to Twig as described in 2.2, and delete the `.php` templates.
-- [ ] D4. Open `http://localhost:8080` and an unknown URL. Confirm the styled home page and 404 page load over plain HTTP with no certificate warning.
+- [x] D1. Register `yiisoft/view-twig` as the renderer for `.twig` files, following the package README.
+- [x] D2. Add Bootstrap 5 through `BootstrapAsset` (Composer package `twbs/bootstrap`), with `MainAsset` depending on it.
+- [x] D3. Port the main layout, the home page and the 404 page to Twig as described in 2.2, and delete the `.php` templates.
+- [x] D4. Open `http://localhost:8080` and an unknown URL. Confirm the styled home page and 404 page load over plain HTTP with no certificate warning.
 
 ### E. Tests and quality tooling
-- [ ] E1. Add `phpunit.xml.dist` and update `tests/bootstrap.php` as described in 2.2.
-- [ ] E2. Convert `tests/Unit/EnvironmentTest.php` to plain PHPUnit if needed.
-- [ ] E3. Add `tests/recreate-test-database.php` with the name guard, and wire it into the `test:integration` script, as described in "Test database reset". Confirm that a `DB_TEST_NAME` without the `_test` suffix makes it stop with an error.
-- [ ] E4. Add `tests/Integration/DatabaseConnectionTest.php`, asserting `SELECT 1` returns 1 and `SELECT DB_NAME()` returns the test database.
-- [ ] E5. Add `tests/Integration/WebSmokeTest.php`: `/` returns 200 with the title, and an unknown path returns 404 with the shared layout.
-- [ ] E6. Add `phpstan.neon.dist` at level max, and fix every reported error without a baseline.
-- [ ] E7. Run `composer cs-fix`, then confirm that `docker compose exec app composer check` passes and reports the tests from "Tests delivered by this spec" (no empty suite).
+- [x] E1. Add `phpunit.xml.dist` and update `tests/bootstrap.php` as described in 2.2.
+- [x] E2. Convert `tests/Unit/EnvironmentTest.php` to plain PHPUnit if needed.
+- [x] E3. Add `tests/recreate-test-database.php` with the name guard, and wire it into the `test:integration` script, as described in "Test database reset". Confirm that a `DB_TEST_NAME` without the `_test` suffix makes it stop with an error.
+- [x] E4. Add `tests/Integration/DatabaseConnectionTest.php`, asserting `SELECT 1` returns 1 and `SELECT DB_NAME()` returns the test database.
+- [x] E5. Add `tests/Integration/WebSmokeTest.php`: `/` returns 200 with the title, and an unknown path returns 404 with the shared layout.
+- [x] E6. Add `phpstan.neon.dist` at level max, and fix every reported error without a baseline.
+- [x] E7. Run `composer cs-fix`, then confirm that `docker compose exec app composer check` passes and reports the tests from "Tests delivered by this spec" (no empty suite).
 
 ### F. Makefile
-- [ ] F1. Replace the template's `Makefile` with the targets in 2.2.
-- [ ] F2. Run `make up`, `make check` and `make down` to confirm each target works.
+- [x] F1. Replace the template's `Makefile` with the targets in 2.2.
+- [x] F2. Run `make up`, `make check` and `make down` to confirm each target works.
 
 ### G. Continuous integration
-- [ ] G1. Add `.github/workflows/ci.yml` with the `lint`, `unit`, `integration` and `ci` jobs as described in 2.2.
+- [x] G1. Add `.github/workflows/ci.yml` with the `lint`, `unit`, `integration` and `ci` jobs as described in 2.2.
 - [ ] G2. Push the branch and confirm that all four jobs pass on the pull request.
 - [ ] G3. With the user's approval, apply the repository settings from 2.2 with `gh api`: branch protection requiring `ci`, and Dependabot security alerts.
 - [ ] G4. Push a temporary commit that breaks one check, such as a code-style violation. Confirm the failing job turns `ci` red and GitHub blocks the merge. Then revert the commit and confirm everything is green again.
