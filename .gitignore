@@ -1,0 +1,12 @@
+/vendor/
+/runtime/
+/public/assets/
+/.env
+/.phpunit.cache/
+/.php-cs-fixer.cache
+/.idea/
+/.vscode/
+.DS_Store
+
+/specs/personal/*
+!/specs/personal/.keep
