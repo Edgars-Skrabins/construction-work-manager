@@ -1,7 +1,7 @@
 # Database setup — Spec
 
 **Type:** feature
-**Status:** ready for implementation
+**Status:** in progress
 **Last updated:** 2026-10-28
 
 # Part 1 — Business logic and usage
@@ -114,28 +114,28 @@ Read Part 1 and Part 2 before starting. Work through the tasks in order and tick
 Baseline before starting: unit 15 tests, integration 4 tests, all passing.
 
 ### A. Package and configuration
-- [ ] A1. Run `make composer require yiisoft/db-migration:^2.2` and commit `composer.lock`.
-- [ ] A2. Add the `@sql` alias, set the `yiisoft/db-migration` params as described in 2.2, and run `composer yii-config-rebuild`.
-- [ ] A3. Add `SQL/.gitkeep` and `SQL/down/.gitkeep`.
-- [ ] A4. Confirm that `docker compose exec app ./yii migrate:new` lists no migrations and that `./yii list` shows the `migrate:*` commands.
+- [x] A1. Run `make composer require yiisoft/db-migration:^2.2` and commit `composer.lock`.
+- [x] A2. Add the `@sql` alias, set the `yiisoft/db-migration` params as described in 2.2, and run `composer yii-config-rebuild`.
+- [x] A3. Add `SQL/.gitkeep` and `SQL/down/.gitkeep`.
+- [x] A4. Confirm that `docker compose exec app ./yii migrate:new` lists no migrations and that `./yii list` shows the `migrate:*` commands.
 
 ### B. Batch splitter
-- [ ] B1. Add `SqlBatch` and `SqlBatchSplitter` as described in 2.2.
-- [ ] B2. Add `SqlBatchSplitterTest` covering every rule in the tests table, and run `composer test:unit`.
+- [x] B1. Add `SqlBatch` and `SqlBatchSplitter` as described in 2.2.
+- [x] B2. Add `SqlBatchSplitterTest` covering every rule in the tests table, and run `composer test:unit`.
 
 ### C. SQL file migration
-- [ ] C1. Add `SqlFileMigration` as described in 2.2.
-- [ ] C2. Add the fixture scripts and `SqlFileMigrationTest`, and run the integration suite.
+- [x] C1. Add `SqlFileMigration` as described in 2.2.
+- [x] C2. Add the fixture scripts and `SqlFileMigrationTest`, and run the integration suite.
 
 ### D. Wiring
-- [ ] D1. Update the `up` target and add the `migrate` target in the `Makefile`.
-- [ ] D2. Update the `test:integration` Composer script, and add `MigrationPipelineTest`.
-- [ ] D3. Run `make check`. All suites pass, and PHPStan level max reports no errors.
+- [x] D1. Update the `up` target and add the `migrate` target in the `Makefile`.
+- [x] D2. Update the `test:integration` Composer script, and add `MigrationPipelineTest`.
+- [x] D3. Run `make check`. All suites pass, and PHPStan level max reports no errors.
 
 ### E. Documentation
-- [ ] E1. Update `README.md` as described in 2.2.
-- [ ] E2. Update `CLAUDE.md` as described in 2.2.
+- [x] E1. Update `README.md` as described in 2.2.
+- [x] E2. Update `CLAUDE.md` as described in 2.2.
 
 ### Z. Wrap-up
 - [ ] Z1. `make check` passes locally, and CI is green on the pull request.
-- [ ] Z2. Manual check: after `docker compose down -v`, `make up` creates the migration history table in `construction_work_manager`, and `make migrate` then reports no new migrations.
+- [x] Z2. Manual check: after `docker compose down -v`, `make up` creates the migration history table in `construction_work_manager`, and `make migrate` then reports no new migrations.
