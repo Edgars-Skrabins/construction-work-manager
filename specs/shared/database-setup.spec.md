@@ -1,7 +1,7 @@
 # Database setup — Spec
 
 **Type:** feature
-**Status:** in progress
+**Status:** done
 **Last updated:** 2026-10-28
 
 # Part 1 — Business logic and usage
@@ -137,5 +137,5 @@ Baseline before starting: unit 15 tests, integration 4 tests, all passing.
 - [x] E2. Update `CLAUDE.md` as described in 2.2.
 
 ### Z. Wrap-up
-- [ ] Z1. `make check` passes locally, and CI is green on the pull request.
+- [x] Z1. `make check` passes locally, and CI is green on the pull request.
 - [x] Z2. Manual check: after `docker compose down -v`, `make up` creates the migration history table in `construction_work_manager`, and `make migrate` then reports no new migrations.
