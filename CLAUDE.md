@@ -38,15 +38,19 @@ Construction Work Manager is a work management module for construction sites. Ad
 
 All commands run inside Docker. Each make target wraps `docker compose`, and each check is a Composer script that CI runs too.
 
-- `make up` / `make down`: start (and install dependencies) / stop the environment. The app is at http://localhost:8080.
+- `make up` / `make down`: start (and install dependencies and apply migrations) / stop the environment. The app is at http://localhost:8080.
+- `make migrate`: `./yii migrate:up`, apply pending migrations.
 - `make check`: `composer check`, which runs `cs`, `stan`, `test:unit` and `test:integration`.
-- `make test`: `composer test`, the unit and integration suites. `test:integration` recreates the test database first.
+- `make test`: `composer test`, the unit and integration suites. `test:integration` recreates the test database and applies the migrations first.
 - `make composer <args>`, `make shell`: Composer and a shell in the app container.
 - `composer cs-fix`: fix code style.
 
 ## Conventions
 
 - Text columns are `NVARCHAR` and string literals in SQL use `N'...'`.
+- A schema change is a numbered script `SQL/NNN_name.sql`, its rollback `SQL/down/NNN_name.sql`, and a migration class `src/Migration/M<YYMMDDHHMMSS><Name>.php` that extends `SqlFileMigration` and only returns the script name. Each file runs in one transaction.
+- In SQL scripts, `GO` separates batches only when it stands alone on a line. Never put a bare `GO` line inside a string or comment, and don't use sqlcmd-only syntax (`GO n`, `:setvar`, `:r`).
+- `CREATE DATABASE` and `ALTER DATABASE` never go into `SQL/`. Database creation belongs to the Docker init step.
 - Tests are split into a `unit` suite with no database and an `integration` suite that runs against SQL Server. Integration tests run inside a transaction that is rolled back.
 - Code must pass PHP-CS-Fixer and PHPStan before it is committed.
 

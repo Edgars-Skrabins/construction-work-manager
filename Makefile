@@ -2,13 +2,16 @@ CLI_ARGS := $(wordlist 2,$(words $(MAKECMDGOALS)),$(MAKECMDGOALS))
 $(eval $(sort $(subst :,\:,$(CLI_ARGS))):;@:)
 
 .DEFAULT_GOAL := help
-.PHONY: up down test check composer shell help
+.PHONY: up down migrate test check composer shell help
 
-up: ## Build and start the environment and install dependencies.
-	docker compose up -d --build && docker compose exec app composer install --no-interaction
+up: ## Build and start the environment, install dependencies and apply migrations.
+	docker compose up -d --build && docker compose exec app composer install --no-interaction && docker compose exec app ./yii migrate:up --no-interaction
 
 down: ## Stop the environment.
 	docker compose down
+
+migrate: ## Apply pending migrations.
+	docker compose exec app ./yii migrate:up --no-interaction
 
 test: ## Run the unit and integration tests.
 	docker compose exec app composer test

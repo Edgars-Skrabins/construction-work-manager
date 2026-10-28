@@ -14,6 +14,8 @@
         "test:unit": "phpunit --testsuite unit",
         "test:integration": [
             "@php tests/recreate-test-database.php",
+            "@putenv APP_ENV=test",
+            "@php ./yii migrate:up --no-interaction",
             "phpunit --testsuite integration"
         ],
         "test": [
@@ -43,6 +45,7 @@
         "yiisoft/cache": "^3.2",
         "yiisoft/config": "^1.6.2",
         "yiisoft/csrf": "^2.2.3",
+        "yiisoft/db-migration": "^2.2.0",
         "yiisoft/db-mssql": "^2.0",
         "yiisoft/definitions": "^3.4.1",
         "yiisoft/di": "^1.4.1",

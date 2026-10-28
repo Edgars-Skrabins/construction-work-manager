@@ -11,5 +11,6 @@ return [
     '@baseUrl' => '/',
     '@public' => '@root/public',
     '@runtime' => '@root/runtime',
+    '@sql' => '@root/SQL',
     '@vendor' => '@root/vendor',
 ];
