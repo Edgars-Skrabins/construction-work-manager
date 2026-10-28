@@ -274,6 +274,13 @@ Both settings are applied with `gh api`, with the user's approval, as soon as th
     - `TrustServerCertificate` is a setting (`DB_TRUST_SERVER_CERTIFICATE`, default false) instead of being hard-coded, so certificate validation stays on anywhere but the self-signed dev server.
     - The SQL logins follow the server's password policy (no `CHECK_POLICY = OFF`), because the dev passwords already comply.
     - Deferred by the user: security headers, SHA-pinned actions, removing template comments and leftovers, Xdebug off in CI, and Dockerfile apt cleanup.
+28. **Branch protection details (2026-10-28):**
+    - `main` requires a pull request with zero approvals, the `ci` check, and branches up to date with `main`.
+    - It applies to admins, and force pushes and deletion are blocked.
+    - Enforcing it for admins matters: otherwise the owner could bypass a red check.
+    - The G4 test pushed a code-style violation. `lint` and `ci` failed, GitHub reported the PR as `BLOCKED`, and a revert turned everything green again. The PR was briefly marked ready only to read the real merge state, because a draft always reports `DRAFT`.
+29. **`make up` installs dependencies (2026-10-28):** `vendor/` isn't committed, so a fresh clone needs `composer install` before the app runs. `make up` therefore also runs `composer install` in the container, so the README's Quick start (`make up`, open the URL, `make check`) works from a fresh clone. `composer install` is idempotent and fast once the dependencies are in place.
+30. **README structure (2026-10-28):** the README lists only folders that exist. `SQL/` is added to it by the schema spec. `CLAUDE.md` keeps `SQL/` as a convention, because it guides future work.
 
 # Part 3 — Implementation TODO
 
@@ -326,18 +333,18 @@ Baseline before starting: no code and no tests.
 
 ### G. Continuous integration
 - [x] G1. Add `.github/workflows/ci.yml` with the `lint`, `unit`, `integration` and `ci` jobs as described in 2.2.
-- [ ] G2. Push the branch and confirm that all four jobs pass on the pull request.
-- [ ] G3. With the user's approval, apply the repository settings from 2.2 with `gh api`: branch protection requiring `ci`, and Dependabot security alerts.
-- [ ] G4. Push a temporary commit that breaks one check, such as a code-style violation. Confirm the failing job turns `ci` red and GitHub blocks the merge. Then revert the commit and confirm everything is green again.
+- [x] G2. Push the branch and confirm that all four jobs pass on the pull request.
+- [x] G3. With the user's approval, apply the repository settings from 2.2 with `gh api`: branch protection requiring `ci`, and Dependabot security alerts.
+- [x] G4. Push a temporary commit that breaks one check, such as a code-style violation. Confirm the failing job turns `ci` red and GitHub blocks the merge. Then revert the commit and confirm everything is green again.
 
 ### H. Documentation
-- [ ] H1. Update `README.md`.
+- [x] H1. Update `README.md`.
     - Add a Quick start at the top: `make up`, open `http://localhost:8080`, `make check`. Mention `APP_PORT` for changing the port.
     - Add Setup, Running the app, Running tests and Commands sections, with the raw `docker compose` command next to every make target.
     - Add the dev-only credentials note, and list the folders added by the template in Project structure.
     - Keep the prerequisites (Docker, Git), and note SQL Server runs as `linux/amd64` (emulated on Apple Silicon).
-- [ ] H2. Update `CLAUDE.md`'s Layout and add a Commands section with the composer scripts and make targets.
+- [x] H2. Update `CLAUDE.md`'s Layout and add a Commands section with the composer scripts and make targets.
 
 ### Z. Wrap-up
 - [ ] Z1. `make check` passes locally, and every CI job is green on the pull request.
-- [ ] Z2. Manual check: after `docker compose down -v` (a clean volume), `make up` starts everything, `http://localhost:8080` shows the home page with no certificate warning, and `make check` passes twice in a row, because the test database is recreated each run.
+- [x] Z2. Manual check: after `docker compose down -v` (a clean volume), `make up` starts everything, `http://localhost:8080` shows the home page with no certificate warning, and `make check` passes twice in a row, because the test database is recreated each run.
