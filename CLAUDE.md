@@ -19,7 +19,7 @@ Construction Work Manager is a work management module for construction sites. Ad
 - `config/` holds the Yii configuration: `common/`, `web/` and `console/` DI definitions and parameters, plus per-environment parameters in `environments/`. Run `composer yii-config-rebuild` after adding or removing config files.
 - `src/` holds the application code under the `App\` namespace. `src/Web/<Page>/` keeps a page's action and its Twig template together. `src/Web/Shared/Layout/Main/` holds the layout and the asset bundles. `src/Environment.php` is the only place that reads environment variables.
 - `public/` is the web root, `assets/` holds CSS published by the asset manager, and `runtime/` holds caches and is not committed.
-- `tests/Unit/` holds tests without a database. `tests/Integration/` holds tests that boot the real application in the `test` environment.
+- `tests/Unit/` holds tests without a database. `tests/Integration/` holds tests that boot the real application in the `test` environment and extend `IntegrationTestCase`, which provides services from the app's container.
 - `docker/` holds the Dockerfile, Caddyfile, PHP settings, the SQL Server init script and the dev environment file `dev.env`.
 - `SQL/` holds the T-SQL scripts that define the schema and seed data, numbered in execution order.
 - `specs/` holds the feature and fix specs.
@@ -51,7 +51,7 @@ All commands run inside Docker. Each make target wraps `docker compose`, and eac
 - A schema change is a numbered script `SQL/NNN_name.sql`, its rollback `SQL/down/NNN_name.sql`, and a migration class `src/Migration/M<YYMMDDHHMMSS><Name>.php` that extends `SqlFileMigration` and only returns the script name. Each file runs in one transaction.
 - In SQL scripts, `GO` separates batches only when it stands alone on a line. Never put a bare `GO` line inside a string or comment, and don't use sqlcmd-only syntax (`GO n`, `:setvar`, `:r`).
 - `CREATE DATABASE` and `ALTER DATABASE` never go into `SQL/`. Database creation belongs to the Docker init step.
-- Tests are split into a `unit` suite with no database and an `integration` suite that runs against SQL Server. Integration tests run inside a transaction that is rolled back.
+- Tests are split into a `unit` suite with no database and an `integration` suite that runs against SQL Server. Integration tests that change data run inside a transaction that is rolled back. Tests that change the schema clean up after themselves.
 - Code must pass PHP-CS-Fixer and PHPStan before it is committed.
 
 ## Workflow

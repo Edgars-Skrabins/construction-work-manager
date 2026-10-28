@@ -4,49 +4,34 @@ declare(strict_types=1);
 
 namespace App\Tests\Integration\Migration;
 
-use App\Environment;
 use App\Migration\SqlBatchSplitter;
 use App\Migration\SqlFileMigration;
-use PHPUnit\Framework\TestCase;
+use App\Tests\Integration\IntegrationTestCase;
 use RuntimeException;
 use Yiisoft\Aliases\Aliases;
-use Yiisoft\Db\Connection\ConnectionInterface;
 use Yiisoft\Db\Migration\Informer\NullMigrationInformer;
 use Yiisoft\Db\Migration\MigrationBuilder;
-use Yiisoft\Yii\Runner\Http\HttpApplicationRunner;
 
 use function PHPUnit\Framework\assertFalse;
 use function PHPUnit\Framework\assertSame;
 use function PHPUnit\Framework\assertTrue;
 
-final class SqlFileMigrationTest extends TestCase
+final class SqlFileMigrationTest extends IntegrationTestCase
 {
-    private ConnectionInterface $db;
     private Aliases $aliases;
     private MigrationBuilder $builder;
 
     protected function setUp(): void
     {
-        $container = (new HttpApplicationRunner(
-            rootPath: dirname(__DIR__, 3),
-            environment: Environment::appEnv(),
-        ))->getContainer();
-
-        $db = $container->get(ConnectionInterface::class);
-        $aliases = $container->get(Aliases::class);
-        self::assertInstanceOf(ConnectionInterface::class, $db);
-        self::assertInstanceOf(Aliases::class, $aliases);
-
-        $this->db = $db;
-        $this->aliases = $aliases;
-        $this->builder = new MigrationBuilder($db, new NullMigrationInformer());
+        $this->aliases = $this->service(Aliases::class);
+        $this->builder = new MigrationBuilder($this->db(), new NullMigrationInformer());
     }
 
     protected function tearDown(): void
     {
-        $this->db->createCommand("DROP VIEW IF EXISTS TEST_ITEM_NAME")->execute();
-        $this->db->createCommand("DROP TABLE IF EXISTS TEST_ITEM")->execute();
-        $this->db->createCommand("DROP TABLE IF EXISTS TEST_BROKEN")->execute();
+        $this->db()->createCommand("DROP VIEW IF EXISTS TEST_ITEM_NAME")->execute();
+        $this->db()->createCommand("DROP TABLE IF EXISTS TEST_ITEM")->execute();
+        $this->db()->createCommand("DROP TABLE IF EXISTS TEST_BROKEN")->execute();
     }
 
     public function testUpRunsEveryBatchAndDownRevertsThem(): void
@@ -55,8 +40,8 @@ final class SqlFileMigrationTest extends TestCase
 
         $this->inTransaction(fn() => $migration->up($this->builder));
 
-        $this->db->createCommand("INSERT INTO TEST_ITEM (NAME) VALUES (N'Bērziņš')")->execute();
-        assertSame('Bērziņš', $this->db->createCommand('SELECT NAME FROM TEST_ITEM_NAME')->queryScalar());
+        $this->db()->createCommand("INSERT INTO TEST_ITEM (NAME) VALUES (N'Bērziņš')")->execute();
+        assertSame('Bērziņš', $this->db()->createCommand('SELECT NAME FROM TEST_ITEM_NAME')->queryScalar());
 
         $this->inTransaction(fn() => $migration->down($this->builder));
 
@@ -114,13 +99,13 @@ final class SqlFileMigrationTest extends TestCase
 
     private function inTransaction(callable $operation): void
     {
-        $this->db->transaction(static function () use ($operation): void {
+        $this->db()->transaction(static function () use ($operation): void {
             $operation();
         });
     }
 
     private function objectExists(string $name): bool
     {
-        return $this->db->createCommand('SELECT OBJECT_ID(:name)', [':name' => $name])->queryScalar() !== null;
+        return $this->db()->createCommand('SELECT OBJECT_ID(:name)', [':name' => $name])->queryScalar() !== null;
     }
 }
