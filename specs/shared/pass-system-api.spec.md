@@ -258,7 +258,7 @@ Baseline before starting: unit 52 tests, integration 143 tests, all passing.
 - [x] C4. Add `ApiPipelineTest`, and check that `WebSmokeTest`, `AuthenticationTest` and `ForbiddenMiddlewareTest` still pass. Run `make test`.
 
 ### D. Documentation
-- [ ] D1. Update `README.md` (Project structure, Running the app, Commands) and `CLAUDE.md` (Layout, Architecture) as described in 2.2, without the site-employees `curl` example until block E.
+- [x] D1. Update `README.md` (Project structure, Running the app, Commands) and `CLAUDE.md` (Layout, Architecture) as described in 2.2, without the site-employees `curl` example until block E.
 
 ### E. Site employees endpoint (after work-assignments merges)
 - [ ] E0. Rebase onto `origin/main`, check that migrations 010 to 014 and this spec's 015 apply in order, and check that `ClockInterface`, `AssignmentRepositoryInterface::findEmployeesNeedingAccess()` (returning `list<EmployeeNeedingAccess>`) and `ConstructionSiteRepositoryInterface::find()` exist as described in 2.2.
