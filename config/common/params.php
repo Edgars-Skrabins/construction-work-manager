@@ -10,6 +10,7 @@ use Yiisoft\Definitions\DynamicReference;
 use Yiisoft\Definitions\Reference;
 use Yiisoft\Router\CurrentRoute;
 use Yiisoft\Router\UrlGeneratorInterface;
+use Yiisoft\User\CurrentUser;
 use Yiisoft\View\Twig\TwigTemplateRenderer;
 use Yiisoft\Yii\View\Renderer\CsrfViewInjection;
 
@@ -32,7 +33,24 @@ return [
             'aliases' => Reference::to(Aliases::class),
             'urlGenerator' => Reference::to(UrlGeneratorInterface::class),
             'currentRoute' => Reference::to(CurrentRoute::class),
+            'currentUser' => Reference::to(CurrentUser::class),
         ],
+    ],
+
+    'yiisoft/session' => [
+        'session' => [
+            'options' => [
+                'cookie_secure' => 0,
+                'cookie_httponly' => 1,
+                'cookie_samesite' => 'Lax',
+                'use_strict_mode' => 1,
+                'gc_maxlifetime' => 28800,
+            ],
+        ],
+    ],
+
+    'yiisoft/user' => [
+        'authTimeout' => 28800,
     ],
 
     'yiisoft/view-twig' => [

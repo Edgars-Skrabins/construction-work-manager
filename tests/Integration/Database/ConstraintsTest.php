@@ -25,12 +25,14 @@ final class ConstraintsTest extends IntegrationTestCase
     #[DataProvider('invalidRows')]
     public function testInvalidRowIsRejected(string $sql, string $constraint): void
     {
-        try {
-            $this->db()->createCommand($sql)->execute();
-            self::fail("Expected $constraint to reject the row.");
-        } catch (DbException $e) {
-            assertStringContainsString($constraint, $e->getMessage());
-        }
+        $this->assertRejected($sql, $constraint);
+    }
+
+    public function testManagerWithEmployeesCannotBeDeleted(): void
+    {
+        $this->db()->createCommand('DELETE FROM ACCOUNT WHERE EMPLOYEE_ID = 2')->execute();
+
+        $this->assertRejected('DELETE FROM EMPLOYEE WHERE ID = 2', 'FK_EMPLOYEE_MANAGER_ID');
     }
 
     /**
@@ -53,6 +55,15 @@ final class ConstraintsTest extends IntegrationTestCase
         ];
         yield 'duplicate work item name' => ["INSERT INTO WORK_ITEM (NAME) VALUES (N'Welding')", 'UQ_WORK_ITEM_NAME'];
         yield 'referenced access level deleted' => ['DELETE FROM ACCESS_LEVEL WHERE ID = 1', 'FK_EMPLOYEE_ACCESS_LEVEL_ID'];
-        yield 'manager with employees deleted' => ['DELETE FROM EMPLOYEE WHERE ID = 2', 'FK_EMPLOYEE_MANAGER_ID'];
+    }
+
+    private function assertRejected(string $sql, string $constraint): void
+    {
+        try {
+            $this->db()->createCommand($sql)->execute();
+            self::fail("Expected $constraint to reject the statement.");
+        } catch (DbException $e) {
+            assertStringContainsString($constraint, $e->getMessage());
+        }
     }
 }
