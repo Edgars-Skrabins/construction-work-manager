@@ -13,6 +13,8 @@ use Yiisoft\Db\Query\Query;
 
 final readonly class AccountRepository implements AccountRepositoryInterface
 {
+    public const array COLUMNS = ['EMPLOYEE_ID', 'EMAIL', 'PASSWORD_HASH', 'IS_ACTIVE', 'SETUP_CODE_HASH', 'SETUP_CODE_EXPIRES_AT'];
+
     private const string DATE_FORMAT = 'Y-m-d H:i:s';
 
     public function __construct(
@@ -90,21 +92,15 @@ final readonly class AccountRepository implements AccountRepositoryInterface
     }
 
     /**
-     * @param array<string, mixed> $condition
+     * @param array<string, mixed> $row
      */
-    private function findWhere(array $condition): ?Account
+    public static function accountFromRow(array $row): ?Account
     {
-        /** @var array{EMPLOYEE_ID: int|string, EMAIL: string, PASSWORD_HASH: string|null, IS_ACTIVE: int|string|bool, SETUP_CODE_HASH: string|null, SETUP_CODE_EXPIRES_AT: string|null}|null $row */
-        $row = (new Query($this->db))
-            ->select(['EMPLOYEE_ID', 'EMAIL', 'PASSWORD_HASH', 'IS_ACTIVE', 'SETUP_CODE_HASH', 'SETUP_CODE_EXPIRES_AT'])
-            ->from('ACCOUNT')
-            ->where($condition)
-            ->one();
-
-        if ($row === null) {
+        if ($row['EMPLOYEE_ID'] === null) {
             return null;
         }
 
+        /** @var array{EMPLOYEE_ID: int|string, EMAIL: string, PASSWORD_HASH: string|null, IS_ACTIVE: int|string|bool, SETUP_CODE_HASH: string|null, SETUP_CODE_EXPIRES_AT: string|null} $row */
         return new Account(
             employeeId: (int) $row['EMPLOYEE_ID'],
             email: $row['EMAIL'],
@@ -115,6 +111,21 @@ final readonly class AccountRepository implements AccountRepositoryInterface
                 ? null
                 : new DateTimeImmutable($row['SETUP_CODE_EXPIRES_AT'], new DateTimeZone('UTC')),
         );
+    }
+
+    /**
+     * @param array<string, mixed> $condition
+     */
+    private function findWhere(array $condition): ?Account
+    {
+        /** @var array<string, mixed>|null $row */
+        $row = (new Query($this->db))
+            ->select(self::COLUMNS)
+            ->from('ACCOUNT')
+            ->where($condition)
+            ->one();
+
+        return $row === null ? null : self::accountFromRow($row);
     }
 
     /**

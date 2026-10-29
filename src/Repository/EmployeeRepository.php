@@ -5,12 +5,10 @@ declare(strict_types=1);
 namespace App\Repository;
 
 use App\Access\Role;
-use App\Entity\Account;
 use App\Entity\Employee;
 use App\Entity\EmployeeListItem;
 use App\Entity\LoginStatus;
 use DateTimeImmutable;
-use DateTimeZone;
 use Yiisoft\Data\Db\QueryDataReader;
 use Yiisoft\Data\Paginator\OffsetPaginator;
 use Yiisoft\Db\Connection\ConnectionInterface;
@@ -125,7 +123,7 @@ final readonly class EmployeeRepository implements EmployeeRepositoryInterface
         return (new Query($this->db))
             ->select([
                 'e.ID', 'e.FIRST_NAME', 'e.LAST_NAME', 'e.BIRTH_DATE', 'e.ACCESS_LEVEL_ID', 'e.ROLE', 'e.MANAGER_ID',
-                'ACCOUNT_ID' => 'a.EMPLOYEE_ID', 'a.EMAIL', 'a.PASSWORD_HASH', 'a.IS_ACTIVE', 'a.SETUP_CODE_HASH', 'a.SETUP_CODE_EXPIRES_AT',
+                ...array_map(static fn(string $column): string => 'a.' . $column, AccountRepository::COLUMNS),
             ])
             ->from(['e' => 'EMPLOYEE'])
             ->leftJoin(['a' => 'ACCOUNT'], 'a.EMPLOYEE_ID = e.ID')
@@ -137,18 +135,9 @@ final readonly class EmployeeRepository implements EmployeeRepositoryInterface
      */
     private static function employeeFromRow(array $row): Employee
     {
-        /** @var array{ID: int|string, FIRST_NAME: string, LAST_NAME: string, BIRTH_DATE: string, ACCESS_LEVEL_ID: int|string, ROLE: string, MANAGER_ID: int|string|null, ACCOUNT_ID: int|string|null, EMAIL: string|null, PASSWORD_HASH: string|null, IS_ACTIVE: int|string|bool|null, SETUP_CODE_HASH: string|null, SETUP_CODE_EXPIRES_AT: string|null} $row */
-        $account = $row['ACCOUNT_ID'] === null || $row['EMAIL'] === null ? null : new Account(
-            employeeId: (int) $row['ACCOUNT_ID'],
-            email: $row['EMAIL'],
-            passwordHash: $row['PASSWORD_HASH'],
-            isActive: (bool) (int) $row['IS_ACTIVE'],
-            setupCodeHash: $row['SETUP_CODE_HASH'],
-            setupCodeExpiresAt: $row['SETUP_CODE_EXPIRES_AT'] === null
-                ? null
-                : new DateTimeImmutable($row['SETUP_CODE_EXPIRES_AT'], new DateTimeZone('UTC')),
-        );
+        $account = AccountRepository::accountFromRow($row);
 
+        /** @var array{ID: int|string, FIRST_NAME: string, LAST_NAME: string, BIRTH_DATE: string, ACCESS_LEVEL_ID: int|string, ROLE: string, MANAGER_ID: int|string|null} $row */
         return new Employee(
             id: (int) $row['ID'],
             firstName: $row['FIRST_NAME'],
