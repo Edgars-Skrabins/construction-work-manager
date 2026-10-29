@@ -169,9 +169,9 @@ Baseline before starting: 150 unit tests and 530 integration tests on `main` (ef
 - [x] B4. Add the field to `SiteForm` and its template, and the `Code` column to the sites list, with the `AdminPagesTest` cases. `make check`.
 
 ### C. API by code
-- [ ] C1. Change `SiteAccessService::forSite()`, the API action and the route to the code, as in 2.2.
-- [ ] C2. Switch `SiteEmployeesTest` and `ApiPipelineTest` to codes and add the 200/404/422 cases from 2.2.
-- [ ] C3. Update the README's API paragraph and `CLAUDE.md`'s API notes. `make check`.
+- [x] C1. Change `SiteAccessService::forSite()`, the API action and the route to the code, as in 2.2.
+- [x] C2. Switch `SiteEmployeesTest` and `ApiPipelineTest` to codes and add the 200/404/422 cases from 2.2.
+- [x] C3. Update the README's API paragraph and `CLAUDE.md`'s API notes. `make check`.
 
 ### D. Search
 - [ ] D1. Once PR #19 (list search) is on `main`, merge `origin/main`, add `s.CODE` to the site search columns, change the placeholder to "Code, name or address", and add an `AdminPagesTest` or `ListingTest` case that searching a code finds its site. `make check`.
