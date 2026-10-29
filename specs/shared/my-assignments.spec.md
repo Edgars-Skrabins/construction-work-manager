@@ -170,8 +170,8 @@ No duplicated code: reuse what the merged specs already provide (the `Assignment
 - [x] C5. Add `tests/Integration/Web/MyAssignmentsPageTest.php` with the cases from 2.2, and run `make test`. It uses the seeded assignments (employee 4 has an in-progress one at Āgenskalns, employee 7 one at Ādaži, employee 8 only Done and Cancelled) and restores the site name it changes for the escaping case. `AuthenticationTest` and `SetPasswordTest` checked an employee's `GET /` for a 200 page; they now check `/my-assignments`, where employees land.
 
 ### D. Documentation
-- [ ] D1. In `README.md` Running the app, say that employees land on their "My assignments" page after login.
-- [ ] D2. Check that `CLAUDE.md` still matches (no structural change expected), and update it if it doesn't.
+- [x] D1. In `README.md` Running the app, say that employees land on their "My assignments" page after login.
+- [x] D2. Check that `CLAUDE.md` still matches (no structural change expected), and update it if it doesn't. It matches: the page follows `src/Web/<Page>/`, and no structure, routing convention, stack or command changed.
 
 ### Z. Wrap-up
 - [ ] Z1. Run `make check`: code style, PHPStan at level max and all tests pass. CI is green on the pull request.
