@@ -25,6 +25,22 @@ return [
                     Route::get('/')
                         ->action(Web\HomePage\Action::class)
                         ->name('home'),
+                    Route::get('/sites')
+                        ->middleware(RequirePermission::for(Permission::SiteUpdate))
+                        ->action(Web\SiteList\Action::class)
+                        ->name('site.list'),
+                    Route::methods([Method::GET, Method::POST], '/sites/create')
+                        ->middleware(RequirePermission::for(Permission::SiteCreate))
+                        ->action(Web\SiteForm\Action::class)
+                        ->name('site.create'),
+                    Route::methods([Method::GET, Method::POST], '/sites/{id:\d+}/edit')
+                        ->middleware(RequirePermission::for(Permission::SiteUpdate))
+                        ->action(Web\SiteForm\Action::class)
+                        ->name('site.edit'),
+                    Route::methods([Method::GET, Method::POST], '/sites/{id:\d+}/delete')
+                        ->middleware(RequirePermission::for(Permission::SiteDelete))
+                        ->action(Web\SiteDelete\Action::class)
+                        ->name('site.delete'),
                     Route::get('/work-items')
                         ->middleware(RequirePermission::for(Permission::WorkItemUpdate))
                         ->action(Web\WorkItemList\Action::class)

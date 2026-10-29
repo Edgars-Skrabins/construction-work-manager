@@ -23,6 +23,11 @@
             {% if not currentUser.isGuest() %}
                 {% set routeName = currentRoute.getName() ?? '' %}
                 <ul class="navbar-nav flex-row gap-3 me-auto">
+                    {% if access.can('site.update') %}
+                        <li class="nav-item">
+                            <a class="nav-link{% if routeName starts with 'site.' %} active{% endif %}" href="{{ urlGenerator.generate('site.list') }}">Construction sites</a>
+                        </li>
+                    {% endif %}
                     {% if access.can('workItem.update') %}
                         <li class="nav-item">
                             <a class="nav-link{% if routeName starts with 'workItem.' %} active{% endif %}" href="{{ urlGenerator.generate('workItem.list') }}">Work items</a>
