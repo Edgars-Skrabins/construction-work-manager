@@ -62,9 +62,22 @@ final readonly class AccountRepository implements AccountRepositoryInterface
         $this->update($employeeId, ['SETUP_CODE_HASH' => $setupCodeHash, 'SETUP_CODE_EXPIRES_AT' => self::utc($expiresAt)]);
     }
 
-    public function completeSetup(int $employeeId, string $passwordHash): void
+    public function completeSetup(int $employeeId, string $setupCodeHash, string $passwordHash): bool
     {
-        $this->update($employeeId, ['PASSWORD_HASH' => $passwordHash, 'SETUP_CODE_HASH' => null, 'SETUP_CODE_EXPIRES_AT' => null]);
+        $updated = $this->db->createCommand()
+            ->update(
+                'ACCOUNT',
+                [
+                    'PASSWORD_HASH' => $passwordHash,
+                    'SETUP_CODE_HASH' => null,
+                    'SETUP_CODE_EXPIRES_AT' => null,
+                    'UPDATED_AT' => new Expression('SYSUTCDATETIME()'),
+                ],
+                ['EMPLOYEE_ID' => $employeeId, 'SETUP_CODE_HASH' => $setupCodeHash, 'PASSWORD_HASH' => null],
+            )
+            ->execute();
+
+        return $updated === 1;
     }
 
     public function delete(int $employeeId): void

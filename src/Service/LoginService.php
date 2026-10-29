@@ -12,7 +12,7 @@ use Yiisoft\User\CurrentUser;
 
 final readonly class LoginService
 {
-    private const string DUMMY_HASH = '$2y$13$pfiuj5TVZkMKVx15nmVhDeJMBC8Bfml2J7CB4XYbKVx9qQygd5.Tu';
+    public const string DUMMY_HASH = '$2y$13$pfiuj5TVZkMKVx15nmVhDeJMBC8Bfml2J7CB4XYbKVx9qQygd5.Tu';
 
     public function __construct(
         private AccountRepositoryInterface $accounts,
