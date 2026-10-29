@@ -1,7 +1,7 @@
 # Role-aware UI — Spec
 
 **Type:** feature
-**Status:** ready for implementation
+**Status:** in progress
 **Last updated:** 2026-10-29
 
 # Part 1 — Business logic and usage
@@ -66,9 +66,9 @@ Baseline before starting: `make check` green on `origin/main` (6de8a4d).
 
 ### A. Manager field
 
-- [ ] A1. Add `EmployeeForm::managerLocked()` and use it in `src/Web/EmployeeForm/template.twig` to render the Manager select disabled with "No manager" selected (2.2).
-- [ ] A2. Add `assets/employee/employee.js` and `src/Web/Shared/Layout/Main/EmployeeAsset.php`, and register the bundle in the employee form template.
-- [ ] A3. In `tests/Integration/Web/AdminPagesTest.php`, add tests for the rendered state: editing a manager (employee 2) and an admin renders the Manager select disabled with "No manager" selected; editing employee 4 renders it enabled with their manager selected; the create page renders it enabled; a POST with role `manager`, a manager ID and a validation error re-renders it disabled with no manager selected; the form page loads `employee.js`. Add a unit test for `managerLocked()` in `tests/Unit/` for each role and an empty role. Run `make test`.
+- [x] A1. Add `EmployeeForm::managerLocked()` and use it in `src/Web/EmployeeForm/template.twig` to render the Manager select disabled with "No manager" selected (2.2).
+- [x] A2. Add `assets/employee/employee.js` and `src/Web/Shared/Layout/Main/EmployeeAsset.php`, and register the bundle in the employee form template.
+- [x] A3. In `tests/Integration/Web/AdminPagesTest.php`, add tests for the rendered state: editing a manager (employee 2) and an admin renders the Manager select disabled with "No manager" selected; editing employee 4 renders it enabled with their manager selected; the create page renders it enabled; a POST with role `manager`, a manager ID and a validation error re-renders it disabled with no manager selected; the form page loads `employee.js`. Add a unit test for `managerLocked()` in `tests/Unit/` for each role and an empty role. Run `make test`.
 
 ### B. Employee-only My assignments
 
