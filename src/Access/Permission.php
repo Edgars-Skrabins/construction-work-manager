@@ -8,6 +8,7 @@ enum Permission: string
 {
     case EmployeeCreate = 'employee.create';
     case EmployeeRead = 'employee.read';
+    case EmployeeList = 'employee.list';
     case EmployeeUpdate = 'employee.update';
     case EmployeeDelete = 'employee.delete';
     case SiteCreate = 'site.create';
@@ -20,6 +21,7 @@ enum Permission: string
     case WorkItemDelete = 'workItem.delete';
     case AssignmentCreate = 'assignment.create';
     case AssignmentRead = 'assignment.read';
+    case AssignmentReadOwn = 'assignment.readOwn';
     case AssignmentUpdate = 'assignment.update';
     case AssignmentDelete = 'assignment.delete';
 }

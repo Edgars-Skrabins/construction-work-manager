@@ -6,7 +6,7 @@
 {% do this.addJsVars(assetManager.getJsVars()) %}
 {% do this.beginPage() %}
 <!DOCTYPE html>
-<html lang="{{ language.current().value }}">
+<html lang="{{ language.current().value }}" data-bs-theme="dark">
 <head>
     <meta charset="{{ applicationParams.charset }}">
     <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -14,10 +14,10 @@
     <title>{{ this.getTitle() }}</title>
     {% do this.head() %}
 </head>
-<body class="d-flex flex-column bg-light">
+<body class="d-flex flex-column">
 {% do this.beginBody() %}
 <header>
-    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+    <nav class="navbar navbar-expand-lg site-navbar">
         <div class="container">
             <a class="navbar-brand" href="{{ aliases.get('@baseUrl') }}">{{ applicationParams.name }}</a>
             <div class="d-flex align-items-center gap-2 ms-auto order-lg-last ms-lg-3">
@@ -32,12 +32,12 @@
                 {% set routeName = currentRoute.getName() ?? '' %}
                 <div class="collapse navbar-collapse" id="main-navbar">
                     <ul class="navbar-nav me-auto mb-2 mb-lg-0">
-                        {% if access.can('assignment.read') %}
+                        {% if access.can('assignment.readOwn') %}
                             <li class="nav-item">
                                 <a class="nav-link{% if routeName == 'my-assignments' %} active{% endif %}" href="{{ urlGenerator.generate('my-assignments') }}">{{ t('My assignments') }}</a>
                             </li>
                         {% endif %}
-                        {% if access.can('employee.update') %}
+                        {% if access.can('employee.list') %}
                             <li class="nav-item">
                                 <a class="nav-link{% if routeName starts with 'employee.' %} active{% endif %}" href="{{ urlGenerator.generate('employee.list') }}">{{ t('Employees') }}</a>
                             </li>
@@ -61,7 +61,7 @@
                     <form class="d-flex flex-wrap align-items-center gap-2 gap-lg-3 pb-2 pb-lg-0" method="post" action="{{ urlGenerator.generate('logout') }}">
                         {{ csrf.hiddenInput()|raw }}
                         <span class="navbar-text">{{ currentUser.getIdentity().fullName() }} ({{ t(currentUser.getIdentity().role.value) }})</span>
-                        <button type="submit" class="btn btn-outline-light btn-sm">{{ t('Log out') }}</button>
+                        <button type="submit" class="btn btn-outline-secondary btn-sm">{{ t('Log out') }}</button>
                     </form>
                 </div>
             {% endif %}

@@ -1,5 +1,6 @@
 {% set title = employee ? t('Edit employee') : t('Add employee') %}
 {% do this.setTitle(title) %}
+{% do assetManager.register('App\\Web\\Shared\\Layout\\Main\\EmployeeAsset') %}
 <div class="row justify-content-center">
     <div class="col-lg-8">
         <h1 class="h3 mb-4">{{ title }}</h1>
@@ -53,10 +54,10 @@
             </div>
             <div class="mb-3">
                 <label for="managerId" class="form-label">{{ t('Manager') }}</label>
-                <select class="form-select{% if errors.managerId is defined %} is-invalid{% endif %}" id="managerId" name="managerId" aria-describedby="managerHelp">
+                <select class="form-select{% if errors.managerId is defined %} is-invalid{% endif %}" id="managerId" name="managerId" aria-describedby="managerHelp"{% if form.managerLocked() %} disabled{% endif %}>
                     <option value="">{{ t('No manager') }}</option>
                     {% for manager in managers %}
-                        <option value="{{ manager.id }}"{% if form.managerId == manager.id ~ '' %} selected{% endif %}>{{ manager.fullName() }}</option>
+                        <option value="{{ manager.id }}"{% if not form.managerLocked() and form.managerId == manager.id ~ '' %} selected{% endif %}>{{ manager.fullName() }}</option>
                     {% endfor %}
                 </select>
                 <div id="managerHelp" class="form-text">{{ t('Only employees have a manager. It is cleared for managers and admins.') }}</div>

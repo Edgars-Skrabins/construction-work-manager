@@ -44,6 +44,29 @@ final class AssignmentPagesTest extends IntegrationTestCase
         assertStringContainsString('data-confirm="Delete this assignment?"', $body);
     }
 
+    public function testManagerSearchFindsOnlyTheirEmployeesAssignments(): void
+    {
+        $this->logIn('manager@mail.test', '123123123');
+
+        $other = (string) $this->request('GET', '/assignments?q=' . rawurlencode('Zariņa'))->getBody();
+        assertStringContainsString('No results for “Zariņa”.', $other);
+        assertStringNotContainsString('Anna Zariņa', $other);
+
+        $own = (string) $this->request('GET', '/assignments?q=' . rawurlencode('krūmiņa'))->getBody();
+        assertStringContainsString('Laura Krūmiņa', $own);
+        assertStringNotContainsString('Mārtiņš Liepiņš', $own);
+    }
+
+    public function testAdminSearchFindsAssignmentsOfEveryManager(): void
+    {
+        $this->logIn('admin@mail.test', '123123123');
+
+        $body = (string) $this->request('GET', '/assignments?q=' . rawurlencode('Zariņa'))->getBody();
+
+        assertStringContainsString('Anna Zariņa', $body);
+        assertStringNotContainsString('Laura Krūmiņa', $body);
+    }
+
     /**
      * @return iterable<string, array{string}>
      */
@@ -192,8 +215,8 @@ final class AssignmentPagesTest extends IntegrationTestCase
 
         $body = (string) $this->request('GET', '/assignments?sort=-startDate')->getBody();
 
-        assertMatchesRegularExpression(sprintf('#/assignments/%d/edit.*#s', $id), $body);
-        assertStringContainsString('Access level too low', $body);
+        assertStringContainsString('<table class="table align-middle assignment-table">', $body);
+        assertMatchesRegularExpression(sprintf('#<tr class="status-planned">(?:(?!</tr>).)*<span class="badge border border-danger text-danger">Access level too low</span>(?:(?!</tr>).)*/assignments/%d/edit#s', $id), $body);
     }
 
     private function deleteAssignment(int $id): ResponseInterface

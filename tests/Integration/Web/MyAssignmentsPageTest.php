@@ -36,12 +36,12 @@ final class MyAssignmentsPageTest extends IntegrationTestCase
 
         assertSame(200, $response->getStatusCode());
         assertStringContainsString('<title>My assignments</title>', $body);
-        assertStringContainsString('<div class="card-header fw-semibold">' . self::SITE . '</div>', $body);
+        assertStringContainsString('<h2 class="h6 text-secondary text-uppercase mb-1">' . self::SITE . '</h2>', $body);
         assertStringContainsString('Mazā Nometņu iela 12, Rīga, Latvia', $body);
         assertStringContainsString('Required access level: General', $body);
         assertStringContainsString('Concrete works', $body);
         assertStringContainsString('Formwork, reinforcement and pouring of foundations, slabs and walls.', $body);
-        assertMatchesRegularExpression('#<span class="text-nowrap">\d{4}-\d{2}-\d{2} – \d{4}-\d{2}-\d{2}</span>\s*<span class="badge text-bg-primary">In progress</span>#u', $body);
+        assertMatchesRegularExpression('#<div class="assignment-block status-in-progress">\s*<div [^>]*>\s*<span class="fw-semibold">Concrete works</span>\s*<span [^>]*>\s*<span class="text-nowrap">\d{4}-\d{2}-\d{2} – \d{4}-\d{2}-\d{2}</span>\s*<span class="badge text-bg-primary">In progress</span>#u', $body);
         assertStringNotContainsString(self::OTHER_EMPLOYEES_SITE, $body);
         assertStringNotContainsString(self::OTHER_EMPLOYEES_WORK, $body);
         assertStringNotContainsString(self::EMPTY_STATE, $body);
@@ -78,9 +78,11 @@ final class MyAssignmentsPageTest extends IntegrationTestCase
         $body = (string) $this->request('GET', '/my-assignments')->getBody();
 
         assertStringContainsString(self::EMPTY_STATE, $body);
-        assertStringNotContainsString('class="card ', $body);
+        assertStringNotContainsString('<section', $body);
         assertStringContainsString('<summary>History (2)</summary>', $body);
         assertStringContainsString('<span class="badge text-bg-success">Done</span>', $body);
+        assertStringContainsString('<div class="assignment-block status-done ', $body);
+        assertStringContainsString('<div class="assignment-block status-cancelled ', $body);
         assertStringContainsString('<span class="badge text-bg-secondary">Cancelled</span>', $body);
     }
 
@@ -104,38 +106,41 @@ final class MyAssignmentsPageTest extends IntegrationTestCase
     }
 
     #[DataProvider('nonEmployees')]
-    public function testOtherRolesSeeAnEmptyList(string $email): void
+    public function testOtherRolesAreForbidden(string $email): void
     {
         $this->logIn($email, '123123123');
 
-        $response = $this->request('GET', '/my-assignments');
-        $body = (string) $response->getBody();
-
-        assertSame(200, $response->getStatusCode());
-        assertStringContainsString(self::EMPTY_STATE, $body);
-        assertStringNotContainsString(self::SITE, $body);
-        assertStringNotContainsString('<details', $body);
+        assertSame(403, $this->request('GET', '/my-assignments')->getStatusCode());
     }
 
-    /**
-     * @return iterable<string, array{string}>
-     */
-    public static function everyRole(): iterable
+    public function testEmployeeSeesTheNavbarLink(): void
     {
-        yield 'employee' => ['employee@mail.test'];
-        yield 'manager' => ['manager@mail.test'];
-        yield 'admin' => ['admin@mail.test'];
-    }
-
-    #[DataProvider('everyRole')]
-    public function testNavbarLinksToMyAssignments(string $email): void
-    {
-        $this->logIn($email, '123123123');
+        $this->logIn('employee@mail.test', '123123123');
 
         assertStringContainsString(
             'href="/my-assignments">My assignments</a>',
             (string) $this->request('GET', '/my-assignments')->getBody(),
         );
+    }
+
+    /**
+     * @return iterable<string, array{string, string}>
+     */
+    public static function nonEmployeeLandingPages(): iterable
+    {
+        yield 'manager' => ['manager@mail.test', '/assignments'];
+        yield 'admin' => ['admin@mail.test', '/employees'];
+    }
+
+    #[DataProvider('nonEmployeeLandingPages')]
+    public function testOtherRolesSeeNoNavbarLink(string $email, string $landingPage): void
+    {
+        $this->logIn($email, '123123123');
+
+        $body = (string) $this->request('GET', $landingPage)->getBody();
+
+        assertStringContainsString('id="main-navbar"', $body);
+        assertStringNotContainsString('href="/my-assignments"', $body);
     }
 
     public function testGuestIsSentToLogin(): void

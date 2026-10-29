@@ -55,7 +55,7 @@ final readonly class AssignmentRepository implements AssignmentRepositoryInterfa
         return $this->listQuery($viewerId, $scope)->andWhere(['a.ID' => $id])->one();
     }
 
-    public function listPaginator(int $viewerId, Scope $scope, string $sort): OffsetPaginator
+    public function listPaginator(int $viewerId, Scope $scope, string $sort, string $search): OffsetPaginator
     {
         $config = [
             'employee' => ListSort::columns(['e.LAST_NAME', 'e.FIRST_NAME'], 'a.ID'),
@@ -65,10 +65,33 @@ final readonly class AssignmentRepository implements AssignmentRepositoryInterfa
             'endDate' => ListSort::columns(['a.END_DATE'], 'a.ID'),
         ];
 
+        $query = ListSearch::apply($this->listQuery($viewerId, $scope), $search, [
+            'e.FIRST_NAME',
+            'e.LAST_NAME',
+            new Expression("CONCAT(e.FIRST_NAME, N' ', e.LAST_NAME)"),
+            'w.NAME',
+            's.NAME',
+        ]);
+
         /** @var QueryDataReader<int, AssignmentListItem> $reader */
-        $reader = new QueryDataReader($this->listQuery($viewerId, $scope), ListSort::create($config, $sort, '-startDate'));
+        $reader = new QueryDataReader($query, ListSort::create($config, $sort, '-startDate'));
 
         return (new OffsetPaginator($reader))->withPageSize(20);
+    }
+
+    public function listInPeriod(int $viewerId, Scope $scope, DateTimeImmutable $from, DateTimeImmutable $to, ?int $employeeId): array
+    {
+        $query = $this->listQuery($viewerId, $scope)
+            ->andWhere(['<=', 'a.START_DATE', $to->format(self::DATE_FORMAT)])
+            ->andWhere(['>=', 'a.END_DATE', $from->format(self::DATE_FORMAT)])
+            ->andWhere(['a.STATUS' => [AssignmentStatus::Active->value, AssignmentStatus::Done->value]])
+            ->orderBy(['e.LAST_NAME' => SORT_ASC, 'e.FIRST_NAME' => SORT_ASC, 'w.NAME' => SORT_ASC, 'a.ID' => SORT_ASC]);
+        if ($employeeId !== null) {
+            $query->andWhere(['a.EMPLOYEE_ID' => $employeeId]);
+        }
+
+        /** @var list<AssignmentListItem> */
+        return $query->all();
     }
 
     public function findAssignedWork(int $employeeId): array

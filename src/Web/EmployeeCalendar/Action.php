@@ -1,0 +1,46 @@
+<?php
+
+declare(strict_types=1);
+
+namespace App\Web\EmployeeCalendar;
+
+use App\Entity\AssignmentDisplayStatus;
+use App\Entity\Employee;
+use App\Service\AssignmentService;
+use Psr\Clock\ClockInterface;
+use Psr\Http\Message\ResponseInterface;
+use Psr\Http\Message\ServerRequestInterface;
+use Yiisoft\User\CurrentUser;
+use Yiisoft\Yii\View\Renderer\WebViewRenderer;
+
+final readonly class Action
+{
+    public function __construct(
+        private WebViewRenderer $viewRenderer,
+        private CurrentUser $currentUser,
+        private AssignmentService $assignments,
+        private ClockInterface $clock,
+    ) {}
+
+    public function __invoke(ServerRequestInterface $request): ResponseInterface
+    {
+        $query = $request->getQueryParams();
+        $actorId = (int) $this->currentUser->getId();
+        $calendar = MonthCalendar::create(is_string($query['month'] ?? null) ? $query['month'] : null, $this->clock->now());
+        $team = $this->assignments->teamEmployees($actorId);
+        $employeeId = is_string($query['employee'] ?? null) && preg_match('/^[1-9]\d{0,8}$/D', $query['employee']) === 1
+            ? (int) $query['employee']
+            : null;
+        if (!in_array($employeeId, array_map(static fn(Employee $employee): int => $employee->id, $team), true)) {
+            $employeeId = null;
+        }
+
+        return $this->viewRenderer->render(__DIR__ . '/template', [
+            'calendar' => $calendar,
+            'weeks' => $calendar->weeks($this->assignments->calendar($actorId, $calendar->from(), $calendar->to(), $employeeId)),
+            'team' => $team,
+            'employeeId' => $employeeId,
+            'statuses' => [AssignmentDisplayStatus::Planned, AssignmentDisplayStatus::InProgress, AssignmentDisplayStatus::Overdue, AssignmentDisplayStatus::Done],
+        ]);
+    }
+}

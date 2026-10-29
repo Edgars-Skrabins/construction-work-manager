@@ -22,7 +22,12 @@ interface AssignmentRepositoryInterface
     /**
      * @return OffsetPaginator<int, AssignmentListItem>
      */
-    public function listPaginator(int $viewerId, Scope $scope, string $sort): OffsetPaginator;
+    public function listPaginator(int $viewerId, Scope $scope, string $sort, string $search): OffsetPaginator;
+
+    /**
+     * @return list<AssignmentListItem>
+     */
+    public function listInPeriod(int $viewerId, Scope $scope, DateTimeImmutable $from, DateTimeImmutable $to, ?int $employeeId): array;
 
     /**
      * @return list<AssignedWork>

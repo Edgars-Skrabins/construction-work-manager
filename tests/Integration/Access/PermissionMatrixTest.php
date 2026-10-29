@@ -29,9 +29,10 @@ final class PermissionMatrixTest extends IntegrationTestCase
     public static function matrix(): iterable
     {
         $granted = [
-            'admin' => [self::ADMIN, Permission::cases()],
+            'admin' => [self::ADMIN, array_values(array_filter(Permission::cases(), static fn(Permission $permission): bool => $permission !== Permission::AssignmentReadOwn))],
             'manager' => [self::MANAGER, [
                 Permission::EmployeeRead,
+                Permission::EmployeeList,
                 Permission::SiteRead,
                 Permission::WorkItemRead,
                 Permission::AssignmentCreate,
@@ -44,6 +45,7 @@ final class PermissionMatrixTest extends IntegrationTestCase
                 Permission::SiteRead,
                 Permission::WorkItemRead,
                 Permission::AssignmentRead,
+                Permission::AssignmentReadOwn,
             ]],
         ];
 

@@ -1,0 +1,10 @@
+{% set sort = paginator.getSort().getOrderAsString() %}
+<form class="d-flex flex-wrap align-items-center gap-2 mb-3" method="get" action="{{ urlGenerator.generate(route) }}" role="search">
+    <input type="hidden" name="sort" value="{{ sort }}">
+    <label class="visually-hidden" for="list-search">Search</label>
+    <input class="form-control list-search-input" type="search" id="list-search" name="q" value="{{ q }}" maxlength="100" placeholder="{{ placeholder }}">
+    <button class="btn btn-outline-primary" type="submit">Search</button>
+    {% if q != '' %}
+        <a class="btn btn-link" href="{{ urlGenerator.generate(route, [], {sort: sort}) }}">Clear</a>
+    {% endif %}
+</form>

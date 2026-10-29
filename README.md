@@ -4,7 +4,7 @@ Construction Work Manager is a work management module for construction sites. Ad
 
 ## Tech stack
 
-- **Frontend:** server-rendered Twig views with Bootstrap 5
+- **Frontend:** server-rendered Twig views with Bootstrap 5 in a dark theme
 - **Backend:** PHP 8.4 with Yii 3, served by FrankenPHP
 - **Database:** Microsoft SQL Server 2022, run with Docker Compose
 - **API:** versioned JSON API under `/api/v1`, authenticated with per-client API keys
@@ -46,23 +46,25 @@ This runs `docker compose up -d --build`, `docker compose exec app composer inst
 
 It also seeds a login account for every seeded employee. All of them use the password `123123123`:
 
-- `admin@mail.test`: Jānis Bērziņš, admin
-- `manager@mail.test`: Ilze Kalniņa, manager
-- `manager2@mail.test`: Andris Ozoliņš, manager
-- `employee@mail.test`: Mārtiņš Liepiņš, employee reporting to Ilze Kalniņa
-- `employee2@mail.test`: Laura Krūmiņa, employee reporting to Ilze Kalniņa
-- `employee3@mail.test`: Kristaps Vītols, employee reporting to Ilze Kalniņa
-- `employee4@mail.test`: Anna Zariņa, employee reporting to Andris Ozoliņš
-- `employee5@mail.test`: Roberts Kalējs, employee reporting to Andris Ozoliņš
+| Email | Person | Role | Use it to test |
+|---|---|---|---|
+| `admin@mail.test` | Jānis Bērziņš | admin | Managing employees, construction sites and work items, and seeing every assignment |
+| `manager@mail.test` | Ilze Kalniņa | manager | Assigning work to a team (Mārtiņš, Laura and Kristaps) and seeing only that team's assignments |
+| `manager2@mail.test` | Andris Ozoliņš | manager | That one manager can't see or assign another manager's employees |
+| `employee@mail.test` | Mārtiņš Liepiņš | employee | My assignments with work in progress |
+| `employee2@mail.test` | Laura Krūmiņa | employee | Work that is planned and hasn't started yet |
+| `employee3@mail.test` | Kristaps Vītols | employee | Overdue work, past its end date but still active |
+| `employee4@mail.test` | Anna Zariņa | employee | Work at the classified Ādaži site, which needs the highest access level |
+| `employee5@mail.test` | Roberts Kalējs | employee | No current work, only finished and cancelled assignments under History |
 
 Like the database passwords, these are dev-only credentials for the local seed data and must never exist in a deployment.
 
 ## Running the app
 
 1. Make sure the containers are running (`make up`), then open `http://localhost:8080`. Every page except the login page needs a logged-in user, so you land on the login page first. Log in with one of the demo accounts from Setup. To use another port, start them with `APP_PORT=9000 make up`.
-2. As an admin (`admin@mail.test`), you land on Employees after login, and the navbar links to Employees, Construction sites and Work items, where you can list, sort, add, edit and delete them. Managers and employees don't see these pages.
-3. As a manager (`manager@mail.test`), you land on Assignments after login, the work items given to your own employees at construction sites. You can sort the list, add an assignment (only sites your chosen employee's access level allows are offered), change its dates or mark it Done or Cancelled, and delete it. The admin sees and manages every employee's assignments. A badge marks an active assignment whose employee's access level is now too low for its site.
-4. As an employee (`employee@mail.test`), you land on My assignments after login: one card per construction site with its address, required access level and a Google Maps link, listing your current work with its dates and status. Finished and cancelled work is under History. Every user has the My assignments link in the navbar. For managers and the admin it stays empty, because work is only assigned to employees.
+2. As an admin (`admin@mail.test`), you land on Employees after login, and the navbar links to Employees, Construction sites and Work items, where you can list, sort, add, edit and delete them. Managers and employees don't see the Construction sites and Work items pages.
+3. As a manager (`manager@mail.test`), you land on Assignments after login, the work items given to your own employees at construction sites. You can sort the list, add an assignment (only sites your chosen employee's access level allows are offered), change its dates or mark it Done or Cancelled, and delete it. The admin sees and manages every employee's assignments. A badge marks an active assignment whose employee's access level is now too low for its site. Managers also have Employees in the navbar: a read-only list of their own employees, and its Work calendar (`/employees/calendar`), a month grid of the team's assigned work with today highlighted, previous and next month links and a filter for one employee. On a phone it becomes a list of the days with work. The admin sees everyone in both.
+4. As an employee (`employee@mail.test`), you land on My assignments after login: one section per construction site with its address, required access level and a Google Maps link, listing your current work with its dates and status, each as its own block with a stripe in its status color. Finished and cancelled work is under History. Only employees have the My assignments link and page, because work is only assigned to employees.
 5. An employee the admin gives a login email gets a one-time setup code, shown to the admin once and valid for 72 hours. The employee opens "First login? Set your password" on the login page (`/set-password`), enters the email, the code and a new password, and is logged in.
 6. The language selector at the right of the navbar, also on the login page, switches the UI between English, Latvian, Lithuanian, Estonian, Russian, Finnish and Swedish. The choice is kept in a cookie for a year. Names of employees, sites, work items and access levels are shown as stored, dates stay `YYYY-MM-DD`, and the API stays English.
 7. External pass systems use the JSON API under `/api/v1`. Each client needs its own API key, sent as `Authorization: Bearer <key>`. Create one with `docker compose exec app ./yii api-key:create "North Gate"` (optionally with `--expires=YYYY-MM-DD`). The key is shown only once and only its hash is stored. `GET /api/v1/construction-sites/{id}/employees` returns the site and the employees who need access to it today: those with an active assignment there whose access level is still high enough. For example, `curl -H "Authorization: Bearer <key>" http://localhost:8080/api/v1/construction-sites/1/employees`. Errors are JSON problem details: a missing, wrong, revoked or expired key gets `401`, an unknown site `404` and a malformed site ID `422`.
