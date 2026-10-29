@@ -243,15 +243,15 @@ Read Part 1 and Part 2 before starting. Work through the tasks in order and tick
 
 Run the Docker stack under its own project name, `COMPOSE_PROJECT_NAME=cwm-work-assignments` with `APP_PORT=8082`, because other worktrees run their own stacks, and stop it when idle. If SQL Server's `127.0.0.1:1433` clashes, use a compose override file kept outside the repository.
 
-Baseline before starting: recorded in A0.
+Baseline before starting: unit 52 tests, integration 143 tests, all passing (taken with the 010 and 011 scripts already in place but none of this spec's tests).
 
 ### A. Dependencies, table and seed
-- [ ] A0. Run `make up` and `make test`, and record the baseline test counts on the line above.
-- [ ] A1. Run `make composer require yiisoft/data:^2.0 yiisoft/data-db:^1.0 psr/clock:^1.0`, and check that `composer.json` and `composer.lock` changed.
-- [ ] A2. Add `SQL/010_create_assignment.sql`, `SQL/down/010_create_assignment.sql` and `src/Migration/M261029000010CreateAssignment.php`, as in 2.2.
-- [ ] A3. Add `SQL/011_seed_assignments.sql`, `SQL/down/011_seed_assignments.sql` and `src/Migration/M261029000011SeedAssignments.php`, as in 2.2.
-- [ ] A4. Run `make migrate`, then `./yii migrate:down --limit=2` and `make migrate` again, and check the table, constraints and the 6 seed rows.
-- [ ] A5. Extend `ConstraintsTest`, `SchemaTest` and `MigrationRoundTripTest` as in 2.2, and run `make test`.
+- [x] A0. Run `make up` and `make test`, and record the baseline test counts on the line above.
+- [x] A1. Run `make composer require yiisoft/data:^2.0 yiisoft/data-db:^1.0 psr/clock:^1.0`, and check that `composer.json` and `composer.lock` changed.
+- [x] A2. Add `SQL/010_create_assignment.sql`, `SQL/down/010_create_assignment.sql` and `src/Migration/M261029000010CreateAssignment.php`, as in 2.2.
+- [x] A3. Add `SQL/011_seed_assignments.sql`, `SQL/down/011_seed_assignments.sql` and `src/Migration/M261029000011SeedAssignments.php`, as in 2.2.
+- [x] A4. Run `make migrate`, then `./yii migrate:down --limit=2` and `make migrate` again, and check the table, constraints and the 6 seed rows.
+- [x] A5. Extend `ConstraintsTest`, `SchemaTest` and `MigrationRoundTripTest` as in 2.2, and run `make test`. `testManagerWithEmployeesCannotBeDeleted` now deletes manager 2's seed assignments first, because `FK_ASSIGNMENT_CREATED_BY_ID` would otherwise fire before `FK_EMPLOYEE_MANAGER_ID`.
 
 ### B. Clock, entities and repository
 - [ ] B1. Add `App\Shared\Clock`, the timezone param and the `ClockInterface` binding in `config/common/di/application.php`, and `tests/Unit/Shared/ClockTest.php`.

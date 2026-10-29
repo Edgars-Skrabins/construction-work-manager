@@ -24,7 +24,7 @@ final class SchemaTest extends IntegrationTestCase
      */
     public static function tables(): iterable
     {
-        foreach (['ACCESS_LEVEL', 'EMPLOYEE', 'CONSTRUCTION_SITE', 'WORK_ITEM', 'RBAC_ITEM', 'RBAC_ITEM_CHILD'] as $table) {
+        foreach (['ACCESS_LEVEL', 'EMPLOYEE', 'CONSTRUCTION_SITE', 'WORK_ITEM', 'RBAC_ITEM', 'RBAC_ITEM_CHILD', 'ASSIGNMENT'] as $table) {
             yield $table => [$table];
         }
     }
@@ -77,5 +77,26 @@ final class SchemaTest extends IntegrationTestCase
         )->queryScalar();
 
         assertSame(0, $mismatched);
+    }
+
+    public function testSeedAssignmentsCoverEveryStoredStatus(): void
+    {
+        $rows = $this->db()->createCommand(
+            "SELECT CONCAT(ID, N' ', STATUS, N' ', CREATED_BY_ID, N' ', DATEDIFF(DAY, CAST(CREATED_AT AS DATE), START_DATE), N' ', DATEDIFF(DAY, CAST(CREATED_AT AS DATE), END_DATE)) FROM ASSIGNMENT ORDER BY ID",
+        )->queryColumn();
+
+        assertSame(
+            ['1 active 2 -7 14', '2 active 2 7 30', '3 active 2 -30 -3', '4 active 3 -2 20', '5 done 3 -40 -10', '6 cancelled 3 3 10'],
+            $rows,
+        );
+    }
+
+    public function testSeedAssignmentsRespectAccessLevelsAndManagers(): void
+    {
+        $invalid = (int) $this->db()->createCommand(
+            'SELECT COUNT(*) FROM ASSIGNMENT a JOIN EMPLOYEE e ON e.ID = a.EMPLOYEE_ID JOIN CONSTRUCTION_SITE s ON s.ID = a.CONSTRUCTION_SITE_ID WHERE e.ACCESS_LEVEL_ID < s.REQUIRED_ACCESS_LEVEL_ID OR e.MANAGER_ID <> a.CREATED_BY_ID',
+        )->queryScalar();
+
+        assertSame(0, $invalid);
     }
 }
