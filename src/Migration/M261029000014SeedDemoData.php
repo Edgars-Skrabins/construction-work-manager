@@ -4,10 +4,10 @@ declare(strict_types=1);
 
 namespace App\Migration;
 
-final class M261029000016SeedDemoData extends SqlFileMigration
+final class M261029000014SeedDemoData extends SqlFileMigration
 {
     protected function script(): string
     {
-        return '016_seed_demo_data';
+        return '014_seed_demo_data';
     }
 }
