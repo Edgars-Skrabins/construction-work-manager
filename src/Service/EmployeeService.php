@@ -139,6 +139,13 @@ final readonly class EmployeeService
         $errors = [];
         $managerId = $input->role === Role::Employee ? $input->managerId : null;
 
+        $birthDate = $input->birthDate->format('Y-m-d');
+        $today = new DateTimeImmutable($this->clock->now()->format('Y-m-d'));
+        if ($birthDate > $today->modify('-16 years')->format('Y-m-d')) {
+            $errors['birthDate'] = 'The employee must be at least 16 years old.';
+        } elseif ($birthDate <= $today->modify('-101 years')->format('Y-m-d')) {
+            $errors['birthDate'] = 'The employee must be at most 100 years old.';
+        }
         if (!$this->accessLevels->exists($input->accessLevelId)) {
             $errors['accessLevelId'] = 'Choose an access level.';
         }

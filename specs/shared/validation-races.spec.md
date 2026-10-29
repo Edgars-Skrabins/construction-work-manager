@@ -1,7 +1,7 @@
 # Validation races — Spec
 
 **Type:** bug fix
-**Status:** ready for implementation
+**Status:** in progress
 **Last updated:** 2026-10-29
 
 # Part 1 — Business logic and usage
@@ -62,13 +62,13 @@ Tests:
 Read Part 1 and Part 2 before starting. Work through the tasks in order and tick each one when it is done.
 
 ### A. Employee age against the Riga clock
-- [ ] A0. Start the stack, run `make check`, and record the test counts here.
-- [ ] A1. Remove the age bounds from `EmployeeForm::checkBirthDate()` and add them to `EmployeeService::validate()` as in 2.2, keyed `birthDate`, before the other checks.
-- [ ] A2. In `EmployeeServiceTest`, add the `birthDate` parameter to `input()` and a data-provider test with a `FixedClock`:
+- [x] A0. Start the stack, run `make check`, and record the test counts here. Baseline on `main`: 136 unit tests and 485 integration tests.
+- [x] A1. Remove the age bounds from `EmployeeForm::checkBirthDate()` and add them to `EmployeeService::validate()` as in 2.2, keyed `birthDate`, before the other checks.
+- [x] A2. In `EmployeeServiceTest`, add the `birthDate` parameter to `input()` and a data-provider test with a `FixedClock`:
   - at 2026-10-29 12:00 Riga: born 2010-10-29 passes, 2010-10-30 fails with the 16-year message, 1925-10-30 passes, 1925-10-29 fails with the 100-year message;
   - at 2026-10-29 00:30 Riga (still 2026-10-28 in UTC): born 2010-10-29 passes;
   - at 2026-10-28 23:59 Riga: born 2010-10-29 fails with the 16-year message.
-- [ ] A3. Run `make check`.
+- [x] A3. Run `make check`.
 
 ### B. Unique names guarded at the constraint
 - [ ] B1. Add `NAME_TAKEN` and `guardName()` to `ConstructionSiteService` and run `create()` and `update()` writes through it.
