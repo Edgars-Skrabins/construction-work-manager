@@ -8,14 +8,14 @@ Construction Work Manager is a work management module for construction sites. Ad
 - **Backend:** PHP 8.4 with Yii 3, served by FrankenPHP
 - **Database:** Microsoft SQL Server 2022, run with Docker Compose
 - **API:** versioned JSON API under `/api/v1`, authenticated with per-client API keys
-- **Auth:** role-based access control with admin, manager and employee roles
+- **Auth:** session login with email and password, and role-based access control with admin, manager and employee roles
 
 ## Project structure
 
 This repository contains the whole app, which runs in Docker Compose:
 
 - `config/`: application configuration, split into `common`, `web`, `console` and per-environment parameters.
-- `src/`: application code. `src/Web/` holds the pages, each with its action and Twig template. `src/Migration/` holds the migrations and the runner that executes the SQL scripts.
+- `src/`: application code. `src/Web/` holds the pages, each with its action and Twig template. `src/Entity/`, `src/Repository/` and `src/Service/` hold the entities, the repositories with their interfaces, and the services. `src/Migration/` holds the migrations and the runner that executes the SQL scripts.
 - `SQL/`: T-SQL scripts that define the schema and seed data, run in numbered order by the migrations. `SQL/down/` holds the matching rollback scripts. They also run unchanged in SSMS or sqlcmd.
 - `public/`: web root with the front controller `index.php`. The app is served at `http://localhost:8080`.
 - `assets/`: CSS published by the asset manager.
@@ -43,9 +43,22 @@ make up
 
 This runs `docker compose up -d --build`, `docker compose exec app composer install` and `docker compose exec app ./yii migrate:up`. It starts SQL Server, creates the app database and the database logins, starts the app, brings the schema up to date and loads the seed data: 8 employees (an admin, two managers and their employees), 4 construction sites and 5 work items. SQL Server keeps its data in a Docker volume between restarts.
 
+It also seeds a login account for every seeded employee. All of them use the password `123123123`:
+
+- `admin@mail.test`: Jānis Bērziņš, admin
+- `manager@mail.test`: Ilze Kalniņa, manager
+- `manager2@mail.test`: Andris Ozoliņš, manager
+- `employee@mail.test`: Mārtiņš Liepiņš, employee reporting to Ilze Kalniņa
+- `employee2@mail.test`: Laura Krūmiņa, employee reporting to Ilze Kalniņa
+- `employee3@mail.test`: Kristaps Vītols, employee reporting to Ilze Kalniņa
+- `employee4@mail.test`: Anna Zariņa, employee reporting to Andris Ozoliņš
+- `employee5@mail.test`: Roberts Kalējs, employee reporting to Andris Ozoliņš
+
+Like the database passwords, these are dev-only credentials for the local seed data and must never exist in a deployment.
+
 ## Running the app
 
-1. Make sure the containers are running (`make up`), then open `http://localhost:8080`. To use another port, start them with `APP_PORT=9000 make up`.
+1. Make sure the containers are running (`make up`), then open `http://localhost:8080`. Every page except the login page needs a logged-in user, so you land on the login page first. Log in with one of the demo accounts from Setup. To use another port, start them with `APP_PORT=9000 make up`.
 2. Stop the containers with `make down` (`docker compose down`). `docker compose down -v` also deletes the database volume.
 
 ## Running tests

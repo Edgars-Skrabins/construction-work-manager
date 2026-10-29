@@ -17,7 +17,7 @@ Construction Work Manager is a work management module for construction sites. Ad
 ## Layout
 
 - `config/` holds the Yii configuration: `common/`, `web/` and `console/` DI definitions and parameters, plus per-environment parameters in `environments/`. Run `composer yii-config-rebuild` after adding or removing config files.
-- `src/` holds the application code under the `App\` namespace. `src/Web/<Page>/` keeps a page's action and its Twig template together. `src/Web/Shared/Layout/Main/` holds the layout and the asset bundles. `src/Environment.php` is the only place that reads environment variables.
+- `src/` holds the application code under the `App\` namespace. `src/Web/<Page>/` keeps a page's action and its Twig template together. `src/Web/Shared/Layout/Main/` holds the layout and the asset bundles, and `src/Web/Shared/Authentication/` the web login method. `src/Entity/` holds plain entity classes, `src/Repository/` the repository interfaces and their `yiisoft/db` implementations, and `src/Service/` the services. `src/Environment.php` is the only place that reads environment variables.
 - `public/` is the web root, `assets/` holds CSS published by the asset manager, and `runtime/` holds caches and is not committed.
 - `tests/Unit/` holds tests without a database. `tests/Integration/` holds tests that boot the real application in the `test` environment and extend `IntegrationTestCase`, which provides services from the app's container.
 - `docker/` holds the Dockerfile, Caddyfile, PHP settings, the SQL Server init script and the dev environment file `dev.env`.
@@ -27,6 +27,7 @@ Construction Work Manager is a work management module for construction sites. Ad
 ## Architecture
 
 - One application with two entry points: a server-rendered web UI for people (session login, HTML) and an API under `/api/v1` for external systems (API key sent as a bearer token, JSON). Each entry point has its own middleware.
+- Web login uses `yiisoft/user`'s `CurrentUser`. Credentials live in `ACCOUNT`, keyed by the employee ID, so the logged-in user's ID is the employee ID. Every web route goes into the route group with the `Authentication` middleware in `config/common/routes.php`, unless it must be public like `/login`.
 - Controllers stay thin and call services. Services hold the business rules and depend on repository interfaces. Repositories implement those interfaces with the `yiisoft/db` query builder and return plain entity classes. The web UI calls services directly and never goes through the API.
 - Every migration executes its matching file from `SQL/`. The schema is written once, in T-SQL, in those files.
 - Roles (admin, manager, employee) and their permissions are RBAC items stored in the `rbac-db` item tables. Each employee's role is stored once, in the employee table. A read-only assignments storage adapter exposes it to RBAC, and roles change only through the employee service.
