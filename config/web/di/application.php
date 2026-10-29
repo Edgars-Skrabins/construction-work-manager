@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use App\Api\Shared\ApiPipelineMiddleware;
 use App\Web\Forbidden\ForbiddenMiddleware;
 use App\Web\NotFound\NotFoundHandler;
 use Yiisoft\Csrf\CsrfTokenMiddleware;
@@ -27,6 +28,7 @@ return [
                 'class' => MiddlewareDispatcher::class,
                 'withMiddlewares()' => [
                     [
+                        ApiPipelineMiddleware::class,
                         ErrorCatcher::class,
                         SessionMiddleware::class,
                         CsrfTokenMiddleware::class,
