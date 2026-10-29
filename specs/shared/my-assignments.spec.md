@@ -143,9 +143,9 @@ Integration, all inside a transaction that is rolled back. Assignments are inser
 
 Read Part 1 and Part 2 before starting. Work through the tasks in order and tick each one when it is done.
 
-Before block A: `admin-management` and `work-assignments` are merged into `main`, this branch is up to date with `origin/main`, and every *(from …)* name in 2.2, the date format and the route syntax are checked against the merged code.
+Before block A: `admin-management` and `work-assignments` are merged into `main`, `origin/main` is merged into this branch with `git merge origin/main` (never rebase, never force-push), and every *(from …)* name in 2.2, the date format and the route syntax are checked against the merged code.
 
-Baseline before starting: <unit and integration test counts after updating from `main`>.
+Baseline before starting: <unit and integration test counts after merging `origin/main`>.
 
 Docker for this worktree: `COMPOSE_PROJECT_NAME=cwm-my-assignments` and `APP_PORT=8084`, set outside the repository.
 
