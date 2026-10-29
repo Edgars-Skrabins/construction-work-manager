@@ -45,11 +45,11 @@ final readonly class AssignmentService
     /**
      * @return OffsetPaginator<int, AssignmentListItem>
      */
-    public function list(int $actorId, string $sort): OffsetPaginator
+    public function list(int $actorId, string $sort, string $search): OffsetPaginator
     {
         $this->accessChecker->ensure($actorId, Permission::AssignmentRead);
 
-        return $this->assignments->listPaginator($actorId, $this->scope($actorId), $sort);
+        return $this->assignments->listPaginator($actorId, $this->scope($actorId), $sort, $search);
     }
 
     public function find(int $actorId, int $id): ?AssignmentListItem

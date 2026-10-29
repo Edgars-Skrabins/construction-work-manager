@@ -24,11 +24,11 @@ final readonly class WorkItemService
     /**
      * @return OffsetPaginator<int, WorkItem>
      */
-    public function listPaginator(int $actorId, string $sort): OffsetPaginator
+    public function listPaginator(int $actorId, string $sort, string $search): OffsetPaginator
     {
         $this->accessChecker->ensure($actorId, Permission::WorkItemUpdate);
 
-        return $this->workItems->listPaginator($sort);
+        return $this->workItems->listPaginator($sort, $search);
     }
 
     public function find(int $actorId, int $id): ?WorkItem

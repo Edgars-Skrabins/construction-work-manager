@@ -1,7 +1,7 @@
 # List search — Spec
 
 **Type:** feature
-**Status:** ready for implementation
+**Status:** in progress
 **Last updated:** 2026-10-29
 
 # Part 1 — Business logic and usage
@@ -39,7 +39,7 @@ The Employees, Assignments, Work items and Construction sites lists only sort an
 
 ## 2.1 Tools and libraries
 
-No new dependencies. Filtering uses the `yiisoft/db` `like` condition. `yiisoft/db-mssql`'s `LikeBuilder` binds the value as a parameter, wraps it in `%…%` and escapes `%`, `_`, `[`, `]` and `\` with brackets (`[%]`, `[_]`, …), so the text is matched literally. The form is plain HTML with Bootstrap 5 classes.
+No new dependencies. Filtering uses the `yiisoft/db` `like` condition, which binds the value as a parameter and wraps it in `%…%`. The builder's own escaping is turned off (`'escape' => false`) because `yiisoft/db-mssql`'s `LikeBuilder` turns `]` into `[]]`, which SQL Server never matches (checked with `sqlcmd`: `N'[x] item' LIKE N'%[[]x[]]%'` is false). `ListSearch` escapes the value itself instead (see 2.2). The form is plain HTML with Bootstrap 5 classes.
 
 ## 2.2 Structure
 
@@ -60,7 +60,7 @@ A `final class` next to `ListSort` with one static method:
 public static function apply(Query $query, string $search, array $columns): Query
 ```
 
-When `$search` is `''` it returns the query unchanged. Otherwise it adds `andWhere(['or', ['like', $column1, $search], ['like', $column2, $search], …])` and returns the query. `andWhere` keeps any scope condition already set with `where`, so scope and search combine with `AND`.
+When `$search` is `''` it returns the query unchanged. Otherwise it escapes the value with `strtr()` (`%` → `[%]`, `_` → `[_]`, `[` → `[[]`; `]` and `\` are literal in SQL Server patterns outside brackets and stay as they are), adds `andWhere(['or', ['like', $column1, $value, 'escape' => false], …])` and returns the query. `andWhere` keeps any scope condition already set with `where`, so scope and search combine with `AND`.
 
 ### Repositories
 
@@ -121,7 +121,7 @@ In each of the four `template.twig` files:
 - `tests/Integration/Repository/ListingTest.php`, seed data in a rolled-back transaction:
   - Employees: a first name, a last name, "First Last", "Last, First" and an email part each find the expected IDs; a case-changed name still matches; a text that matches nothing gives an empty list with total 0.
   - Work items, sites: a match in each searched column and a non-match.
-  - Escaping: insert work items named `100% done`, `100x done`, `a_b` and `axb`; searching `100%` finds only `100% done` and `a_b` finds only `a_b`; `[x]` doesn't act as a character class.
+  - Escaping: insert work items named `100% done`, `100x done`, `a_b`, `axb`, `[x] item`, `x item` and `a\b`; searching `100%` finds only `100% done`, `a_b` only `a_b`, `[x]` and `x]` only `[x] item`, `a\b` only `a\b`, and `[^a]` nothing.
   - Search and sort combine: the filtered list sorted descending is the reverse of ascending.
   - The total and page count follow the filter: 25 inserted matching rows plus the seed give 2 pages for the search.
 - `tests/Integration/Repository/AssignmentRepositoryTest.php`: with `Scope::Subordinates` for manager 2, searching the name of an employee of manager 3 finds nothing, while the same search with `Scope::All` finds their assignments; searching a work item or site name as manager 2 finds only manager 2's subordinates' rows.
@@ -135,7 +135,7 @@ In each of the four `template.twig` files:
 
 1. **Where the search runs** — in SQL in the repositories with a parameterized `LIKE`, not in PHP after loading rows. Totals and pages must reflect the filter, and loading every row to filter in PHP would defeat pagination.
 2. **One shared filter helper** — `ListSearch::apply()` next to `ListSort`, so the four repositories share one implementation instead of repeating the `or`/`like` condition.
-3. **Escaping** — rely on `yiisoft/db-mssql`'s `LikeBuilder`, which escapes `%`, `_`, `[`, `]` and `\` with brackets. Rejected: hand-written escaping with an `ESCAPE` clause, which would duplicate what the builder already does.
+3. **Escaping** — `ListSearch` escapes `%`, `_` and `[` with brackets itself and passes `'escape' => false`. First planned to rely on `yiisoft/db-mssql`'s `LikeBuilder`, but its `]` → `[]]` mapping makes any search containing `]` match nothing (2026-10-29, found by the escaping test). Rejected: an `ESCAPE` clause, which the condition builder can't emit.
 4. **Case-insensitivity** — from the database collation, not `LOWER()` on both sides, which would add a function on every column for no gain. Accent-insensitive matching is out of scope.
 5. **Length cap** — 100 characters, applied by `ListParams` with `mb_substr` after trimming; the input also gets `maxlength="100"`. Longer input is cut silently rather than rejected, because a search isn't a form with errors.
 6. **Parameter name** — `q` in the URL and `ListParams::$q`; the repository and service parameter is `$search`.
@@ -151,17 +151,17 @@ In each of the four `template.twig` files:
 
 Read Part 1 and Part 2 before starting. Work through the tasks in order and tick each one when it is done.
 
-Baseline before starting: run `make check` and record the unit and integration test counts here.
+Baseline before starting: 139 unit tests on `main` at `6de8a4d`.
 
 ### A. Request parameter and SQL filter
-- [ ] A1. `ListParams`: add `SEARCH_MAX_LENGTH`, the `q` property and its parsing in `fromRequest()`. Extend `ListParamsTest` with the trim, non-string, length-cap and multibyte cases.
-- [ ] A2. Add `src/Repository/ListSearch.php` with `apply()` as described in 2.2.
+- [x] A1. `ListParams`: add `SEARCH_MAX_LENGTH`, the `q` property and its parsing in `fromRequest()`. Extend `ListParamsTest` with the trim, non-string, length-cap and multibyte cases.
+- [x] A2. Add `src/Repository/ListSearch.php` with `apply()` as described in 2.2.
 
 ### B. Repositories and services
-- [ ] B1. Add `string $search` to `listPaginator()` in the four repository interfaces and implementations, filtering through `ListSearch::apply()` with the columns from 2.2.
-- [ ] B2. Pass `$search` through `EmployeeService`, `WorkItemService`, `ConstructionSiteService` (`listPaginator`) and `AssignmentService::list()`. Update every caller and the anonymous repository classes in `tests/Integration/Service/WorkItemServiceTest.php` and `ConstructionSiteServiceTest.php`, and the existing calls in `ListingTest` and `AssignmentRepositoryTest`.
-- [ ] B3. Repository tests from 2.2: matching, non-matching, case, escaping, sort plus search, filtered totals, and manager scope plus search in `AssignmentRepositoryTest`.
-- [ ] B4. Check the query plans of the four searches in the dev database and note the result here.
+- [x] B1. Add `string $search` to `listPaginator()` in the four repository interfaces and implementations, filtering through `ListSearch::apply()` with the columns from 2.2.
+- [x] B2. Pass `$search` through `EmployeeService`, `WorkItemService`, `ConstructionSiteService` (`listPaginator`) and `AssignmentService::list()`. Update every caller and the anonymous repository classes in `tests/Integration/Service/WorkItemServiceTest.php` and `ConstructionSiteServiceTest.php`, and the existing calls in `ListingTest` and `AssignmentRepositoryTest`.
+- [x] B3. Repository tests from 2.2: matching, non-matching, case, escaping, sort plus search, filtered totals, and manager scope plus search in `AssignmentRepositoryTest`.
+- [x] B4. Check the query plans of the four searches in the dev database and note the result here. Result: each search is one clustered index scan of the list's base table (`EMPLOYEE`, `ASSIGNMENT`; `WORK_ITEM` and `CONSTRUCTION_SITE` scan their name index in sort order) with the `LIKE` filter applied there or right after the joins, and the joins stay the primary key seeks the unfiltered list already uses. No extra joins or sorts; no index added.
 
 ### C. Web
 - [ ] C1. Add `src/Web/Shared/Listing/search-form.twig` and the `.list-search-input` rule in `assets/main/site.css`.
