@@ -6,7 +6,6 @@ namespace App\Repository;
 
 use App\Entity\ApiKey;
 use DateTimeImmutable;
-use DateTimeZone;
 use LogicException;
 use Yiisoft\Db\Connection\ConnectionInterface;
 use Yiisoft\Db\Query\Query;
@@ -35,7 +34,7 @@ final readonly class ApiKeyRepository implements ApiKeyRepositoryInterface
                 'KEY_ID' => $keyId,
                 'CLIENT_NAME' => $clientName,
                 'SECRET_HASH' => $secretHash,
-                'EXPIRES_AT' => $this->toDatabase($expiresAt),
+                'EXPIRES_AT' => DbTime::toUtc($expiresAt),
             ])
             ->execute();
 
@@ -44,7 +43,7 @@ final readonly class ApiKeyRepository implements ApiKeyRepositoryInterface
 
     public function findByKeyId(string $keyId): ?ApiKey
     {
-        /** @var array<string, int|string|null>|null $row */
+        /** @var array<string, mixed>|null $row */
         $row = (new Query($this->db))
             ->select(self::COLUMNS)
             ->from('API_KEY')
@@ -56,7 +55,7 @@ final readonly class ApiKeyRepository implements ApiKeyRepositoryInterface
 
     public function findAll(): array
     {
-        /** @var list<array<string, int|string|null>> $rows */
+        /** @var list<array<string, mixed>> $rows */
         $rows = (new Query($this->db))
             ->select(self::COLUMNS)
             ->from('API_KEY')
@@ -68,7 +67,7 @@ final readonly class ApiKeyRepository implements ApiKeyRepositoryInterface
 
     public function revoke(string $keyId, DateTimeImmutable $at): bool
     {
-        $time = $this->toDatabase($at);
+        $time = DbTime::toUtc($at);
 
         return $this->db->createCommand()
             ->update(
@@ -82,34 +81,25 @@ final readonly class ApiKeyRepository implements ApiKeyRepositoryInterface
     public function touchLastUsed(int $id, DateTimeImmutable $at): void
     {
         $this->db->createCommand()
-            ->update('API_KEY', ['LAST_USED_AT' => $this->toDatabase($at)], ['ID' => $id])
+            ->update('API_KEY', ['LAST_USED_AT' => DbTime::toUtc($at)], ['ID' => $id])
             ->execute();
     }
 
     /**
-     * @param array<string, int|string|null> $row
+     * @param array<string, mixed> $row
      */
     private function toEntity(array $row): ApiKey
     {
+        /** @var array{ID: int|string, KEY_ID: string, CLIENT_NAME: string, SECRET_HASH: string, CREATED_AT: string, EXPIRES_AT: string|null, LAST_USED_AT: string|null, REVOKED_AT: string|null} $row */
         return new ApiKey(
             id: (int) $row['ID'],
-            keyId: (string) $row['KEY_ID'],
-            clientName: (string) $row['CLIENT_NAME'],
-            secretHash: (string) $row['SECRET_HASH'],
-            createdAt: $this->fromDatabase($row['CREATED_AT']) ?? throw new LogicException('API key without a creation time.'),
-            expiresAt: $this->fromDatabase($row['EXPIRES_AT']),
-            lastUsedAt: $this->fromDatabase($row['LAST_USED_AT']),
-            revokedAt: $this->fromDatabase($row['REVOKED_AT']),
+            keyId: $row['KEY_ID'],
+            clientName: $row['CLIENT_NAME'],
+            secretHash: $row['SECRET_HASH'],
+            createdAt: DbTime::fromUtc($row['CREATED_AT']),
+            expiresAt: DbTime::fromUtc($row['EXPIRES_AT']),
+            lastUsedAt: DbTime::fromUtc($row['LAST_USED_AT']),
+            revokedAt: DbTime::fromUtc($row['REVOKED_AT']),
         );
-    }
-
-    private function toDatabase(?DateTimeImmutable $time): ?string
-    {
-        return $time?->setTimezone(new DateTimeZone('UTC'))->format('Y-m-d H:i:s');
-    }
-
-    private function fromDatabase(int|string|null $value): ?DateTimeImmutable
-    {
-        return $value === null ? null : new DateTimeImmutable((string) $value, new DateTimeZone('UTC'));
     }
 }
