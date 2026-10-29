@@ -4,8 +4,10 @@ declare(strict_types=1);
 
 namespace App\Tests\Integration\Service;
 
+use App\Access\AccessChecker;
 use App\Access\ForbiddenException;
 use App\Entity\ConstructionSite;
+use App\Repository\AccessLevelRepositoryInterface;
 use App\Repository\ConstructionSiteData;
 use App\Repository\ConstructionSiteRepositoryInterface;
 use App\Service\ConstructionSiteService;
@@ -14,6 +16,7 @@ use App\Service\ValidationException;
 use App\Tests\Integration\IntegrationTestCase;
 use Closure;
 use PHPUnit\Framework\Attributes\DataProvider;
+use Yiisoft\Data\Paginator\OffsetPaginator;
 
 use function PHPUnit\Framework\assertNotNull;
 use function PHPUnit\Framework\assertNull;
@@ -55,6 +58,33 @@ final class ConstructionSiteServiceTest extends IntegrationTestCase
                 'requiredAccessLevelId' => 'Choose an access level.',
             ], $e->errors);
         }
+    }
+
+    /**
+     * @param Closure(ConstructionSiteService): void $save
+     */
+    #[DataProvider('racedSaves')]
+    public function testDuplicateNameMissedByThePreCheckIsRejectedByTheConstraint(Closure $save): void
+    {
+        try {
+            $save($this->sitesWithoutNamePreCheck());
+            self::fail('Expected a duplicate name to be rejected.');
+        } catch (ValidationException $e) {
+            assertSame(['name' => 'A construction site with this name already exists.'], $e->errors);
+        }
+    }
+
+    /**
+     * @return iterable<string, array{Closure(ConstructionSiteService): void}>
+     */
+    public static function racedSaves(): iterable
+    {
+        yield 'create' => [static function (ConstructionSiteService $s): void {
+            $s->create(1, self::data('Ādaži Defence Facility', '10', 1));
+        }];
+        yield 'update' => [static function (ConstructionSiteService $s): void {
+            $s->update(1, 1, self::data('Ādaži Defence Facility', '10', 1));
+        }];
     }
 
     public function testKeepingTheOwnNameOnUpdateIsAllowed(): void
@@ -134,5 +164,51 @@ final class ConstructionSiteServiceTest extends IntegrationTestCase
     private function sites(): ConstructionSiteService
     {
         return $this->service(ConstructionSiteService::class);
+    }
+
+    private function sitesWithoutNamePreCheck(): ConstructionSiteService
+    {
+        $sites = new readonly class ($this->service(ConstructionSiteRepositoryInterface::class)) implements ConstructionSiteRepositoryInterface {
+            public function __construct(
+                private ConstructionSiteRepositoryInterface $sites,
+            ) {}
+
+            public function listPaginator(string $sort): OffsetPaginator
+            {
+                return $this->sites->listPaginator($sort);
+            }
+
+            public function find(int $id): ?ConstructionSite
+            {
+                return $this->sites->find($id);
+            }
+
+            public function all(): array
+            {
+                return $this->sites->all();
+            }
+
+            public function nameExists(string $name, ?int $exceptId): bool
+            {
+                return false;
+            }
+
+            public function create(ConstructionSiteData $data): int
+            {
+                return $this->sites->create($data);
+            }
+
+            public function update(int $id, ConstructionSiteData $data): void
+            {
+                $this->sites->update($id, $data);
+            }
+
+            public function delete(int $id): void
+            {
+                $this->sites->delete($id);
+            }
+        };
+
+        return new ConstructionSiteService($sites, $this->service(AccessLevelRepositoryInterface::class), $this->service(AccessChecker::class));
     }
 }

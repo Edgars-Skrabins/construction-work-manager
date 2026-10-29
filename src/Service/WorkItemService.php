@@ -9,10 +9,13 @@ use App\Access\Permission;
 use App\Entity\WorkItem;
 use App\Repository\WorkItemData;
 use App\Repository\WorkItemRepositoryInterface;
+use Closure;
 use Yiisoft\Data\Paginator\OffsetPaginator;
 
 final readonly class WorkItemService
 {
+    private const string NAME_TAKEN = 'A work item with this name already exists.';
+
     public function __construct(
         private WorkItemRepositoryInterface $workItems,
         private AccessChecker $accessChecker,
@@ -40,7 +43,7 @@ final readonly class WorkItemService
         $this->accessChecker->ensure($actorId, Permission::WorkItemCreate);
         $this->ensureUniqueName($data->name, null);
 
-        return $this->workItems->create($data);
+        return $this->guardName(fn(): int => $this->workItems->create($data));
     }
 
     public function update(int $actorId, int $id, WorkItemData $data): void
@@ -48,7 +51,7 @@ final readonly class WorkItemService
         $this->accessChecker->ensure($actorId, Permission::WorkItemUpdate);
         $this->ensureUniqueName($data->name, $id);
 
-        $this->workItems->update($id, $data);
+        $this->guardName(fn() => $this->workItems->update($id, $data));
     }
 
     public function delete(int $actorId, int $id): void
@@ -61,7 +64,17 @@ final readonly class WorkItemService
     private function ensureUniqueName(string $name, ?int $exceptId): void
     {
         if ($this->workItems->nameExists($name, $exceptId)) {
-            throw ValidationException::forField('name', 'A work item with this name already exists.');
+            throw ValidationException::forField('name', self::NAME_TAKEN);
         }
+    }
+
+    /**
+     * @template T
+     * @param Closure(): T $write
+     * @return T
+     */
+    private function guardName(Closure $write): mixed
+    {
+        return ValidationException::guardUnique($write, 'UQ_WORK_ITEM_NAME', 'name', self::NAME_TAKEN);
     }
 }

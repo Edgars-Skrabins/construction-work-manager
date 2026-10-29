@@ -71,10 +71,10 @@ Read Part 1 and Part 2 before starting. Work through the tasks in order and tick
 - [x] A3. Run `make check`.
 
 ### B. Unique names guarded at the constraint
-- [ ] B1. Add `NAME_TAKEN` and `guardName()` to `ConstructionSiteService` and run `create()` and `update()` writes through it.
-- [ ] B2. The same in `WorkItemService` with `UQ_WORK_ITEM_NAME`.
-- [ ] B3. In `ConstructionSiteServiceTest` and `WorkItemServiceTest`, add create and update tests with the pre-check bypassed as in 2.2 that expect exactly the name field error.
-- [ ] B4. Run `make check`.
+- [x] B1. Add `NAME_TAKEN` and `guardName()` to `ConstructionSiteService` and run `create()` and `update()` writes through it.
+- [x] B2. The same in `WorkItemService` with `UQ_WORK_ITEM_NAME`.
+- [x] B3. In `ConstructionSiteServiceTest` and `WorkItemServiceTest`, add create and update tests with the pre-check bypassed as in 2.2 that expect exactly the name field error.
+- [x] B4. Run `make check`.
 
 ### Z. Wrap-up
 - [ ] Z1. `make check` green: code style, PHPStan, unit and integration tests.
