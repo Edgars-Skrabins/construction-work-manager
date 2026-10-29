@@ -41,20 +41,28 @@ Build and start the containers, install the Composer dependencies and apply the 
 make up
 ```
 
-This runs `docker compose up -d --build`, `docker compose exec app composer install` and `docker compose exec app ./yii migrate:up`. It starts SQL Server, creates the app database and the database logins, starts the app, brings the schema up to date and loads the seed data: 8 employees (an admin, two managers and their employees), 4 construction sites, 5 work items and 6 assignments of work items to employees at sites, dated around the day of the migration so they show every status (Planned, In progress, Overdue, Done and Cancelled). SQL Server keeps its data in a Docker volume between restarts.
+This runs `docker compose up -d --build`, `docker compose exec app composer install` and `docker compose exec app ./yii migrate:up`. It starts SQL Server, creates the app database and the database logins, starts the app, brings the schema up to date and loads the seed data. SQL Server keeps its data in a Docker volume between restarts. The seed data is:
 
-It also seeds a login account for every seeded employee. All of them use the password `123123123`:
+- 80 employees: 3 admins, 7 managers and 70 employees with all four access levels, spread across six of the managers. Margus Tamm is a manager without subordinates, and a few employees have no assignments.
+- 11 construction sites in Latvia, Lithuania and Estonia with every required access level. Kaunas Logistics Hub has no assignments.
+- 25 work items, real construction trades. Elevator installation has no assignments.
+- 177 assignments, dated around the day of the migration so they show every status (Planned, In progress, Overdue, Done and Cancelled), work that starts or ends today, one-day and year-long periods, employees working at several sites at once and sites with many employees today. Four active assignments are flagged because the employee's access level is below the site's.
+
+The lists have several pages: Employees 4, Assignments 9 for the admin and 3 for `manager@mail.test`.
+
+It also seeds seven login accounts, one for each case worth logging in for. All of them use the password `123123123`:
 
 | Email | Person | Role | Use it to test |
 |---|---|---|---|
 | `admin@mail.test` | Jānis Bērziņš | admin | Managing employees, construction sites and work items, and seeing every assignment |
-| `manager@mail.test` | Ilze Kalniņa | manager | Assigning work to a team (Mārtiņš, Laura and Kristaps) and seeing only that team's assignments |
-| `manager2@mail.test` | Andris Ozoliņš | manager | That one manager can't see or assign another manager's employees |
-| `employee@mail.test` | Mārtiņš Liepiņš | employee | My assignments with work in progress |
-| `employee2@mail.test` | Laura Krūmiņa | employee | Work that is planned and hasn't started yet |
-| `employee3@mail.test` | Kristaps Vītols | employee | Overdue work, past its end date but still active |
-| `employee4@mail.test` | Anna Zariņa | employee | Work at the classified Ādaži site, which needs the highest access level |
-| `employee5@mail.test` | Roberts Kalējs | employee | No current work, only finished and cancelled assignments under History |
+| `manager@mail.test` | Ilze Kalniņa | manager | A big team of 15 employees with work at 10 sites in every status, including flagged assignments, over several pages |
+| `manager2@mail.test` | Andris Ozoliņš | manager | A small team of two (Anna Zariņa and Roberts Kalējs), and that one manager can't see or assign another manager's employees |
+| `manager3@mail.test` | Margus Tamm | manager | A manager without a team: the empty assignment list and an employee picker with nobody in it |
+| `employee@mail.test` | Mārtiņš Liepiņš | employee | My assignments at three sites in every status, work starting today and ending today, and History |
+| `employee2@mail.test` | Laura Krūmiņa | employee | No current work, only finished and cancelled assignments under History |
+| `employee3@mail.test` | Kristaps Vītols | employee | A lowered access level: one active assignment is flagged as "Access level too low", and the API leaves him out for that site |
+
+The other employees have no login, so the admin can try giving them one.
 
 Like the database passwords, these are dev-only credentials for the local seed data and must never exist in a deployment.
 

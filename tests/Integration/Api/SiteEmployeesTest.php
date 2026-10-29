@@ -54,7 +54,7 @@ final class SiteEmployeesTest extends IntegrationTestCase
             . '"employees":['
             . '{"id":8,"firstName":"Roberts","lastName":"Kalējs","accessLevel":{"id":2,"name":"Restricted"}},'
             . '{"id":5,"firstName":"Laura","lastName":"Krūmiņa","accessLevel":{"id":2,"name":"Restricted"}},'
-            . '{"id":6,"firstName":"Kristaps","lastName":"Vītols","accessLevel":{"id":3,"name":"Critical infrastructure"}}'
+            . '{"id":6,"firstName":"Kristaps","lastName":"Vītols","accessLevel":{"id":2,"name":"Restricted"}}'
             . ']}',
             (string) $response->getBody(),
         );

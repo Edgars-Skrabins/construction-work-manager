@@ -20,7 +20,7 @@ final class AssignmentPagesTest extends IntegrationTestCase
 {
     use WebClient;
 
-    private const int LAST_SEED_ID = 6;
+    private const int LAST_SEED_ID = 177;
 
     protected function tearDown(): void
     {
@@ -32,15 +32,16 @@ final class AssignmentPagesTest extends IntegrationTestCase
     {
         $this->logIn('manager@mail.test', '123123123');
 
-        $body = (string) $this->request('GET', '/assignments')->getBody();
+        $body = implode('', array_map(fn(int $page): string => (string) $this->request('GET', "/assignments?page=$page")->getBody(), [1, 2, 3]));
 
         assertStringContainsString('href="/assignments">Assignments</a>', $body);
-        foreach (['Mārtiņš Liepiņš', 'Laura Krūmiņa', 'Kristaps Vītols'] as $name) {
+        foreach (['Mārtiņš Liepiņš', 'Laura Krūmiņa', 'Kristaps Vītols', 'Aušra Žukauskaitė', 'Rasmus Mägi'] as $name) {
             assertStringContainsString($name, $body);
         }
-        foreach (['Anna Zariņa', 'Roberts Kalējs'] as $name) {
+        foreach (['Anna Zariņa', 'Roberts Kalējs', 'Olga Smirnova', 'Edgars Kļaviņš'] as $name) {
             assertStringNotContainsString($name, $body);
         }
+        assertStringNotContainsString('page=4"', $body);
         assertStringContainsString('data-confirm="Delete this assignment?"', $body);
     }
 
@@ -106,11 +107,12 @@ final class AssignmentPagesTest extends IntegrationTestCase
 
         $body = (string) $this->request('GET', '/assignments/create')->getBody();
 
-        foreach ([4 => 1, 5 => 2, 6 => 3] as $id => $level) {
+        foreach ([4 => 1, 5 => 2, 6 => 2, 59 => 3, 65 => 1] as $id => $level) {
             assertStringContainsString(sprintf('<option value="%d" data-access-level="%d"', $id, $level), $body);
         }
         assertStringNotContainsString('<option value="7" data-access-level', $body);
-        foreach ([1 => 1, 2 => 2, 3 => 3, 4 => 4] as $id => $level) {
+        assertStringNotContainsString('<option value="16" data-access-level', $body);
+        foreach ([1 => 1, 2 => 2, 3 => 3, 4 => 4, 10 => 4, 11 => 2] as $id => $level) {
             assertStringContainsString(sprintf('<option value="%d" data-required-level="%d"', $id, $level), $body);
         }
     }
@@ -203,9 +205,11 @@ final class AssignmentPagesTest extends IntegrationTestCase
 
         $body = (string) $this->request('GET', '/assignments')->getBody();
 
-        foreach (['Mārtiņš Liepiņš', 'Anna Zariņa', 'Roberts Kalējs'] as $name) {
+        foreach (['Aušra Žukauskaitė', 'Olga Smirnova', 'Ieva Vanaga', 'Ivars Dambītis', 'Viesturs Mežulis', 'Daiga Riekstiņa'] as $name) {
             assertStringContainsString($name, $body);
         }
+        assertStringContainsString('page=9"', $body);
+        assertStringNotContainsString('page=10"', $body);
     }
 
     public function testFlaggedAssignmentShowsTheAccessLevelBadge(): void
