@@ -41,7 +41,7 @@ final class MyAssignmentsPageTest extends IntegrationTestCase
         assertStringContainsString('Required access level: General', $body);
         assertStringContainsString('Concrete works', $body);
         assertStringContainsString('Formwork, reinforcement and pouring of foundations, slabs and walls.', $body);
-        assertMatchesRegularExpression('#\d{4}-\d{2}-\d{2} – \d{4}-\d{2}-\d{2}\s*<span class="badge text-bg-primary">In progress</span>#u', $body);
+        assertMatchesRegularExpression('#<span class="text-nowrap">\d{4}-\d{2}-\d{2} – \d{4}-\d{2}-\d{2}</span>\s*<span class="badge text-bg-primary">In progress</span>#u', $body);
         assertStringNotContainsString(self::OTHER_EMPLOYEES_SITE, $body);
         assertStringNotContainsString(self::OTHER_EMPLOYEES_WORK, $body);
         assertStringNotContainsString(self::EMPTY_STATE, $body);
@@ -104,16 +104,13 @@ final class MyAssignmentsPageTest extends IntegrationTestCase
     }
 
     #[DataProvider('nonEmployees')]
-    public function testOtherRolesKeepTheHomePageAndSeeAnEmptyList(string $email): void
+    public function testOtherRolesSeeAnEmptyList(string $email): void
     {
         $this->logIn($email, '123123123');
 
-        $home = $this->request('GET', '/');
         $response = $this->request('GET', '/my-assignments');
         $body = (string) $response->getBody();
 
-        assertSame(200, $home->getStatusCode());
-        assertStringContainsString('<title>Construction Work Manager</title>', (string) $home->getBody());
         assertSame(200, $response->getStatusCode());
         assertStringContainsString(self::EMPTY_STATE, $body);
         assertStringNotContainsString(self::SITE, $body);

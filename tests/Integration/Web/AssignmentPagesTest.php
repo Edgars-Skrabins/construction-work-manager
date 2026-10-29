@@ -60,7 +60,7 @@ final class AssignmentPagesTest extends IntegrationTestCase
         $this->logIn('employee@mail.test', '123123123');
 
         assertSame(403, $this->request('GET', $path)->getStatusCode());
-        assertStringNotContainsString('href="/assignments"', (string) $this->request('GET', '/')->getBody());
+        assertStringNotContainsString('href="/assignments"', (string) $this->request('GET', '/my-assignments')->getBody());
     }
 
     #[DataProvider('managerPages')]

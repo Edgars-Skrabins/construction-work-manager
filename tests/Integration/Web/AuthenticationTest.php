@@ -59,10 +59,11 @@ final class AuthenticationTest extends IntegrationTestCase
         assertSame(302, $response->getStatusCode());
         assertSame('/', $response->getHeaderLine('Location'));
 
-        $home = $this->request('GET', '/');
-        $body = (string) $home->getBody();
-        assertSame(200, $home->getStatusCode());
-        assertStringContainsString('<title>Construction Work Manager</title>', $body);
+        assertSame('/employees', $this->request('GET', '/')->getHeaderLine('Location'));
+        $page = $this->request('GET', '/employees');
+        $body = (string) $page->getBody();
+        assertSame(200, $page->getStatusCode());
+        assertStringContainsString('<title>Employees</title>', $body);
         assertStringContainsString('Jānis Bērziņš (admin)', $body);
         assertStringContainsString('Log out', $body);
     }
@@ -72,7 +73,7 @@ final class AuthenticationTest extends IntegrationTestCase
         $response = $this->logIn('  Admin@Mail.TEST  ', '123123123');
 
         assertSame(302, $response->getStatusCode());
-        assertStringContainsString('Jānis Bērziņš (admin)', (string) $this->request('GET', '/')->getBody());
+        assertStringContainsString('Jānis Bērziņš (admin)', (string) $this->request('GET', '/employees')->getBody());
     }
 
     public function testAccountDeactivatedWhileLoggedInIsLoggedOutOnTheNextRequest(): void
@@ -104,7 +105,7 @@ final class AuthenticationTest extends IntegrationTestCase
     public function testLogoutEndsTheSession(): void
     {
         $this->logIn('admin@mail.test', '123123123');
-        $token = $this->csrfToken((string) $this->request('GET', '/')->getBody());
+        $token = $this->csrfToken((string) $this->request('GET', '/employees')->getBody());
 
         $response = $this->request('POST', '/logout', ['_csrf' => $token]);
 
