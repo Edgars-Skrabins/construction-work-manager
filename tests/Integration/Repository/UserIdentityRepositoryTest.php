@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Tests\Integration\Repository;
 
+use App\Access\Role;
 use App\Entity\UserIdentity;
 use App\Repository\UserIdentityRepository;
 use App\Tests\Integration\IntegrationTestCase;
@@ -31,7 +32,7 @@ final class UserIdentityRepositoryTest extends IntegrationTestCase
         $identity = $this->repository()->findIdentity('1');
 
         assertNotNull($identity);
-        assertEquals(new UserIdentity(1, 'Jānis', 'Bērziņš', 'admin'), $identity);
+        assertEquals(new UserIdentity(1, 'Jānis', 'Bērziņš', Role::Admin), $identity);
         assertSame('1', $identity->getId());
         assertSame('Jānis Bērziņš', $identity->fullName());
     }

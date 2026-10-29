@@ -21,9 +21,29 @@
         <div class="container">
             <a class="navbar-brand" href="{{ aliases.get('@baseUrl') }}">{{ applicationParams.name }}</a>
             {% if not currentUser.isGuest() %}
+                {% set routeName = currentRoute.getName() ?? '' %}
+                <ul class="navbar-nav flex-row gap-3 me-auto">
+                    {% if access.can('employee.update') %}
+                        <li class="nav-item">
+                            <a class="nav-link{% if routeName starts with 'employee.' %} active{% endif %}" href="{{ urlGenerator.generate('employee.list') }}">Employees</a>
+                        </li>
+                    {% endif %}
+                    {% if access.can('site.update') %}
+                        <li class="nav-item">
+                            <a class="nav-link{% if routeName starts with 'site.' %} active{% endif %}" href="{{ urlGenerator.generate('site.list') }}">Construction sites</a>
+                        </li>
+                    {% endif %}
+                    {% if access.can('workItem.update') %}
+                        <li class="nav-item">
+                            <a class="nav-link{% if routeName starts with 'workItem.' %} active{% endif %}" href="{{ urlGenerator.generate('workItem.list') }}">Work items</a>
+                        </li>
+                    {% endif %}
+                </ul>
+            {% endif %}
+            {% if not currentUser.isGuest() %}
                 <form class="d-flex align-items-center gap-3" method="post" action="{{ urlGenerator.generate('logout') }}">
                     {{ csrf.hiddenInput()|raw }}
-                    <span class="navbar-text">{{ currentUser.getIdentity().fullName() }} ({{ currentUser.getIdentity().role }})</span>
+                    <span class="navbar-text">{{ currentUser.getIdentity().fullName() }} ({{ currentUser.getIdentity().role.value }})</span>
                     <button type="submit" class="btn btn-outline-light btn-sm">Log out</button>
                 </form>
             {% endif %}
@@ -32,6 +52,9 @@
 </header>
 
 <main class="container flex-grow-1 py-5">
+    {% for message in flash.success() %}
+        <div class="alert alert-success" role="status">{{ message }}</div>
+    {% endfor %}
     {{ content|raw }}
 </main>
 

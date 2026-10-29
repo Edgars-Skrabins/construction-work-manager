@@ -12,7 +12,7 @@ use Yiisoft\User\CurrentUser;
 
 final readonly class LoginService
 {
-    private const string DUMMY_HASH = '$2y$13$pfiuj5TVZkMKVx15nmVhDeJMBC8Bfml2J7CB4XYbKVx9qQygd5.Tu';
+    public const string DUMMY_HASH = '$2y$13$pfiuj5TVZkMKVx15nmVhDeJMBC8Bfml2J7CB4XYbKVx9qQygd5.Tu';
 
     public function __construct(
         private AccountRepositoryInterface $accounts,
@@ -39,16 +39,18 @@ final readonly class LoginService
             return false;
         }
 
-        $identity = $this->identities->findIdentity((string) $account->employeeId);
-        if ($identity === null) {
-            return false;
-        }
-
         if ($this->passwordHasher->needsRehash($account->passwordHash)) {
             $this->accounts->updatePasswordHash($account->employeeId, $this->passwordHasher->hash($password));
         }
 
-        return $this->currentUser->login($identity);
+        return $this->loginEmployee($account->employeeId);
+    }
+
+    public function loginEmployee(int $employeeId): bool
+    {
+        $identity = $this->identities->findIdentity((string) $employeeId);
+
+        return $identity !== null && $this->currentUser->login($identity);
     }
 
     public function logout(): void

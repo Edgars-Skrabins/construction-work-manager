@@ -4,23 +4,20 @@ declare(strict_types=1);
 
 namespace App\Web\Shared\Authentication;
 
-use Psr\Http\Message\ResponseFactoryInterface;
+use App\Web\Shared\Redirect\Redirector;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Yiisoft\Auth\AuthenticationMethodInterface;
 use Yiisoft\Auth\IdentityInterface;
 use Yiisoft\Http\Method;
-use Yiisoft\Http\Status;
-use Yiisoft\Router\UrlGeneratorInterface;
 use Yiisoft\User\CurrentUser;
 
 final readonly class WebAuthWithReturnUrl implements AuthenticationMethodInterface
 {
     public function __construct(
+        private Redirector $redirector,
         private CurrentUser $currentUser,
         private ReturnUrl $returnUrl,
-        private ResponseFactoryInterface $responseFactory,
-        private UrlGeneratorInterface $urlGenerator,
     ) {}
 
     public function authenticate(ServerRequestInterface $request): ?IdentityInterface
@@ -40,8 +37,6 @@ final readonly class WebAuthWithReturnUrl implements AuthenticationMethodInterfa
 
     public function challenge(ResponseInterface $response): ResponseInterface
     {
-        return $this->responseFactory
-            ->createResponse(Status::FOUND)
-            ->withHeader('Location', $this->urlGenerator->generate('login'));
+        return $this->redirector->toRoute('login');
     }
 }

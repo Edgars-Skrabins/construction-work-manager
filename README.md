@@ -15,7 +15,7 @@ Construction Work Manager is a work management module for construction sites. Ad
 This repository contains the whole app, which runs in Docker Compose:
 
 - `config/`: application configuration, split into `common`, `web`, `console` and per-environment parameters.
-- `src/`: application code. `src/Web/` holds the pages, each with its action and Twig template. `src/Entity/`, `src/Repository/` and `src/Service/` hold the entities, the repositories with their interfaces, and the services. `src/Migration/` holds the migrations and the runner that executes the SQL scripts. `src/Access/` holds the role permissions: the role and permission names, the permission check used by services, and which rows each role may reach.
+- `src/`: application code. `src/Web/` holds the pages, each with its action and Twig template. `src/Web/Shared/` holds what the pages share: the layout, the route permission guard and the template permission check (`Access/`), list sorting and pagination (`Listing/`), form errors, flash messages and redirects. `src/Entity/`, `src/Repository/` and `src/Service/` hold the entities, the repositories with their interfaces, and the services. `src/Migration/` holds the migrations and the runner that executes the SQL scripts. `src/Access/` holds the role permissions: the role and permission names, the permission check used by services, and which rows each role may reach.
 - `SQL/`: T-SQL scripts that define the schema and seed data, run in numbered order by the migrations. `SQL/down/` holds the matching rollback scripts. The roles, permissions and which role has which permission are reference data in `SQL/008_create_rbac_items.sql`. The scripts also run unchanged in SSMS or sqlcmd.
 - `public/`: web root with the front controller `index.php`. The app is served at `http://localhost:8080`.
 - `assets/`: CSS published by the asset manager.
@@ -59,7 +59,9 @@ Like the database passwords, these are dev-only credentials for the local seed d
 ## Running the app
 
 1. Make sure the containers are running (`make up`), then open `http://localhost:8080`. Every page except the login page needs a logged-in user, so you land on the login page first. Log in with one of the demo accounts from Setup. To use another port, start them with `APP_PORT=9000 make up`.
-2. Stop the containers with `make down` (`docker compose down`). `docker compose down -v` also deletes the database volume.
+2. As an admin (`admin@mail.test`), the navbar links to Employees, Construction sites and Work items, where you can list, sort, add, edit and delete them. Managers and employees don't see these pages.
+3. An employee the admin gives a login email gets a one-time setup code, shown to the admin once and valid for 72 hours. The employee opens "First login? Set your password" on the login page (`/set-password`), enters the email, the code and a new password, and is logged in.
+4. Stop the containers with `make down` (`docker compose down`). `docker compose down -v` also deletes the database volume.
 
 ## Running tests
 
