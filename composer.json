@@ -4,10 +4,6 @@
     "description": "Work management module for construction sites",
     "license": "MIT",
     "scripts": {
-        "serve": [
-            "Composer\\Config::disableProcessTimeout",
-            "@php ./yii serve"
-        ],
         "cs": "php-cs-fixer fix --dry-run --diff",
         "cs-fix": "php-cs-fixer fix",
         "stan": "phpstan analyse",
