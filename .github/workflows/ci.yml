@@ -64,6 +64,24 @@ jobs:
             done
           done
           exit $status
+      - name: Cache headers
+        run: |
+          status=0
+          asset=$(curl -sS http://127.0.0.1:8080/login | grep -o '/assets/[^"]*' | head -n 1)
+          if [ -z "$asset" ]; then
+            echo "::error::/login links no asset"
+            exit 1
+          fi
+          for check in "/login|Cache-Control: no-store" "$asset|Cache-Control: public, max-age=31536000, immutable"; do
+            path=${check%%|*}
+            expected=${check#*|}
+            headers=$(curl -sS -D - -o /dev/null "http://127.0.0.1:8080$path" | tr -d '\r')
+            if ! grep -Fqix "$expected" <<< "$headers"; then
+              echo "::error::$path is missing '$expected'"
+              status=1
+            fi
+          done
+          exit $status
       - name: Integration tests
         run: docker compose run --rm --no-deps -T app composer test:integration
       - name: Container logs
