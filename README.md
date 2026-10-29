@@ -52,21 +52,15 @@ The lists have several pages: Employees 4, Assignments 9 for the admin and 3 for
 
 It also seeds these login accounts. All of them use the password `123123123`:
 
-- `admin@mail.test`: Jānis Bērziņš, admin
-- `manager@mail.test`: Ilze Kalniņa, manager of 15 employees with work at 10 sites in every status, including a flagged assignment
-- `manager2@mail.test`: Andris Ozoliņš, manager
-- `employee@mail.test`: Mārtiņš Liepiņš, employee reporting to Ilze Kalniņa, with work at three sites in every status, work starting and ending today, and history
-- `employee2@mail.test`: Laura Krūmiņa, employee reporting to Ilze Kalniņa
-- `employee3@mail.test`: Kristaps Vītols, employee reporting to Ilze Kalniņa
-- `employee4@mail.test`: Anna Zariņa, employee reporting to Andris Ozoliņš
-- `employee5@mail.test`: Roberts Kalējs, employee reporting to Andris Ozoliņš
-- `admin2@mail.test`: Dace Ābele, admin
-- `manager3@mail.test`: Gatis Lācis, manager of 11 employees, including the special cases below
-- `manager4@mail.test`: Margus Tamm, manager without subordinates
-- `employee6@mail.test`: Edgars Kļaviņš, works at three sites at the same time
-- `employee7@mail.test`: Zane Pētersone, has two assignments flagged because her access level is now too low for their sites
-- `employee8@mail.test`: Raivis Siliņš, has no assignments
-- `employee9@mail.test`: Līga Strazdiņa, has work starting today, ending today, a one-day job today, one tomorrow and a year-long one
+| Email | Person | Role | Use it to test |
+|---|---|---|---|
+| `admin@mail.test` | Jānis Bērziņš | admin | Managing employees, construction sites and work items, and seeing every assignment |
+| `manager@mail.test` | Ilze Kalniņa | manager | A big team of 15 employees with work at 10 sites in every status, including flagged assignments, over several pages |
+| `manager2@mail.test` | Andris Ozoliņš | manager | A small team of two (Anna Zariņa and Roberts Kalējs), and that one manager can't see or assign another manager's employees |
+| `manager3@mail.test` | Margus Tamm | manager | A manager without a team: the empty assignment list and an employee picker with nobody in it |
+| `employee@mail.test` | Mārtiņš Liepiņš | employee | My assignments at three sites in every status, work starting today and ending today, and History |
+| `employee2@mail.test` | Laura Krūmiņa | employee | No current work, only finished and cancelled assignments under History |
+| `employee3@mail.test` | Kristaps Vītols | employee | A lowered access level: one active assignment is flagged as "Access level too low", and the API leaves him out for that site |
 
 The other employees have no login, so the admin can try giving them one.
 
