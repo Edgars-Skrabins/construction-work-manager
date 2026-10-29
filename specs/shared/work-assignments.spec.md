@@ -65,7 +65,7 @@ New dependencies:
 - `yiisoft/data-db` `^1.0`: `QueryDataReader`, which wraps a `yiisoft/db` `Query` with `OFFSET ... FETCH` and `COUNT` and feeds `OffsetPaginator`.
 - `psr/clock` `^1.0`: `Psr\Clock\ClockInterface`, so services and repositories get "today" from one place and tests can fix it.
 
-If admin-management has already added `yiisoft/data` and `yiisoft/data-db` by the time of the rebase, its versions are kept and only `psr/clock` is new.
+If admin-management has already added `yiisoft/data` and `yiisoft/data-db` by the time of the merge, its versions are kept and only `psr/clock` is new.
 
 Everything else is already in the stack: `yiisoft/db-mssql`, the `SQL/` migration pipeline, `App\Access`, `CurrentUser`, Twig with Bootstrap 5, `yiisoft/assets` and PHPUnit. Admin-management's shared pieces are reused, never rebuilt:
 
@@ -79,7 +79,7 @@ Everything else is already in the stack: `yiisoft/db-mssql`, the `SQL/` migratio
 - **Transactions:** `App\Repository\TransactionRunnerInterface::run(callable)`, available if a write ever spans several statements. This spec's writes are single statements and don't need it.
 - **Repositories for the pickers and checks:** `EmployeeRepositoryInterface::withRole(Role::Employee, managerId: $id)` (`managerId: null` for the admin), `EmployeeRepositoryInterface` lookups by ID, `ConstructionSiteRepositoryInterface::all()` and its lookup by ID (with the required access level), `WorkItemRepositoryInterface::all()` and its lookup by ID, and `AccessLevelRepositoryInterface::all()` for level names.
 
-Task C0 rebases onto `origin/main` and verifies these names and signatures against the merged code.
+Task C0 merges `origin/main` into the branch and verifies these names and signatures against the merged code.
 
 ## 2.2 Structure
 
@@ -257,12 +257,12 @@ Baseline before starting: unit 52 tests, integration 143 tests, all passing (tak
 ### B. Clock, entities and repository
 - [x] B1. Add `App\Shared\Clock`, the timezone param and the `ClockInterface` binding in `config/common/di/application.php`, and `tests/Unit/Shared/ClockTest.php`.
 - [x] B2. Add `AssignmentStatus`, `AssignmentDisplayStatus`, `Assignment`, `AssignmentListItem` and `EmployeeNeedingAccess` in `src/Entity/`, with `AssignmentTest` and `AssignmentListItemTest`.
-- [x] B3. Add `AssignmentRepositoryInterface` and `AssignmentRepository` with every method in 2.2, and bind the interface in DI. The binding is in `config/common/di/repositories.php`, the file admin-management also adds, so C0 merges both lists. `src/Repository/ListSort.php` is a byte-identical copy of admin-management's, so the rebase keeps one file; if admin-management changed it by then, its version wins.
+- [x] B3. Add `AssignmentRepositoryInterface` and `AssignmentRepository` with every method in 2.2, and bind the interface in DI. The binding is in `config/common/di/repositories.php`, the file admin-management also adds, so C0 merges both lists. `src/Repository/ListSort.php` is a byte-identical copy of admin-management's, so the merge keeps one file; if admin-management changed it by then, its version wins.
 - [x] B4. Add `tests/Integration/Repository/AssignmentRepositoryTest.php`, and run `make test`. With an index hint, the access query's plan seeks `IX_ASSIGNMENT_SITE_PERIOD` on the site and start date, with the end date and status as residual predicates from the included columns and no key lookup.
 
 ### C. Service (after admin-management has merged)
-- [ ] C0. Rebase onto `origin/main` once admin-management has merged, and verify the class names and signatures listed in 2.1 against the merged code, including the page folder style. Ask before deviating from anything in this spec.
-- [ ] C0a. After the rebase, switch admin-management's `EmployeeService`, `PasswordSetupService` and `AccountRepository` from their own `new DateTimeImmutable('now', UTC)` to the injected `ClockInterface`, keeping storage formatting in UTC, and give their tests a fixed clock where that makes them deterministic. One commit, "Use the shared clock in services". Also build the `DateTimeZone` once in `Clock`'s constructor, so a bad timezone fails on first resolve.
+- [ ] C0. Once admin-management has merged, run `git merge origin/main` (never rebase, never force-push), resolving `config/common/di/repositories.php` by keeping both lists and `src/Repository/ListSort.php` by keeping one copy (admin-management's if they differ), and verify the class names and signatures listed in 2.1 against the merged code, including the page folder style. Ask before deviating from anything in this spec.
+- [ ] C0a. After the merge, switch admin-management's `EmployeeService`, `PasswordSetupService` and `AccountRepository` from their own `new DateTimeImmutable('now', UTC)` to the injected `ClockInterface`, keeping storage formatting in UTC, and give their tests a fixed clock where that makes them deterministic. One commit, "Use the shared clock in services". Also build the `DateTimeZone` once in `Clock`'s constructor, so a bad timezone fails on first resolve.
 - [ ] C1. Add `App\Service\AssignmentService` with every method and rule in 2.2.
 - [ ] C2. Add `tests/Integration/Service/AssignmentServiceTest.php`, and run `make test`.
 
