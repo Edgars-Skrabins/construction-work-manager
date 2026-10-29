@@ -156,6 +156,28 @@ final class AdminPagesTest extends IntegrationTestCase
         assertStringContainsString('Work item deleted.', (string) $this->request('GET', '/work-items')->getBody());
     }
 
+    public function testPaginationShowsAWindowAndNoLinksForDisabledItems(): void
+    {
+        for ($i = 1; $i <= 200; $i++) {
+            $this->db()->createCommand()->insert('WORK_ITEM', ['NAME' => sprintf('%s %03d', self::WORK_ITEM, $i)])->execute();
+        }
+        $this->asAdmin();
+
+        $middle = (string) $this->request('GET', '/work-items?page=4')->getBody();
+        preg_match_all('/class="page-link"[^>]*>([^<]+)</', $middle, $labels);
+        preg_match_all('/<a class="page-link" href="[^"]*page=(\d+)"/', $middle, $targets);
+        assertSame(['Previous', '1', '2', '3', '4', '5', '6', '…', '11', 'Next'], $labels[1]);
+        assertSame(['3', '1', '2', '3', '5', '6', '11', '5'], $targets[1]);
+
+        $first = (string) $this->request('GET', '/work-items')->getBody();
+        assertStringContainsString('<li class="page-item disabled"><span class="page-link">Previous</span></li>', $first);
+        assertStringNotContainsString('page=0', $first);
+
+        $last = (string) $this->request('GET', '/work-items?page=11')->getBody();
+        assertStringContainsString('<li class="page-item disabled"><span class="page-link">Next</span></li>', $last);
+        assertStringNotContainsString('page=12', $last);
+    }
+
     public function testValidationErrorsAreShownUnderTheirFields(): void
     {
         $this->asAdmin();
