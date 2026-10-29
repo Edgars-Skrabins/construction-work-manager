@@ -1,7 +1,7 @@
 # Login throttling — Spec
 
 **Type:** bug fix
-**Status:** in progress
+**Status:** done
 **Last updated:** 2026-10-29
 
 # Part 1 — Business logic and usage
@@ -135,6 +135,6 @@ Baseline before starting: `make check` green on `main`.
 - [x] C1. Throttle `ApiKeyAuthentication` per IP and add the 429 test to `ApiPipelineTest`.
 
 ### Z. Wrap-up
-- [ ] Z1. `make check` green.
-- [ ] Z2. Update `CLAUDE.md` (Architecture: login throttling and `AUTH_THROTTLE`) and the README if it describes the login or the API errors.
-- [ ] Z3. Manual check in the running app: six wrong logins show the throttle message with 429; the API returns 429 with `Retry-After` after 20 rejected requests.
+- [x] Z1. `make check` green.
+- [x] Z2. Update `CLAUDE.md` (Architecture: login throttling and `AUTH_THROTTLE`) and the README if it describes the login or the API errors.
+- [x] Z3. Manual check in the running app: six wrong logins show the throttle message with 429; the API returns 429 with `Retry-After` after 20 rejected requests.
