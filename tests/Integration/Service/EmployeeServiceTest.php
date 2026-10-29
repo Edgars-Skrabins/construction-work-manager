@@ -10,6 +10,7 @@ use App\Access\Role;
 use App\Entity\Employee;
 use App\Repository\AccessLevelRepositoryInterface;
 use App\Repository\AccountRepositoryInterface;
+use App\Repository\AssignmentRepositoryInterface;
 use App\Repository\EmployeeRepositoryInterface;
 use App\Repository\TransactionRunnerInterface;
 use App\Service\EmployeeInput;
@@ -96,9 +97,41 @@ final class EmployeeServiceTest extends IntegrationTestCase
         yield 'unknown manager' => [0, self::input(managerId: 9999), ['managerId' => 'Choose a manager.']];
         yield 'email of another login' => [0, self::input(email: 'Admin@mail.test'), ['email' => 'This email is already used by another login.']];
         yield 'manager with employees demoted' => [2, self::input(role: Role::Employee, managerId: 3, email: 'manager@mail.test'), ['role' => "Reassign this manager's employees first."]];
+        yield 'employee with active assignments made a manager' => [4, self::input(role: Role::Manager, managerId: null, email: 'employee@mail.test'), ['role' => "Finish or cancel this employee's active assignments first."]];
+        yield 'employee with active assignments made an admin' => [4, self::input(role: Role::Admin, managerId: null, email: 'employee@mail.test'), ['role' => "Finish or cancel this employee's active assignments first."]];
         yield 'own role changed' => [1, self::input(role: Role::Manager, managerId: null, email: 'admin@mail.test'), ['role' => "You can't change your own role."]];
         yield 'own login removed' => [1, self::input(role: Role::Admin, managerId: null, email: null), ['email' => "You can't remove your own login."]];
         yield 'own login deactivated' => [1, self::input(role: Role::Admin, managerId: null, email: 'admin@mail.test', loginActive: false), ['loginActive' => "You can't deactivate your own login."]];
+    }
+
+    #[DataProvider('birthDates')]
+    public function testAgeIsCheckedAgainstTodayInRiga(string $now, string $birthDate, ?string $error): void
+    {
+        $service = $this->employeesAt(new DateTimeImmutable($now, new DateTimeZone('Europe/Riga')));
+
+        try {
+            $saved = $service->create(1, self::input(birthDate: $birthDate));
+            assertNull($error);
+            assertSame($birthDate, $this->find($saved->id)->birthDate->format('Y-m-d'));
+        } catch (ValidationException $e) {
+            assertSame(['birthDate' => $error], $e->errors);
+        }
+    }
+
+    /**
+     * @return iterable<string, array{string, string, ?string}>
+     */
+    public static function birthDates(): iterable
+    {
+        $tooYoung = 'The employee must be at least 16 years old.';
+        $tooOld = 'The employee must be at most 100 years old.';
+
+        yield '16 today' => ['2026-10-29 12:00', '2010-10-29', null];
+        yield 'a day short of 16' => ['2026-10-29 12:00', '2010-10-30', $tooYoung];
+        yield '101 tomorrow' => ['2026-10-29 12:00', '1925-10-30', null];
+        yield '101 today' => ['2026-10-29 12:00', '1925-10-29', $tooOld];
+        yield '16 after Riga midnight while UTC is a day behind' => ['2026-10-29 00:30', '2010-10-29', null];
+        yield '16 tomorrow just before Riga midnight' => ['2026-10-28 23:59', '2010-10-29', $tooYoung];
     }
 
     public function testManagerIsClearedForManagersAndAdmins(): void
@@ -118,16 +151,36 @@ final class EmployeeServiceTest extends IntegrationTestCase
         assertSame(3, $this->find($saved->id)->managerId);
     }
 
+    public function testEmployeeWithOnlyDoneOrCancelledAssignmentsCanBecomeAManager(): void
+    {
+        $this->employees()->update(1, 8, self::input(role: Role::Manager, managerId: null, email: 'employee5@mail.test'));
+
+        assertSame(Role::Manager, $this->find(8)->role);
+        assertNull($this->find(8)->managerId);
+    }
+
+    public function testEmployeeWithActiveAssignmentsCanStillBeEdited(): void
+    {
+        $this->employees()->update(1, 4, self::input(firstName: 'Renamed', accessLevelId: 3, managerId: 3, email: 'employee@mail.test'));
+
+        $employee = $this->find(4);
+        assertSame('Renamed', $employee->firstName);
+        assertSame(3, $employee->accessLevelId);
+        assertSame(3, $employee->managerId);
+        assertSame(Role::Employee, $employee->role);
+    }
+
     public function testOnlyARoleChangeUpdatesRoleAssignedAt(): void
     {
-        $this->db()->createCommand("UPDATE EMPLOYEE SET ROLE_ASSIGNED_AT = '2000-01-01T00:00:00' WHERE ID = 4")->execute();
-        $before = $this->roleAssignedAt(4);
+        $id = $this->employees()->create(1, self::input())->id;
+        $this->db()->createCommand("UPDATE EMPLOYEE SET ROLE_ASSIGNED_AT = '2000-01-01T00:00:00' WHERE ID = :id", [':id' => $id])->execute();
+        $before = $this->roleAssignedAt($id);
 
-        $this->employees()->update(1, 4, self::input(firstName: 'Renamed', email: 'employee@mail.test'));
-        assertSame($before, $this->roleAssignedAt(4));
+        $this->employees()->update(1, $id, self::input(firstName: 'Renamed'));
+        assertSame($before, $this->roleAssignedAt($id));
 
-        $this->employees()->update(1, 4, self::input(role: Role::Manager, managerId: null, email: 'employee@mail.test'));
-        assertTrue($this->roleAssignedAt(4) > $before);
+        $this->employees()->update(1, $id, self::input(role: Role::Manager, managerId: null));
+        assertTrue($this->roleAssignedAt($id) > $before);
     }
 
     public function testAdminCanEditTheirOwnNameAndAccessLevel(): void
@@ -283,8 +336,9 @@ final class EmployeeServiceTest extends IntegrationTestCase
         ?int $managerId = 2,
         ?string $email = null,
         bool $loginActive = true,
+        string $birthDate = '1992-06-15',
     ): EmployeeInput {
-        return new EmployeeInput($firstName, $lastName, new DateTimeImmutable('1992-06-15'), $accessLevelId, $role, $managerId, $email, $loginActive);
+        return new EmployeeInput($firstName, $lastName, new DateTimeImmutable($birthDate), $accessLevelId, $role, $managerId, $email, $loginActive);
     }
 
     private function codeMatches(string $code, ?string $hash): bool
@@ -319,6 +373,7 @@ final class EmployeeServiceTest extends IntegrationTestCase
             $this->service(EmployeeRepositoryInterface::class),
             $this->service(AccountRepositoryInterface::class),
             $this->service(AccessLevelRepositoryInterface::class),
+            $this->service(AssignmentRepositoryInterface::class),
             $this->service(TransactionRunnerInterface::class),
             $this->service(AccessChecker::class),
             $this->service(PasswordHasher::class),

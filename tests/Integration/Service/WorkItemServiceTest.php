@@ -4,14 +4,18 @@ declare(strict_types=1);
 
 namespace App\Tests\Integration\Service;
 
+use App\Access\AccessChecker;
 use App\Access\ForbiddenException;
+use App\Entity\WorkItem;
 use App\Repository\WorkItemData;
+use App\Repository\WorkItemRepositoryInterface;
 use App\Service\InUseException;
 use App\Service\ValidationException;
 use App\Service\WorkItemService;
 use App\Tests\Integration\IntegrationTestCase;
 use Closure;
 use PHPUnit\Framework\Attributes\DataProvider;
+use Yiisoft\Data\Paginator\OffsetPaginator;
 
 use function PHPUnit\Framework\assertNotNull;
 use function PHPUnit\Framework\assertNull;
@@ -48,6 +52,33 @@ final class WorkItemServiceTest extends IntegrationTestCase
         } catch (ValidationException $e) {
             assertSame(['name' => 'A work item with this name already exists.'], $e->errors);
         }
+    }
+
+    /**
+     * @param Closure(WorkItemService): void $save
+     */
+    #[DataProvider('racedSaves')]
+    public function testDuplicateNameMissedByThePreCheckIsRejectedByTheConstraint(Closure $save): void
+    {
+        try {
+            $save($this->workItemsWithoutNamePreCheck());
+            self::fail('Expected a duplicate name to be rejected.');
+        } catch (ValidationException $e) {
+            assertSame(['name' => 'A work item with this name already exists.'], $e->errors);
+        }
+    }
+
+    /**
+     * @return iterable<string, array{Closure(WorkItemService): void}>
+     */
+    public static function racedSaves(): iterable
+    {
+        yield 'create' => [static function (WorkItemService $s): void {
+            $s->create(1, new WorkItemData('Welding', null));
+        }];
+        yield 'update' => [static function (WorkItemService $s): void {
+            $s->update(1, 1, new WorkItemData('Welding', null));
+        }];
     }
 
     public function testKeepingTheOwnNameOnUpdateIsAllowed(): void
@@ -115,5 +146,51 @@ final class WorkItemServiceTest extends IntegrationTestCase
     private function workItems(): WorkItemService
     {
         return $this->service(WorkItemService::class);
+    }
+
+    private function workItemsWithoutNamePreCheck(): WorkItemService
+    {
+        $workItems = new readonly class ($this->service(WorkItemRepositoryInterface::class)) implements WorkItemRepositoryInterface {
+            public function __construct(
+                private WorkItemRepositoryInterface $workItems,
+            ) {}
+
+            public function listPaginator(string $sort): OffsetPaginator
+            {
+                return $this->workItems->listPaginator($sort);
+            }
+
+            public function find(int $id): ?WorkItem
+            {
+                return $this->workItems->find($id);
+            }
+
+            public function all(): array
+            {
+                return $this->workItems->all();
+            }
+
+            public function nameExists(string $name, ?int $exceptId): bool
+            {
+                return false;
+            }
+
+            public function create(WorkItemData $data): int
+            {
+                return $this->workItems->create($data);
+            }
+
+            public function update(int $id, WorkItemData $data): void
+            {
+                $this->workItems->update($id, $data);
+            }
+
+            public function delete(int $id): void
+            {
+                $this->workItems->delete($id);
+            }
+        };
+
+        return new WorkItemService($workItems, $this->service(AccessChecker::class));
     }
 }

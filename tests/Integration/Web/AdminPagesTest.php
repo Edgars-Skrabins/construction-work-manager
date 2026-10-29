@@ -218,6 +218,23 @@ final class AdminPagesTest extends IntegrationTestCase
         assertStringContainsString('value="x"', $body);
     }
 
+    public function testRoleChangeOfAnEmployeeWithActiveAssignmentsIsShownUnderTheRoleField(): void
+    {
+        $this->asAdmin();
+
+        $response = $this->submit('/employees/4/edit', [
+            'firstName' => 'Mārtiņš', 'lastName' => 'Liepiņš', 'birthDate' => '1990-05-18', 'accessLevelId' => '1',
+            'role' => 'manager', 'managerId' => '', 'email' => 'employee@mail.test', 'loginActive' => '1',
+        ]);
+        $body = (string) $response->getBody();
+
+        assertSame(200, $response->getStatusCode());
+        assertMatchesRegularExpression('/is-invalid"[^>]*id="role"/', $body);
+        assertStringContainsString('Finish or cancel this employee&#039;s active assignments first.', $body);
+        $this->resetServices();
+        assertSame('employee', $this->db()->createCommand('SELECT ROLE FROM EMPLOYEE WHERE ID = 4')->queryScalar());
+    }
+
     public function testDuplicateNameFromTheServiceIsShownUnderTheField(): void
     {
         $this->asAdmin();

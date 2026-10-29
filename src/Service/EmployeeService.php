@@ -12,6 +12,7 @@ use App\Entity\Employee;
 use App\Entity\EmployeeListItem;
 use App\Repository\AccessLevelRepositoryInterface;
 use App\Repository\AccountRepositoryInterface;
+use App\Repository\AssignmentRepositoryInterface;
 use App\Repository\EmployeeData;
 use App\Repository\EmployeeRepositoryInterface;
 use App\Repository\TransactionRunnerInterface;
@@ -31,6 +32,7 @@ final readonly class EmployeeService
         private EmployeeRepositoryInterface $employees,
         private AccountRepositoryInterface $accounts,
         private AccessLevelRepositoryInterface $accessLevels,
+        private AssignmentRepositoryInterface $assignments,
         private TransactionRunnerInterface $transaction,
         private AccessChecker $accessChecker,
         private PasswordHasher $passwordHasher,
@@ -139,6 +141,13 @@ final readonly class EmployeeService
         $errors = [];
         $managerId = $input->role === Role::Employee ? $input->managerId : null;
 
+        $birthDate = $input->birthDate->format('Y-m-d');
+        $today = new DateTimeImmutable($this->clock->now()->format('Y-m-d'));
+        if ($birthDate > $today->modify('-16 years')->format('Y-m-d')) {
+            $errors['birthDate'] = 'The employee must be at least 16 years old.';
+        } elseif ($birthDate <= $today->modify('-101 years')->format('Y-m-d')) {
+            $errors['birthDate'] = 'The employee must be at most 100 years old.';
+        }
         if (!$this->accessLevels->exists($input->accessLevelId)) {
             $errors['accessLevelId'] = 'Choose an access level.';
         }
@@ -169,6 +178,14 @@ final readonly class EmployeeService
             && $this->employees->hasSubordinates($employee->id)
         ) {
             $errors['role'] = "Reassign this manager's employees first.";
+        }
+        if (
+            !isset($errors['role'])
+            && $employee?->role === Role::Employee
+            && $input->role !== Role::Employee
+            && $this->assignments->hasActiveForEmployee($employee->id)
+        ) {
+            $errors['role'] = "Finish or cancel this employee's active assignments first.";
         }
 
         if ($errors !== []) {
