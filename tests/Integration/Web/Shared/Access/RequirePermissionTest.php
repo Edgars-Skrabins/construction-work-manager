@@ -8,6 +8,7 @@ use App\Access\AccessChecker;
 use App\Access\ForbiddenException;
 use App\Access\Permission;
 use App\Tests\Integration\IntegrationTestCase;
+use App\Tests\Integration\Web\WebClient;
 use App\Web\Shared\Access\RequirePermission;
 use App\Web\Shared\Access\ViewAccess;
 use Psr\EventDispatcher\EventDispatcherInterface;
@@ -26,9 +27,28 @@ use function PHPUnit\Framework\assertTrue;
 
 final class RequirePermissionTest extends IntegrationTestCase
 {
+    use WebClient;
+
+    public function testGuestOnAProtectedRouteIsRedirectedToLoginBeforeThePermissionCheck(): void
+    {
+        $response = $this->request('GET', '/work-items');
+
+        assertSame(302, $response->getStatusCode());
+        assertSame('/login', $response->getHeaderLine('Location'));
+    }
+
+    public function testUserWithoutThePermissionGetsTheForbiddenPage(): void
+    {
+        $this->logIn('manager@mail.test', '123123123');
+
+        $response = $this->request('GET', '/work-items');
+
+        assertSame(403, $response->getStatusCode());
+    }
+
     public function testPermittedUserPassesThrough(): void
     {
-        $response = $this->middleware(Permission::SiteUpdate, 1)->process($this->request(), $this->handler());
+        $response = $this->middleware(Permission::SiteUpdate, 1)->process($this->serverRequest(), $this->handler());
 
         assertSame(204, $response->getStatusCode());
     }
@@ -37,14 +57,14 @@ final class RequirePermissionTest extends IntegrationTestCase
     {
         $this->expectException(ForbiddenException::class);
 
-        $this->middleware(Permission::SiteUpdate, 2)->process($this->request(), $this->handler());
+        $this->middleware(Permission::SiteUpdate, 2)->process($this->serverRequest(), $this->handler());
     }
 
     public function testGuestIsForbidden(): void
     {
         $this->expectException(ForbiddenException::class);
 
-        $this->middleware(Permission::SiteRead, null)->process($this->request(), $this->handler());
+        $this->middleware(Permission::SiteRead, null)->process($this->serverRequest(), $this->handler());
     }
 
     public function testForBuildsARouteMiddlewareDefinition(): void
@@ -94,7 +114,7 @@ final class RequirePermissionTest extends IntegrationTestCase
         return $currentUser;
     }
 
-    private function request(): ServerRequestInterface
+    private function serverRequest(): ServerRequestInterface
     {
         return $this->service(ServerRequestFactoryInterface::class)->createServerRequest('GET', 'http://localhost/');
     }

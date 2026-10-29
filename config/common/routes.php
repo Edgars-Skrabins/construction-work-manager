@@ -2,7 +2,9 @@
 
 declare(strict_types=1);
 
+use App\Access\Permission;
 use App\Web;
+use App\Web\Shared\Access\RequirePermission;
 use Yiisoft\Auth\Middleware\Authentication;
 use Yiisoft\Http\Method;
 use Yiisoft\Router\Group;
@@ -23,6 +25,22 @@ return [
                     Route::get('/')
                         ->action(Web\HomePage\Action::class)
                         ->name('home'),
+                    Route::get('/work-items')
+                        ->middleware(RequirePermission::for(Permission::WorkItemUpdate))
+                        ->action(Web\WorkItemList\Action::class)
+                        ->name('workItem.list'),
+                    Route::methods([Method::GET, Method::POST], '/work-items/create')
+                        ->middleware(RequirePermission::for(Permission::WorkItemCreate))
+                        ->action(Web\WorkItemForm\Action::class)
+                        ->name('workItem.create'),
+                    Route::methods([Method::GET, Method::POST], '/work-items/{id:\d+}/edit')
+                        ->middleware(RequirePermission::for(Permission::WorkItemUpdate))
+                        ->action(Web\WorkItemForm\Action::class)
+                        ->name('workItem.edit'),
+                    Route::methods([Method::GET, Method::POST], '/work-items/{id:\d+}/delete')
+                        ->middleware(RequirePermission::for(Permission::WorkItemDelete))
+                        ->action(Web\WorkItemDelete\Action::class)
+                        ->name('workItem.delete'),
                 ),
         ),
 ];
