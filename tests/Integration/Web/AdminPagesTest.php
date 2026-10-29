@@ -385,6 +385,27 @@ final class AdminPagesTest extends IntegrationTestCase
         assertDoesNotMatchRegularExpression('#<option value="\d+" selected>#', $this->managerSelect($body));
     }
 
+    public function testPostWithoutTheDisabledManagerSelectSavesNoManager(): void
+    {
+        $this->asAdmin();
+        $fields = [
+            'firstName' => 'Lapa', 'lastName' => 'Pārbaude', 'birthDate' => '1990-01-01', 'accessLevelId' => '1',
+            'role' => 'employee', 'managerId' => '3', 'email' => '', 'loginActive' => '1',
+        ];
+        $this->assertRedirectsTo('/employees', $this->submit('/employees/create', $fields));
+        $this->resetServices();
+        $id = (int) $this->db()->createCommand("SELECT ID FROM EMPLOYEE WHERE FIRST_NAME = N'Lapa' AND LAST_NAME = N'Pārbaude'")->queryScalar();
+        unset($fields['managerId']);
+
+        $this->assertRedirectsTo('/employees', $this->submit("/employees/$id/edit", [...$fields, 'role' => 'manager']));
+
+        $this->resetServices();
+        assertSame(
+            ['ROLE' => 'manager', 'MANAGER_ID' => null],
+            $this->db()->createCommand('SELECT ROLE, MANAGER_ID FROM EMPLOYEE WHERE ID = :id', [':id' => $id])->queryOne(),
+        );
+    }
+
     private function managerSelect(string $body): string
     {
         preg_match('#<select [^>]*id="managerId".*?</select>#s', $body, $match);

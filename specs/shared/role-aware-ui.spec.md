@@ -41,9 +41,9 @@ No new dependencies. It uses the existing asset manager bundles, Twig, `yiisoft/
 
 ### My assignments
 
-- `SQL/016_add_assignment_read_own_permission.sql` (new): inserts the permission `assignment.readOwn` with the description "Read own work assignments." into `RBAC_ITEM` (timestamps from `DATEDIFF(SECOND, '1970-01-01', SYSUTCDATETIME())`, like `008`) and links it to `employee` in `RBAC_ITEM_CHILD`.
-- `SQL/down/016_add_assignment_read_own_permission.sql` (new): deletes the `RBAC_ITEM_CHILD` row, then the `RBAC_ITEM` row.
-- `src/Migration/M261029000016AddAssignmentReadOwnPermission.php` (new): extends `SqlFileMigration` and returns `016_add_assignment_read_own_permission`.
+- `SQL/017_add_assignment_read_own_permission.sql` (new): inserts the permission `assignment.readOwn` with the description "Read own work assignments." into `RBAC_ITEM` (timestamps from `DATEDIFF(SECOND, '1970-01-01', SYSUTCDATETIME())`, like `008`) and links it to `employee` in `RBAC_ITEM_CHILD`.
+- `SQL/down/017_add_assignment_read_own_permission.sql` (new): deletes the `RBAC_ITEM_CHILD` row, then the `RBAC_ITEM` row.
+- `src/Migration/M261029000017AddAssignmentReadOwnPermission.php` (new): extends `SqlFileMigration` and returns `017_add_assignment_read_own_permission`.
 - `src/Access/Permission.php`: new case `AssignmentReadOwn = 'assignment.readOwn'`.
 - `config/common/routes.php`: `/my-assignments` uses `RequirePermission::for(Permission::AssignmentReadOwn)`.
 - `src/Service/MyAssignmentsService.php`: `forEmployee()` ensures `Permission::AssignmentReadOwn`.
@@ -57,6 +57,7 @@ No new dependencies. It uses the existing asset manager bundles, Twig, `yiisoft/
 3. **No restore when switching back to employee (2026-10-29):** the select stays on "No manager". Rejected: remembering the last manager in the script, extra state for a rare path.
 4. **Employee-only My assignments by a new permission (2026-10-29):** `assignment.readOwn`, held only by the employee role, guards the route, the service and the nav link. This replaces decision 5 of `my-assignments.spec.md` (the page guarded by `assignment.read`, which every role holds). Reason: managers and admins hold `assignment.read` too, so roles can't be told apart by the existing permissions, and the app checks permissions, never roles. Rejected: a role check (`Role::Employee`) in the route, service and template, which would be the app's only role-based authorization. Rejected: removing `assignment.read` from managers and admins, which the assignment list needs.
 5. **Admins don't hold `assignment.readOwn` (2026-10-29):** `008` granted admin every permission at seed time; this permission is deliberately not granted to admin, because admins are never assigned work. `PermissionMatrixTest` states the admin's permissions as every case except `AssignmentReadOwn`.
+6. **Script number (2026-10-29):** the permission script is `017`, because the demo-data spec takes `016` and manager-team `018`.
 
 # Part 3 — Implementation TODO
 
@@ -68,11 +69,11 @@ Baseline before starting: `make check` green on `origin/main` (6de8a4d).
 
 - [x] A1. Add `EmployeeForm::managerLocked()` and use it in `src/Web/EmployeeForm/template.twig` to render the Manager select disabled with "No manager" selected (2.2).
 - [x] A2. Add `assets/employee/employee.js` and `src/Web/Shared/Layout/Main/EmployeeAsset.php`, and register the bundle in the employee form template.
-- [x] A3. In `tests/Integration/Web/AdminPagesTest.php`, add tests for the rendered state: editing a manager (employee 2) and an admin renders the Manager select disabled with "No manager" selected; editing employee 4 renders it enabled with their manager selected; the create page renders it enabled; a POST with role `manager`, a manager ID and a validation error re-renders it disabled with no manager selected; the form page loads `employee.js`. Add a unit test for `managerLocked()` in `tests/Unit/` for each role and an empty role. Run `make test`.
+- [x] A3. In `tests/Integration/Web/AdminPagesTest.php`, add tests for the rendered state: editing a manager (employee 2) and an admin renders the Manager select disabled with "No manager" selected; editing employee 4 renders it enabled with their manager selected; the create page renders it enabled; a POST with role `manager`, a manager ID and a validation error re-renders it disabled with no manager selected; a post without `managerId` (as a browser sends with the select disabled) that changes an employee with a manager to `manager` saves no manager; the form page loads `employee.js`. Add a unit test for `managerLocked()` in `tests/Unit/` for each role and an empty role. Run `make test`.
 
 ### B. Employee-only My assignments
 
-- [x] B1. Add `SQL/016_add_assignment_read_own_permission.sql`, its rollback in `SQL/down/` and `src/Migration/M261029000016AddAssignmentReadOwnPermission.php`, and run `make migrate`.
+- [x] B1. Add `SQL/017_add_assignment_read_own_permission.sql`, its rollback in `SQL/down/` and `src/Migration/M261029000017AddAssignmentReadOwnPermission.php`, and run `make migrate`.
 - [x] B2. Add `Permission::AssignmentReadOwn`, and use it in the `/my-assignments` route, `MyAssignmentsService::forEmployee()` and the nav link condition in `layout.twig`.
 - [x] B3. Update the tests: `PermissionMatrixTest` (employee holds `AssignmentReadOwn`, manager doesn't, admin holds every case except it); `MyAssignmentsPageTest` (managers and admins get 403 on `/my-assignments` instead of the empty list, only employees see the nav link, managers and admins don't); `MyAssignmentsServiceTest` (managers and admins get `ForbiddenException`, an employee without assignments still gets empty lists). Run `make test`.
 
