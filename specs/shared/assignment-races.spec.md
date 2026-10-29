@@ -28,7 +28,8 @@ Expected: every Active save behaves as if it ran alone. A second concurrent save
   - All validation errors are still collected into one `ValidationException`, as today.
   - The access-level rule itself doesn't change: it is checked only when a save ends Active. Lowering a level later still only flags existing assignments ("Access level too low").
 - **Out of scope:**
-  - Locking in `EmployeeService` and `ConstructionSiteService`. A level change is a single `UPDATE` whose exclusive row lock already conflicts with the save's update lock, so they need no change.
+  - Locking in `EmployeeService` and `ConstructionSiteService`. A level change is a single `UPDATE` by primary key whose exclusive row lock already conflicts with the save's update lock, so they need no change. Their validation reads run before their transaction with shared locks released after each statement, and the `EMPLOYEE` (or `CONSTRUCTION_SITE`) row is the first lock their transaction takes, so they never hold a lock the save needs while waiting for the row.
+  - The role-change rule ("Finish or cancel this employee's active assignments first.") reads `hasActiveForEmployee()` in `EmployeeService::validate()` before its transaction. A save that commits between that read and the role update leaves an Active assignment on a non-employee. That race is in `EmployeeService` and needs its own spec.
   - Two concurrent edits of the same assignment to different dates or statuses. The last write wins, as for every other edit form; there is no rule they can break together.
   - A concurrent delete of the assignment being edited, which makes the update affect no row. That is the existing behaviour of every edit form.
   - Retrying a deadlocked save automatically (see decision 6).
@@ -64,6 +65,7 @@ Tests:
   - A save holds the employee and site rows: after `create()` on the test connection (not committed), the second session's `UPDATE EMPLOYEE SET ACCESS_LEVEL_ID = …` for that employee and `UPDATE CONSTRUCTION_SITE SET REQUIRED_ACCESS_LEVEL_ID = …` for that site each time out, while the same update of another employee succeeds.
   - A save waits for another save of the same work: the second session runs `findOverlappingActive()` for an employee, work item and site in its transaction; `create()` of the same on the test connection (with `SET LOCK_TIMEOUT 500`) times out. There is no "other employee" control here: which neighbouring key the range lock reaches depends on the seed rows, and the plan check above covers the range size.
   - The tests use employee 5 (manager 2's subordinate, level 2), site 2 (level 2) and work item 1 with dates in 2030, so neither the current seed nor the demo seed has an overlapping row.
+  - A level change waits for an open save and then sees the new assignment (added 2026-10-29 at the coordinator's request): for the employee's level lowered through `EmployeeRepository::update()` and the site's level raised through `ConstructionSiteRepository::update()`, both on the second session, the update times out while the save is open. The test connection then commits, and the same update succeeds. The second session sees the new assignment Active, flagged (employee level below the site's), and missing from `findEmployeesNeedingAccess()`. Because this test commits, `tearDown()` deletes the committed assignment.
   - Without the hints, neither statement would wait (an `S` lock is compatible with `U`, and is released after reading), so these tests fail if a hint is removed.
 - `tests/Integration/Service/AssignmentServiceTest.php`: a test builds the service with a `TransactionRunnerInterface` stub that throws `SerializationFailureException` and expects exactly `['startDate' => CONCURRENT_CHANGE message]` from `create()` and `update()`. The existing tests stay green unchanged, apart from `assignmentsAt()`.
 - There are no employee or site repository test classes; `findForUpdate()` is covered by the service and locking tests.
@@ -82,7 +84,7 @@ Tests:
 
 Read Part 1 and Part 2 before starting. Work through the tasks in order and tick each one when it is done.
 
-Baseline before starting: 180 unit tests and 608 integration tests. After: 180 unit and 612 integration.
+Baseline before starting: 180 unit tests and 608 integration tests. After: 180 unit and 614 integration.
 
 ### A. Locking reads
 - [x] A1. Add `findForUpdate()` to `EmployeeRepositoryInterface` and `EmployeeRepository`, and to `ConstructionSiteRepositoryInterface` and `ConstructionSiteRepository`, as in 2.2.
@@ -93,6 +95,7 @@ Baseline before starting: 180 unit tests and 608 integration tests. After: 180 u
 - [x] B2. Map `SerializationFailureException` to the `CONCURRENT_CHANGE` error in `save()` and add the stub-runner test for `create()` and `update()`.
 - [x] B3. Add `AssignmentLockingTest` with the lock-timeout tests from 2.2.
 - [x] B4. Add the sentence to `CLAUDE.md` and run `make check`.
+- [x] B5. Add the level-change test from 2.2 (employee level lowered, site level raised) to `AssignmentLockingTest`, cleaning up the committed assignment in `tearDown()`.
 
 ### Z. Wrap-up
 - [x] Z1. `make check` green: code style, PHPStan, unit and integration tests.
