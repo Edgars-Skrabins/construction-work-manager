@@ -1,7 +1,7 @@
 # Pass system API — Spec
 
 **Type:** feature
-**Status:** ready for implementation
+**Status:** in progress
 **Last updated:** 2026-10-29
 
 # Part 1 — Business logic and usage
@@ -105,7 +105,7 @@ Script number 016 is not used (no seed).
   - `revoke(string $keyId, DateTimeImmutable $at): bool`: sets `REVOKED_AT` and `UPDATED_AT` to `$at` where `REVOKED_AT IS NULL`, returns whether a row changed.
   - `touchLastUsed(int $id, DateTimeImmutable $at): void`: sets `LAST_USED_AT` to `$at`.
   - Times are passed in by the service and written as UTC, so the service's clock is the one source of time.
-- `src/Service/ApiKeyService.php`, depending on `ApiKeyRepositoryInterface`. The current time comes from one private `now()` method, which returns the time in UTC. In blocks A to D it returns `new DateTimeImmutable('now', new DateTimeZone('UTC'))`, because the shared clock doesn't exist on `main` yet. In block E, after the rebase, the service gets the shared `ClockInterface` injected and `now()` returns `$clock->now()->setTimezone(new DateTimeZone('UTC'))`, and its tests use a fixed clock:
+- `src/Service/ApiKeyService.php`, depending on `ApiKeyRepositoryInterface`. The current time comes from one private `now()` method, which returns the time in UTC. In blocks A to D it returns `new DateTimeImmutable('now', new DateTimeZone('UTC'))`, because the shared clock doesn't exist on `main` yet. In block E, after the rebase, the service gets the shared `ClockInterface` injected, the private method is removed in favour of `$clock->now()->setTimezone(new DateTimeZone('UTC'))`, and its tests use a fixed clock:
   - `issue(string $clientName, ?DateTimeImmutable $expiresAt): IssuedApiKey`: trims the client name and throws `InvalidArgumentException` for an empty one or one longer than 100 characters, and for an expiry not in the future. Generates the key ID, regenerating it while `findByKeyId()` finds one (the unique constraint backs this up), generates the secret, stores `hash('sha256', $secret)`.
   - `authenticate(string $plainKey): ?ApiKey`: returns null for a malformed key. Looks up the key ID. When there is no row it still runs `hash_equals` against a fixed dummy hash, so unknown key IDs take the same time. Compares `hash('sha256', $secret)` with the stored hash using `hash_equals`. Returns null for a mismatch, a revoked or an expired key. On success calls `touchLastUsed()` with `now()` and returns the key.
   - `revoke(string $keyId): bool`, passing `now()`, and `list(): list<ApiKey>`.
@@ -155,7 +155,7 @@ This spec writes no query of its own for this. `work-assignments` provides:
 This spec adds:
 
 - `src/Entity/SiteAccess.php`: final readonly class with `int $siteId`, `string $siteName`, `int $requiredAccessLevelId`, `string $requiredAccessLevelName` and `list<EmployeeNeedingAccess> $employees`.
-- `src/Service/SiteAccessService.php`: `forSite(int $siteId): ?SiteAccess`. It loads the site with its required access level ID and name through the construction site repository that `admin-management` adds, and returns null when the site doesn't exist. Then it calls `findEmployeesNeedingAccess($siteId, $clock->now())`, so D is the Riga date. If the site repository doesn't return the level's name, E0 asks the coordinating session how to get it before anything else is added. It doesn't use `AccessChecker`: API clients are not employees and the RBAC permissions don't cover them.
+- `src/Service/SiteAccessService.php`: `forSite(int $siteId): ?SiteAccess`. It loads the site with `ConstructionSiteRepositoryInterface::find(int $id): ?ConstructionSite` from `admin-management` (its `ConstructionSite` has `requiredAccessLevelId` and `requiredAccessLevelName`), and returns null when the site doesn't exist. It calls the repository directly, not `ConstructionSiteService::find()`, which requires the `site.update` permission. Then it calls `findEmployeesNeedingAccess($siteId, $clock->now())`, so D is the Riga date. It doesn't use `AccessChecker`: API clients are not employees and the RBAC permissions don't cover them.
 
 ### Configuration
 
@@ -232,15 +232,15 @@ This spec adds:
 
 Read Part 1 and Part 2 before starting. Work through the tasks in order and tick each one when it is done. Blocks A to D don't need `WORK_ASSIGNMENT` or the shared clock. Block E starts only after `work-assignments` is merged into `main` and this branch is rebased onto `origin/main`.
 
-Baseline before starting: (recorded in A0).
+Baseline before starting: unit 52 tests, integration 143 tests, all passing.
 
 ### A. API key table, repository and service
-- [ ] A0. Start the stack with its own project name and port (see the session setup), run `make test`, and record the baseline test counts on the line above.
-- [ ] A1. Add `SQL/015_create_api_key.sql`, `SQL/down/015_create_api_key.sql` and `src/Migration/M261029000015CreateApiKey.php`. Run `make migrate`, roll it back and re-apply it.
-- [ ] A2. Add `ApiKeySchemaTest` and add `API_KEY` to `MigrationRoundTripTest`.
-- [ ] A3. Add `ApiKey` (with `isValidAt()`), `IssuedApiKey`, `ApiKeyRepositoryInterface`, `ApiKeyRepository` and `config/common/di/api.php`, then run `composer yii-config-rebuild`.
-- [ ] A4. Add `ApiKeyTest` and `ApiKeyRepositoryTest`.
-- [ ] A5. Add `ApiKeyService` and `ApiKeyServiceTest`. Run `make test`.
+- [x] A0. Start the stack with its own project name and port (see the session setup), run `make test`, and record the baseline test counts on the line above.
+- [x] A1. Add `SQL/015_create_api_key.sql`, `SQL/down/015_create_api_key.sql` and `src/Migration/M261029000015CreateApiKey.php`. Run `make migrate`, roll it back and re-apply it.
+- [x] A2. Add `ApiKeySchemaTest` and add `API_KEY` to `MigrationRoundTripTest`.
+- [x] A3. Add `ApiKey` (with `isValidAt()`), `IssuedApiKey`, `ApiKeyRepositoryInterface`, `ApiKeyRepository` and `config/common/di/api.php`, then run `composer yii-config-rebuild`.
+- [x] A4. Add `ApiKeyTest` and `ApiKeyRepositoryTest`.
+- [x] A5. Add `ApiKeyService` and `ApiKeyServiceTest`. Run `make test`.
 
 ### B. Console commands
 - [ ] B1. Add `ApiKeyCreateCommand`, `ApiKeyListCommand` and `ApiKeyRevokeCommand`, and register them in `config/console/commands.php`.
@@ -256,8 +256,8 @@ Baseline before starting: (recorded in A0).
 - [ ] D1. Update `README.md` (Project structure, Running the app, Commands) and `CLAUDE.md` (Layout, Architecture) as described in 2.2, without the site-employees `curl` example until block E.
 
 ### E. Site employees endpoint (after work-assignments merges)
-- [ ] E0. Rebase onto `origin/main`, check that migrations 010 to 014 and this spec's 015 apply in order, and check that `ClockInterface`, `WorkAssignmentRepositoryInterface::findEmployeesNeedingAccess()` and the construction site repository exist as described in 2.2.
-- [ ] E1. Inject `ClockInterface` into `ApiKeyService`, make `now()` use it, and switch `ApiKeyServiceTest` to a fixed clock.
+- [ ] E0. Rebase onto `origin/main`, check that migrations 010 to 014 and this spec's 015 apply in order, and check that `ClockInterface`, `WorkAssignmentRepositoryInterface::findEmployeesNeedingAccess()` (returning `list<EmployeeNeedingAccess>`) and `ConstructionSiteRepositoryInterface::find()` exist as described in 2.2.
+- [ ] E1. Inject `ClockInterface` into `ApiKeyService`, replace the private `now()` with `$clock->now()->setTimezone(UTC)` so the clock is the only source of time, and switch `ApiKeyServiceTest` to a fixed clock.
 - [ ] E2. Add `SiteAccess` and `SiteAccessService`.
 - [ ] E3. Add `src/Api/V1/SiteEmployees/Action.php` and the `/api/v1` route group in `config/common/routes.php`.
 - [ ] E4. Add `SiteEmployeesTest`. Run `make test`.
