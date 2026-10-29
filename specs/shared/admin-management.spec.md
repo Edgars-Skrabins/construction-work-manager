@@ -146,7 +146,7 @@ Each interface has a `yiisoft/db` implementation next to it, bound in a new `con
   - `update(int $id, EmployeeData $data, bool $roleChanged): void` sets `UPDATED_AT`, and `ROLE_ASSIGNED_AT` when `$roleChanged`.
   - `delete(int $id): void`.
 - `App\Repository\EmployeeData`: final readonly with the stored fields `firstName`, `lastName`, `birthDate`, `accessLevelId`, `role`, `managerId`.
-- `AccountRepositoryInterface` / `AccountRepository` (extended): `findByEmployeeId(int)`, `create(int $employeeId, string $email, bool $isActive, string $setupCodeHash, DateTimeImmutable $expiresAt)`, `updateEmail(int, string)`, `setActive(int, bool)`, `replaceSetupCode(int, string $hash, DateTimeImmutable $expiresAt)`, `completeSetup(int $employeeId, string $passwordHash)` (sets the password and clears the code), `delete(int)`. Emails are trimmed and lowercased here, as in `findByEmail`. Every write sets `UPDATED_AT`.
+- `AccountRepositoryInterface` / `AccountRepository` (extended): `findByEmployeeId(int)`, `create(int $employeeId, string $email, bool $isActive, string $setupCodeHash, DateTimeImmutable $expiresAt)`, `updateEmail(int, string)`, `setActive(int, bool)`, `replaceSetupCode(int, string $hash, DateTimeImmutable $expiresAt)`, `completeSetup(int $employeeId, string $setupCodeHash, string $passwordHash): bool` (sets the password and clears the code only while the stored code hash is still that one and there is no password, so two parallel submits of one code can't both succeed), `delete(int)`. Emails are trimmed and lowercased here, as in `findByEmail`. Every write sets `UPDATED_AT`.
 - `ConstructionSiteRepositoryInterface` / `ConstructionSiteRepository`: `listPaginator(string $sort)` with sort keys `name`, `city`, `country`, `area` → `AREA_M2`, `accessLevel` → `REQUIRED_ACCESS_LEVEL_ID`; `find`, `all(): list<ConstructionSite>` sorted by name (with the required level, for `work-assignments`' picker), `nameExists(string $name, ?int $exceptId)`, `create(ConstructionSiteData)`, `update(int, ConstructionSiteData)`, `delete(int)`. `ConstructionSiteData` holds the stored fields.
 - `WorkItemRepositoryInterface` / `WorkItemRepository`: `listPaginator(string $sort)` with sort key `name`; `find`, `all(): list<WorkItem>` sorted by name, `nameExists`, `create(WorkItemData)`, `update`, `delete`.
 - `AccessLevelRepositoryInterface` / `AccessLevelRepository`: `all(): list<AccessLevel>` by ID, `exists(int)`.
@@ -173,7 +173,7 @@ Every public method takes the acting employee's ID as its first argument and cal
   - It applies the manager rules, the self-lockout rules, the access level and email uniqueness checks, and the account changes from Part 1, all inside one `TransactionRunnerInterface::run()`.
 - `ConstructionSiteService` and `WorkItemService`: `listPaginator`, `find`, `create`, `update` (each needs the entity's matching permission, with list and find needing update) and `delete`. Duplicate names throw `ValidationException::forField('name', ...)`; the site service reports a duplicate name and an unknown access level together. `ConstructionSiteService::accessLevels(int $actorId)` (needs `SiteRead`) feeds the form's select. `delete` turns an `IntegrityException` into `InUseException`.
 - `PasswordSetupService` (depends on `AccountRepositoryInterface`, `PasswordHasher`, `SetupCodeGenerator`, `LoginService`): `setPassword(string $email, string $code, string $password): bool`.
-  - It finds the account by email, and verifies a dummy hash when there is none or it has no code.
+  - It finds the account by email, and verifies `LoginService::DUMMY_HASH` (now a public constant) when there is none, it has no code, or the code is empty.
   - It returns false unless the account is active, has no password, the code isn't expired and the normalized code verifies.
   - Then it calls `completeSetup()` with the hash of the new password and `LoginService::login($email, $password)`.
 
@@ -315,7 +315,7 @@ Baseline before starting: unit 52 tests, integration 143 tests, all passing.
 - [x] C2. Add `Employee`, `EmployeeListItem`, `LoginStatus`, `EmployeeData`, `EmployeeRepositoryInterface` and `EmployeeRepository`.
 - [x] C3. Add `EmployeeInput`, `SavedEmployee` and `EmployeeService` with `EmployeeServiceTest`.
 - [x] C4. Add the `EmployeeList`, `EmployeeForm`, `EmployeeDelete` and `EmployeeSetupCode` pages and their routes.
-- [ ] C5. Add `PasswordSetupService` with its test, the `SetPassword` page and route, and the link on the login page. Add `SetPasswordTest`.
+- [x] C5. Add `PasswordSetupService` with its test, the `SetPassword` page and route, and the link on the login page. Add `SetPasswordTest`.
 
 ### D. Lists, page tests and documentation
 - [ ] D1. Add `ListingTest` and `AdminPagesTest`.
