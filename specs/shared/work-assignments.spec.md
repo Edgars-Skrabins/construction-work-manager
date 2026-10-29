@@ -137,7 +137,7 @@ The down script deletes IDs 1 to 6. Integration tests never depend on the seed r
 `App\Repository\AssignmentRepositoryInterface` and `App\Repository\AssignmentRepository` (`yiisoft/db` query builder), bound in DI like `AccountRepositoryInterface`:
 
 - `find(int $id, int $viewerId, Scope $scope): ?Assignment`: null when the row doesn't exist or is outside the scope.
-- `listPaginator(int $viewerId, Scope $scope): OffsetPaginator`: an `OffsetPaginator` over a `QueryDataReader` on `ASSIGNMENT` joined with `EMPLOYEE`, `WORK_ITEM` and `CONSTRUCTION_SITE`, rows mapped to `AssignmentListItem`, page size 20. Its `Sort` whitelist is `employee` (last name, first name), `workItem`, `site`, `startDate` and `endDate`, the default is `-startDate`, and `ID` descending is always the last tiebreak, built with admin-management's `App\Repository\ListSort`. The action applies `ListParams`.
+- `listPaginator(int $viewerId, Scope $scope, string $sort): OffsetPaginator`: an `OffsetPaginator` over a `QueryDataReader` on `ASSIGNMENT` joined with `EMPLOYEE`, `WORK_ITEM` and `CONSTRUCTION_SITE`, rows mapped to `AssignmentListItem`, page size 20. Its `Sort` whitelist is `employee` (last name, first name), `workItem`, `site`, `startDate` and `endDate`, the default is `-startDate`, and `ID` descending is always the last tiebreak, built with admin-management's `App\Repository\ListSort`. The action applies `ListParams`.
 - `findOverlappingActive(int $employeeId, int $workItemId, int $constructionSiteId, DateTimeImmutable $startDate, DateTimeImmutable $endDate, ?int $exceptId): ?Assignment`: the first Active assignment with the same employee, work item and site whose period overlaps, excluding `$exceptId`, or null.
 - `create(int $employeeId, int $workItemId, int $constructionSiteId, DateTimeImmutable $startDate, DateTimeImmutable $endDate, int $createdById): int`: inserts with status Active and returns the new ID.
 - `updatePeriodAndStatus(int $id, DateTimeImmutable $startDate, DateTimeImmutable $endDate, AssignmentStatus $status): void`: also sets `UPDATED_AT` to `SYSUTCDATETIME()`.
@@ -152,7 +152,7 @@ The down script deletes IDs 1 to 6. Integration tests never depend on the seed r
 
 `App\Service\AssignmentService`, depending on `AccessChecker`, `AccessScope`, `AssignmentRepositoryInterface`, `EmployeeRepositoryInterface`, `ConstructionSiteRepositoryInterface`, `WorkItemRepositoryInterface` and `ClockInterface`. Every method takes the acting employee's ID and role first.
 
-- `list(int $actorId, Role $role): OffsetPaginator`: ensures `assignment.read`.
+- `list(int $actorId, Role $role, string $sort): OffsetPaginator`: ensures `assignment.read`.
 - `find(int $actorId, Role $role, int $id): ?Assignment`: ensures `assignment.read`, and returns null when the row doesn't exist or is outside the scope. The action then returns `NotFoundHandler::handle()`.
 - `formOptions(int $actorId, Role $role)`: ensures `assignment.create`, and returns the assignable employees (`withRole(Role::Employee, managerId: …)`, with access levels), all sites (with required levels) and all work items for the pickers.
 - `create(int $actorId, Role $role, int $employeeId, int $workItemId, int $constructionSiteId, string $startDate, string $endDate): int`: ensures `assignment.create`, then the assignee rule (`ForbiddenException`), then dates, work item and site existence, access level and overlap (all collected into one `ValidationException`), then `create` with `createdById = $actorId`.
@@ -254,10 +254,10 @@ Baseline before starting: unit 52 tests, integration 143 tests, all passing (tak
 - [x] A5. Extend `ConstraintsTest`, `SchemaTest` and `MigrationRoundTripTest` as in 2.2, and run `make test`. `testManagerWithEmployeesCannotBeDeleted` now deletes manager 2's seed assignments first, because `FK_ASSIGNMENT_CREATED_BY_ID` would otherwise fire before `FK_EMPLOYEE_MANAGER_ID`.
 
 ### B. Clock, entities and repository
-- [ ] B1. Add `App\Shared\Clock`, the timezone param and the `ClockInterface` binding in `config/common/di/application.php`, and `tests/Unit/Shared/ClockTest.php`.
-- [ ] B2. Add `AssignmentStatus`, `AssignmentDisplayStatus`, `Assignment`, `AssignmentListItem` and `EmployeeNeedingAccess` in `src/Entity/`, with `AssignmentTest` and `AssignmentListItemTest`.
-- [ ] B3. Add `AssignmentRepositoryInterface` and `AssignmentRepository` with every method in 2.2, and bind the interface in DI.
-- [ ] B4. Add `tests/Integration/Repository/AssignmentRepositoryTest.php`, and run `make test`.
+- [x] B1. Add `App\Shared\Clock`, the timezone param and the `ClockInterface` binding in `config/common/di/application.php`, and `tests/Unit/Shared/ClockTest.php`.
+- [x] B2. Add `AssignmentStatus`, `AssignmentDisplayStatus`, `Assignment`, `AssignmentListItem` and `EmployeeNeedingAccess` in `src/Entity/`, with `AssignmentTest` and `AssignmentListItemTest`.
+- [x] B3. Add `AssignmentRepositoryInterface` and `AssignmentRepository` with every method in 2.2, and bind the interface in DI. The binding is in `config/common/di/repositories.php`, the file admin-management also adds, so C0 merges both lists. `src/Repository/ListSort.php` is a byte-identical copy of admin-management's, so the rebase keeps one file; if admin-management changed it by then, its version wins.
+- [x] B4. Add `tests/Integration/Repository/AssignmentRepositoryTest.php`, and run `make test`. With an index hint, the access query's plan seeks `IX_ASSIGNMENT_SITE_PERIOD` on the site and start date, with the end date and status as residual predicates from the included columns and no key lookup.
 
 ### C. Service (after admin-management has merged)
 - [ ] C0. Rebase onto `origin/main` once admin-management has merged, and verify the class names and signatures listed in 2.1 against the merged code, including the page folder style. Ask before deviating from anything in this spec.
