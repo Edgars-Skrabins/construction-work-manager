@@ -306,7 +306,7 @@ final class EmployeeServiceTest extends IntegrationTestCase
     public static function calls(): iterable
     {
         yield 'list' => [static function (EmployeeService $s): void {
-            $s->listPaginator(2, '');
+            $s->listPaginator(2, '', '');
         }];
         yield 'find' => [static function (EmployeeService $s): void {
             $s->find(2, 4);

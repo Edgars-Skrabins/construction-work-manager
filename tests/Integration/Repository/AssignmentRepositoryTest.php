@@ -102,6 +102,40 @@ final class AssignmentRepositoryTest extends IntegrationTestCase
         yield 'employee 4 sees their own' => [4, Scope::Own, [4]];
     }
 
+    /**
+     * @param list<int> $found
+     */
+    #[DataProvider('searches')]
+    public function testSearchOnlyFindsRowsInsideTheScope(int $viewerId, Scope $scope, string $search, array $found): void
+    {
+        $this->insert(4, 1, 1, '2026-11-10', '2026-11-20');
+        $this->insert(5, 2, 2, '2026-11-10', '2026-11-20');
+        $this->insert(7, 1, 4, '2026-11-10', '2026-11-20');
+        $this->insert(8, 3, 2, '2026-11-10', '2026-11-20');
+
+        $listed = array_map(
+            static fn(AssignmentListItem $item): int => $item->assignment->employeeId,
+            $this->list($viewerId, $scope, 'employee', $search),
+        );
+        sort($listed);
+        assertSame($found, $listed);
+    }
+
+    /**
+     * @return iterable<string, array{int, Scope, string, list<int>}>
+     */
+    public static function searches(): iterable
+    {
+        yield 'admin finds another manager\'s employee' => [1, Scope::All, 'Zariņa', [7]];
+        yield 'manager 2 does not find manager 3\'s employee' => [2, Scope::Subordinates, 'Zariņa', []];
+        yield 'manager 2 finds their employee by full name' => [2, Scope::Subordinates, 'laura krūmiņa', [5]];
+        yield 'manager 2 finds only their rows of a work item' => [2, Scope::Subordinates, 'concrete', [4]];
+        yield 'admin finds every row of a work item' => [1, Scope::All, 'concrete', [4, 7]];
+        yield 'manager 2 finds only their rows at a site' => [2, Scope::Subordinates, 'Daugavpils', [5]];
+        yield 'manager 3 finds only their rows at a site' => [3, Scope::Subordinates, 'Daugavpils', [8]];
+        yield 'no match' => [1, Scope::All, 'Nothing like this', []];
+    }
+
     public function testListItemCarriesNamesAndLevels(): void
     {
         $this->insert(5, 3, 3, '2026-11-10', '2026-11-20');
@@ -171,7 +205,7 @@ final class AssignmentRepositoryTest extends IntegrationTestCase
             $this->insert(4, 1, 1, sprintf('2026-11-%02d', $day), '2026-11-30');
         }
 
-        $paginator = $this->repository()->listPaginator(2, Scope::Subordinates, '');
+        $paginator = $this->repository()->listPaginator(2, Scope::Subordinates, '', '');
 
         assertSame(20, $paginator->getPageSize());
         assertSame(25, $paginator->getTotalItems());
@@ -331,9 +365,9 @@ final class AssignmentRepositoryTest extends IntegrationTestCase
     /**
      * @return list<AssignmentListItem>
      */
-    private function list(int $viewerId, Scope $scope, string $sort): array
+    private function list(int $viewerId, Scope $scope, string $sort, string $search = ''): array
     {
-        return iterator_to_array($this->repository()->listPaginator($viewerId, $scope, $sort)->read(), false);
+        return iterator_to_array($this->repository()->listPaginator($viewerId, $scope, $sort, $search)->read(), false);
     }
 
     /**

@@ -94,6 +94,11 @@ final class EmployeeForm
         );
     }
 
+    public function managerLocked(): bool
+    {
+        return in_array(Role::tryFrom($this->role), [Role::Admin, Role::Manager], true);
+    }
+
     public function checkBirthDate(mixed $value): Result
     {
         $result = new Result();

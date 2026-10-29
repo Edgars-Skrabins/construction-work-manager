@@ -5,7 +5,7 @@
     <nav aria-label="Pages">
         <ul class="pagination">
             {% if current > 1 %}
-                <li class="page-item"><a class="page-link" href="{{ urlGenerator.generate(route, [], {sort: sort, page: current - 1}) }}">Previous</a></li>
+                <li class="page-item"><a class="page-link" href="{{ urlGenerator.generate(route, [], {sort: sort, page: current - 1, q: q ?: null}) }}">Previous</a></li>
             {% else %}
                 <li class="page-item disabled"><span class="page-link">Previous</span></li>
             {% endif %}
@@ -18,13 +18,13 @@
                     {% if number == current %}
                         <li class="page-item active" aria-current="page"><span class="page-link">{{ number }}</span></li>
                     {% else %}
-                        <li class="page-item"><a class="page-link" href="{{ urlGenerator.generate(route, [], {sort: sort, page: number}) }}">{{ number }}</a></li>
+                        <li class="page-item"><a class="page-link" href="{{ urlGenerator.generate(route, [], {sort: sort, page: number, q: q ?: null}) }}">{{ number }}</a></li>
                     {% endif %}
                     {% set shown = number %}
                 {% endif %}
             {% endfor %}
             {% if current < last %}
-                <li class="page-item"><a class="page-link" href="{{ urlGenerator.generate(route, [], {sort: sort, page: current + 1}) }}">Next</a></li>
+                <li class="page-item"><a class="page-link" href="{{ urlGenerator.generate(route, [], {sort: sort, page: current + 1, q: q ?: null}) }}">Next</a></li>
             {% else %}
                 <li class="page-item disabled"><span class="page-link">Next</span></li>
             {% endif %}

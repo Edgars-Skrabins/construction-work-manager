@@ -8,6 +8,7 @@ use App\Tests\Integration\IntegrationTestCase;
 use Psr\Http\Message\ResponseInterface;
 use PHPUnit\Framework\Attributes\DataProvider;
 
+use function PHPUnit\Framework\assertDoesNotMatchRegularExpression;
 use function PHPUnit\Framework\assertMatchesRegularExpression;
 use function PHPUnit\Framework\assertNotFalse;
 use function PHPUnit\Framework\assertSame;
@@ -204,6 +205,76 @@ final class AdminPagesTest extends IntegrationTestCase
         assertStringNotContainsString('page=13', $last);
     }
 
+    /**
+     * @return iterable<string, array{string, string, string, string}>
+     */
+    public static function searches(): iterable
+    {
+        yield 'employees' => ['/employees', 'kalniņa', 'Kalniņa, Ilze', 'Vītols, Kristaps'];
+        yield 'employees by email' => ['/employees', 'employee3@', 'Vītols, Kristaps', 'Kalniņa, Ilze'];
+        yield 'sites' => ['/sites', 'Daugavpils', 'Daugavpils School Renovation', 'Ādaži Defence Facility'];
+        yield 'work items' => ['/work-items', 'pipework', 'Welding', 'Roofing'];
+    }
+
+    #[DataProvider('searches')]
+    public function testSearchShowsOnlyMatchingRowsAndAClearLink(string $path, string $q, string $shown, string $hidden): void
+    {
+        $this->asAdmin();
+
+        $unfiltered = (string) $this->request('GET', $path)->getBody();
+        assertStringContainsString('role="search"', $unfiltered);
+        assertStringContainsString($hidden, $unfiltered);
+        assertStringNotContainsString('>Clear</a>', $unfiltered);
+
+        $body = (string) $this->request('GET', $path . '?q=' . rawurlencode($q))->getBody();
+        assertStringContainsString($shown, $body);
+        assertStringNotContainsString($hidden, $body);
+        assertStringContainsString('name="q" value="' . htmlspecialchars($q) . '"', $body);
+        assertMatchesRegularExpression('#<a class="btn btn-link" href="' . preg_quote($path, '#') . '\?sort=[^"&]*">Clear</a>#', $body);
+    }
+
+    public function testSortAndPageLinksKeepTheSearch(): void
+    {
+        for ($i = 1; $i <= 45; $i++) {
+            $this->db()->createCommand()->insert('WORK_ITEM', ['NAME' => sprintf('%s %03d', self::WORK_ITEM, $i)])->execute();
+        }
+        $this->asAdmin();
+
+        $body = (string) $this->request('GET', '/work-items?sort=-name&page=2&q=' . rawurlencode(self::WORK_ITEM))->getBody();
+
+        preg_match_all('/<a class="(?:page-link|link-body-emphasis[^"]*)" href="([^"]*)"/', $body, $links);
+        assertSame(5, count($links[1]));
+        foreach ($links[1] as $href) {
+            assertStringContainsString('q=' . urlencode(self::WORK_ITEM), html_entity_decode($href));
+        }
+        assertStringContainsString('name="sort" value="-name"', $body);
+        assertStringContainsString(self::WORK_ITEM . ' 025', $body);
+        assertStringNotContainsString(self::WORK_ITEM . ' 026', $body);
+        assertStringNotContainsString('Roofing', $body);
+    }
+
+    public function testUnmatchedSearchEchoesTheQueryEscaped(): void
+    {
+        $this->asAdmin();
+
+        $body = (string) $this->request('GET', '/work-items?q=' . rawurlencode('<script>alert(1)</script>"'))->getBody();
+
+        assertStringContainsString('No results for “&lt;script&gt;alert(1)&lt;/script&gt;&quot;”.', $body);
+        assertStringContainsString('name="q" value="&lt;script&gt;alert(1)&lt;/script&gt;&quot;"', $body);
+        assertStringNotContainsString('<script>alert(1)', $body);
+        assertStringNotContainsString('No work items yet.', $body);
+    }
+
+    public function testSearchIsCutToOneHundredCharacters(): void
+    {
+        $this->asAdmin();
+
+        $body = (string) $this->request('GET', '/work-items?q=' . str_repeat('x', 150))->getBody();
+
+        assertStringContainsString('name="q" value="' . str_repeat('x', 100) . '"', $body);
+        assertStringContainsString('No results for “' . str_repeat('x', 100) . '”.', $body);
+    }
+
     public function testValidationErrorsAreShownUnderTheirFields(): void
     {
         $this->asAdmin();
@@ -328,6 +399,89 @@ final class AdminPagesTest extends IntegrationTestCase
         assertStringNotContainsString('btn btn-danger', $body);
         $this->resetServices();
         assertSame(1, (int) $this->db()->createCommand($stillThere)->queryScalar());
+    }
+
+    /**
+     * @return iterable<string, array{string}>
+     */
+    public static function nonEmployeeEditPages(): iterable
+    {
+        yield 'admin' => ['/employees/1/edit'];
+        yield 'manager' => ['/employees/2/edit'];
+    }
+
+    #[DataProvider('nonEmployeeEditPages')]
+    public function testManagerSelectIsLockedForAdminsAndManagers(string $path): void
+    {
+        $this->asAdmin();
+
+        $body = (string) $this->request('GET', $path)->getBody();
+
+        assertMatchesRegularExpression('#<select [^>]*id="managerId"[^>]* disabled>#', $body);
+        assertDoesNotMatchRegularExpression('#<option value="\d+" selected>#', $this->managerSelect($body));
+    }
+
+    public function testManagerSelectIsEnabledForEmployeesWithTheirManagerSelected(): void
+    {
+        $this->asAdmin();
+
+        $body = (string) $this->request('GET', '/employees/4/edit')->getBody();
+
+        assertDoesNotMatchRegularExpression('#<select [^>]*id="managerId"[^>]* disabled>#', $body);
+        assertStringContainsString('<option value="2" selected>', $this->managerSelect($body));
+    }
+
+    public function testManagerSelectIsEnabledOnTheCreatePage(): void
+    {
+        $this->asAdmin();
+
+        $body = (string) $this->request('GET', '/employees/create')->getBody();
+
+        assertDoesNotMatchRegularExpression('#<select [^>]*id="managerId"[^>]* disabled>#', $body);
+        assertMatchesRegularExpression('#<script src="/assets/employee/[^"]*employee\.js[^"]*"#', $body);
+    }
+
+    public function testRerenderedFormLocksTheManagerSelectForAPostedManagerRole(): void
+    {
+        $this->asAdmin();
+
+        $response = $this->submit('/employees/create', [
+            'firstName' => '', 'lastName' => 'Pārbaude', 'birthDate' => '1990-01-01', 'accessLevelId' => '1',
+            'role' => 'manager', 'managerId' => '3', 'email' => '', 'loginActive' => '1',
+        ]);
+        $body = (string) $response->getBody();
+
+        assertSame(200, $response->getStatusCode());
+        assertMatchesRegularExpression('#<select [^>]*id="managerId"[^>]* disabled>#', $body);
+        assertDoesNotMatchRegularExpression('#<option value="\d+" selected>#', $this->managerSelect($body));
+    }
+
+    public function testPostWithoutTheDisabledManagerSelectSavesNoManager(): void
+    {
+        $this->asAdmin();
+        $fields = [
+            'firstName' => 'Lapa', 'lastName' => 'Pārbaude', 'birthDate' => '1990-01-01', 'accessLevelId' => '1',
+            'role' => 'employee', 'managerId' => '3', 'email' => '', 'loginActive' => '1',
+        ];
+        $this->assertRedirectsTo('/employees', $this->submit('/employees/create', $fields));
+        $this->resetServices();
+        $id = (int) $this->db()->createCommand("SELECT ID FROM EMPLOYEE WHERE FIRST_NAME = N'Lapa' AND LAST_NAME = N'Pārbaude'")->queryScalar();
+        unset($fields['managerId']);
+
+        $this->assertRedirectsTo('/employees', $this->submit("/employees/$id/edit", [...$fields, 'role' => 'manager']));
+
+        $this->resetServices();
+        assertSame(
+            ['ROLE' => 'manager', 'MANAGER_ID' => null],
+            $this->db()->createCommand('SELECT ROLE, MANAGER_ID FROM EMPLOYEE WHERE ID = :id', [':id' => $id])->queryOne(),
+        );
+    }
+
+    private function managerSelect(string $body): string
+    {
+        preg_match('#<select [^>]*id="managerId".*?</select>#s', $body, $match);
+
+        return $match[0] ?? '';
     }
 
     private function asAdmin(): void

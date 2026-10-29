@@ -17,7 +17,7 @@ final readonly class ConstructionSiteRepository implements ConstructionSiteRepos
         private ConnectionInterface $db,
     ) {}
 
-    public function listPaginator(string $sort): OffsetPaginator
+    public function listPaginator(string $sort, string $search): OffsetPaginator
     {
         $config = [
             'name' => ListSort::columns(['s.NAME'], 's.ID'),
@@ -28,7 +28,10 @@ final readonly class ConstructionSiteRepository implements ConstructionSiteRepos
         ];
 
         /** @var QueryDataReader<int, ConstructionSite> $reader */
-        $reader = new QueryDataReader($this->query(), ListSort::create($config, $sort, 'name'));
+        $reader = new QueryDataReader(
+            ListSearch::apply($this->query(), $search, ['s.NAME', 's.STREET', 's.CITY', 's.COUNTRY']),
+            ListSort::create($config, $sort, 'name'),
+        );
 
         return (new OffsetPaginator($reader))->withPageSize(20);
     }
