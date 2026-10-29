@@ -19,6 +19,8 @@ interface EmployeeRepositoryInterface
 
     public function find(int $id): ?Employee;
 
+    public function findForUpdate(int $id): ?Employee;
+
     public function roleOf(int $id): ?Role;
 
     /**
