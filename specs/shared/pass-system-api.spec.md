@@ -38,7 +38,7 @@ Each external client authenticates with its own API key, sent as a bearer token 
      - `500`: an unexpected error, with no detail.
   5. `./yii api-key:list` shows every key's key ID, client name, created, expires, last used and revoked dates and its status (active, expired or revoked), never the secret or its hash.
   6. `./yii api-key:revoke 3f9a1c2b` revokes that key. The next request with it gets `401`.
-- **Who needs access** (defined by the `work-assignments` spec, approved by the user): on date D, the employees with a work assignment at the site whose `STATUS` is `active`, `START_DATE <= D` and `END_DATE >= D` (end inclusive), and whose current access level is at least the site's current required access level. D is today in `Europe/Riga`. An employee whose access level was lowered after being assigned is not listed. Each employee appears once, ordered by last name, first name and ID.
+- **Who needs access** (defined by the `work-assignments` spec, approved by the user): on date D, the employees with a assignment at the site whose `STATUS` is `active`, `START_DATE <= D` and `END_DATE >= D` (end inclusive), and whose current access level is at least the site's current required access level. D is today in `Europe/Riga`. An employee whose access level was lowered after being assigned is not listed. Each employee appears once, ordered by last name, first name and ID.
 - **Rules:**
   - Only the fields above are exposed. Never the birth date, role, manager, login email or any account data.
   - API requests never start a session, never set a cookie and are never checked for a CSRF token. The web pipeline doesn't run for them at all.
@@ -54,7 +54,7 @@ Each external client authenticates with its own API key, sent as a bearer token 
   - Rate limiting: belongs at the reverse proxy, or a later spec.
   - OAuth 2.0 client credentials: can replace API keys later behind the same middleware (#12).
   - A seeded demo key: developers create one with the console command (README).
-  - The `WORK_ASSIGNMENT` table, its lifecycle and the query for employees needing access: owned by `work-assignments`. WorkItem is the catalog of work, WorkAssignment is the assignment (Decision Log #148).
+  - The `ASSIGNMENT` table, its lifecycle and the query for employees needing access: owned by `work-assignments`. WorkItem is the catalog of work, Assignment is the assignment (Decision Log #148, revised).
   - Asking about another date than today: a query parameter could be added later.
 
 # Part 2 — Technical details
@@ -68,7 +68,7 @@ No new dependencies. It uses:
 - `yiisoft/db` query builder for the repositories, `yiisoft/yii-console` and `symfony/console` for the commands.
 - PSR-17 `ResponseFactoryInterface` and `StreamFactoryInterface` for JSON responses, `psr/log` for error logging.
 - PHP's `random_bytes`, `hash('sha256', …)` and `hash_equals`.
-- From block E: the PSR-20 `ClockInterface` implemented by `App\Shared\Clock` (`Europe/Riga`), and `WorkAssignmentRepositoryInterface::findEmployeesNeedingAccess()`, both added by `work-assignments`.
+- From block E: the PSR-20 `ClockInterface` implemented by `App\Shared\Clock` (`Europe/Riga`), and `AssignmentRepositoryInterface::findEmployeesNeedingAccess()`, both added by `work-assignments`.
 
 ## 2.2 Structure
 
@@ -148,8 +148,8 @@ The route pattern accepts any segment for `{id}`, so the action can answer `422`
 
 This spec writes no query of its own for this. `work-assignments` provides:
 
-- `WORK_ASSIGNMENT` with `ID`, `EMPLOYEE_ID`, `WORK_ITEM_ID`, `CONSTRUCTION_SITE_ID`, `START_DATE` and `END_DATE` (DATE, required, end inclusive), `STATUS` (`active`, `done` or `cancelled`), `CREATED_BY_ID`, `CREATED_AT` and `UPDATED_AT`. No soft delete.
-- `WorkAssignmentRepositoryInterface::findEmployeesNeedingAccess(int $constructionSiteId, DateTimeImmutable $date): list<EmployeeNeedingAccess>`, where `EmployeeNeedingAccess` has `employeeId`, `firstName`, `lastName`, `accessLevelId` and `accessLevelName`. It applies the whole rule from Part 1 in one query (status, dates and the access level filter), distinct, ordered by last name, first name and ID. Its repository test covers the filter.
+- `ASSIGNMENT` with `ID`, `EMPLOYEE_ID`, `WORK_ITEM_ID`, `CONSTRUCTION_SITE_ID`, `START_DATE` and `END_DATE` (DATE, required, end inclusive), `STATUS` (`active`, `done` or `cancelled`), `CREATED_BY_ID`, `CREATED_AT` and `UPDATED_AT`. No soft delete.
+- `AssignmentRepositoryInterface::findEmployeesNeedingAccess(int $constructionSiteId, DateTimeImmutable $date): list<EmployeeNeedingAccess>`, where `EmployeeNeedingAccess` has `employeeId`, `firstName`, `lastName`, `accessLevelId` and `accessLevelName`. It applies the whole rule from Part 1 in one query (status, dates and the access level filter), distinct, ordered by last name, first name and ID. Its repository test covers the filter.
 - `App\Shared\Clock`, the PSR-20 `ClockInterface` in `Europe/Riga`, bound in `config/common/di/`.
 
 This spec adds:
@@ -184,11 +184,11 @@ This spec adds:
   - A thrown exception in an API handler becomes a `500` problem, and the logged message contains no `Authorization` value.
   - The configured web middleware list is `ApiPipelineMiddleware` followed by the unchanged web list.
   - `WebSmokeTest` still passes, so web requests are untouched.
-- `tests/Integration/Api/SiteEmployeesTest.php` (block E), with work assignments inserted in a rolled-back transaction and the shared clock fixed to a known Riga date:
+- `tests/Integration/Api/SiteEmployeesTest.php` (block E), with assignments inserted in a rolled-back transaction and the shared clock fixed to a known Riga date:
   - `200` with the exact body shape and only the documented fields (no `birthDate`, `role` or account fields), Unicode intact, ordered by last name, first name and ID, each employee once.
-  - `done` and `cancelled` work assignments, and active ones that start after or ended before the Riga date, are not listed. One that starts or ends on that date is listed.
+  - `done` and `cancelled` assignments, and active ones that start after or ended before the Riga date, are not listed. One that starts or ends on that date is listed.
   - Inside the rolled-back transaction, lowering a listed employee's `ACCESS_LEVEL_ID` below the site's required level makes them drop out of the response.
-  - A site with no active work assignments returns `"employees": []`.
+  - A site with no active assignments returns `"employees": []`.
   - `404` for an unknown site, `422` for `abc`, `0`, `-1`, `01` and `2147483648`, `405` with `Allow: GET` for `POST`, `401` without a key.
   - A successful call sets the key's `LAST_USED_AT`.
 
@@ -220,17 +220,17 @@ This spec adds:
 19. **Several keys per client name:** allows switching keys without downtime. Rejected: one active key per client.
 20. **Ordering by last name, first name, ID, no pagination:** stable and readable, and a site has tens of people. Rejected: by ID.
 21. **Generic `401` with `WWW-Authenticate: Bearer`:** the same body for every failure, so nothing reveals whether a key ID exists, is revoked or expired, plus the RFC 6750 header. Rejected: the body only.
-22. **Access level filter:** an employee is only listed while their access level is at least the site's required level, even if an older work assignment says otherwise. Rejected: trusting the check at assignment time only. It stays even if work-assignments ends or flags such assignments, as harmless defence in depth.
+22. **Access level filter:** an employee is only listed while their access level is at least the site's required level, even if an older assignment says otherwise. Rejected: trusting the check at assignment time only. It stays even if work-assignments ends or flags such assignments, as harmless defence in depth.
 23. **No probe endpoint:** the pipeline and authentication are tested on unknown `/api` paths before the endpoint exists. Rejected: `GET /api/v1/ping`.
 24. **`Cache-Control: no-store` on API responses:** access lists must not be cached by intermediaries. `nosniff` and the other security headers come from Caddy for all responses, `/api/v1` included (hardening, Decision Log #95), so the app doesn't repeat them.
-25. **"Needs access" comes from work-assignments:** this spec doesn't define the work assignment lifecycle. 2026-10-29: the user approved it in work-assignments: status `active`, `START_DATE <= D <= END_DATE`, and the access level filter, with D today in `Europe/Riga`.
-26. **One query, owned by work-assignments (2026-10-29):** the endpoint calls `WorkAssignmentRepositoryInterface::findEmployeesNeedingAccess()` instead of its own `SiteAccessRepository`, so the rule lives in one place. Its fields are exactly this API's employee fields. Rejected: a second query in this spec.
+25. **"Needs access" comes from work-assignments:** this spec doesn't define the assignment lifecycle. 2026-10-29: the user approved it in work-assignments: status `active`, `START_DATE <= D <= END_DATE`, and the access level filter, with D today in `Europe/Riga`.
+26. **One query, owned by work-assignments (2026-10-29):** the endpoint calls `AssignmentRepositoryInterface::findEmployeesNeedingAccess()` instead of its own `SiteAccessRepository`, so the rule lives in one place. Its fields are exactly this API's employee fields. Rejected: a second query in this spec.
 27. **Shared clock (2026-10-29):** all time comes from the shared PSR-20 `ClockInterface`, for testability and one source of time. Key expiry, `LAST_USED_AT` and `REVOKED_AT` are stored in UTC, and the access date is the Riga date. Until block E's rebase brings the clock to this branch, `ApiKeyService::now()` creates the UTC time itself, and E0 switches it to the clock. Rejected: adding `psr/clock` and a clock class on this branch too, which would collide with work-assignments' copy.
 28. **Seed data in examples (2026-10-29):** the example response uses seed site 1 and seed employee 4.
 
 # Part 3 — Implementation TODO
 
-Read Part 1 and Part 2 before starting. Work through the tasks in order and tick each one when it is done. Blocks A to D don't need `WORK_ASSIGNMENT` or the shared clock. Block E starts only after `work-assignments` is merged into `main` and this branch is rebased onto `origin/main`.
+Read Part 1 and Part 2 before starting. Work through the tasks in order and tick each one when it is done. Blocks A to D don't need `ASSIGNMENT` or the shared clock. Block E starts only after `work-assignments` is merged into `main` and this branch is rebased onto `origin/main`.
 
 Baseline before starting: unit 52 tests, integration 143 tests, all passing.
 
@@ -256,7 +256,7 @@ Baseline before starting: unit 52 tests, integration 143 tests, all passing.
 - [ ] D1. Update `README.md` (Project structure, Running the app, Commands) and `CLAUDE.md` (Layout, Architecture) as described in 2.2, without the site-employees `curl` example until block E.
 
 ### E. Site employees endpoint (after work-assignments merges)
-- [ ] E0. Rebase onto `origin/main`, check that migrations 010 to 014 and this spec's 015 apply in order, and check that `ClockInterface`, `WorkAssignmentRepositoryInterface::findEmployeesNeedingAccess()` (returning `list<EmployeeNeedingAccess>`) and `ConstructionSiteRepositoryInterface::find()` exist as described in 2.2.
+- [ ] E0. Rebase onto `origin/main`, check that migrations 010 to 014 and this spec's 015 apply in order, and check that `ClockInterface`, `AssignmentRepositoryInterface::findEmployeesNeedingAccess()` (returning `list<EmployeeNeedingAccess>`) and `ConstructionSiteRepositoryInterface::find()` exist as described in 2.2.
 - [ ] E1. Inject `ClockInterface` into `ApiKeyService`, replace the private `now()` with `$clock->now()->setTimezone(UTC)` so the clock is the only source of time, and switch `ApiKeyServiceTest` to a fixed clock.
 - [ ] E2. Add `SiteAccess` and `SiteAccessService`.
 - [ ] E3. Add `src/Api/V1/SiteEmployees/Action.php` and the `/api/v1` route group in `config/common/routes.php`.
