@@ -241,7 +241,7 @@ final class AdminPagesTest extends IntegrationTestCase
 
         $body = (string) $this->request('GET', '/work-items?sort=-name&page=2&q=' . rawurlencode(self::WORK_ITEM))->getBody();
 
-        preg_match_all('/<a class="(?:page-link|link-dark[^"]*)" href="([^"]*)"/', $body, $links);
+        preg_match_all('/<a class="(?:page-link|link-body-emphasis[^"]*)" href="([^"]*)"/', $body, $links);
         assertSame(5, count($links[1]));
         foreach ($links[1] as $href) {
             assertStringContainsString('q=' . urlencode(self::WORK_ITEM), html_entity_decode($href));

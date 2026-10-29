@@ -1,2 +1,2 @@
 {% set direction = paginator.getSort().getOrder()[key] ?? null %}
-<a class="link-dark text-decoration-none" href="{{ urlGenerator.generate(route, [], {sort: direction == 'asc' ? '-' ~ key : key, q: q ?: null}) }}">{{ label }}{% if direction == 'asc' %} ▲{% elseif direction == 'desc' %} ▼{% endif %}</a>
+<a class="link-body-emphasis text-decoration-none" href="{{ urlGenerator.generate(route, [], {sort: direction == 'asc' ? '-' ~ key : key, q: q ?: null}) }}">{{ label }}{% if direction == 'asc' %} ▲{% elseif direction == 'desc' %} ▼{% endif %}</a>
