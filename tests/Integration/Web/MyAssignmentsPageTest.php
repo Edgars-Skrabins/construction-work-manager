@@ -106,38 +106,41 @@ final class MyAssignmentsPageTest extends IntegrationTestCase
     }
 
     #[DataProvider('nonEmployees')]
-    public function testOtherRolesSeeAnEmptyList(string $email): void
+    public function testOtherRolesAreForbidden(string $email): void
     {
         $this->logIn($email, '123123123');
 
-        $response = $this->request('GET', '/my-assignments');
-        $body = (string) $response->getBody();
-
-        assertSame(200, $response->getStatusCode());
-        assertStringContainsString(self::EMPTY_STATE, $body);
-        assertStringNotContainsString(self::SITE, $body);
-        assertStringNotContainsString('<details', $body);
+        assertSame(403, $this->request('GET', '/my-assignments')->getStatusCode());
     }
 
-    /**
-     * @return iterable<string, array{string}>
-     */
-    public static function everyRole(): iterable
+    public function testEmployeeSeesTheNavbarLink(): void
     {
-        yield 'employee' => ['employee@mail.test'];
-        yield 'manager' => ['manager@mail.test'];
-        yield 'admin' => ['admin@mail.test'];
-    }
-
-    #[DataProvider('everyRole')]
-    public function testNavbarLinksToMyAssignments(string $email): void
-    {
-        $this->logIn($email, '123123123');
+        $this->logIn('employee@mail.test', '123123123');
 
         assertStringContainsString(
             'href="/my-assignments">My assignments</a>',
             (string) $this->request('GET', '/my-assignments')->getBody(),
         );
+    }
+
+    /**
+     * @return iterable<string, array{string, string}>
+     */
+    public static function nonEmployeeLandingPages(): iterable
+    {
+        yield 'manager' => ['manager@mail.test', '/assignments'];
+        yield 'admin' => ['admin@mail.test', '/employees'];
+    }
+
+    #[DataProvider('nonEmployeeLandingPages')]
+    public function testOtherRolesSeeNoNavbarLink(string $email, string $landingPage): void
+    {
+        $this->logIn($email, '123123123');
+
+        $body = (string) $this->request('GET', $landingPage)->getBody();
+
+        assertStringContainsString('id="main-navbar"', $body);
+        assertStringNotContainsString('href="/my-assignments"', $body);
     }
 
     public function testGuestIsSentToLogin(): void

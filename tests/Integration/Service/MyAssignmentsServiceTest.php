@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Tests\Integration\Service;
 
+use App\Access\ForbiddenException;
 use App\Entity\AssignedSite;
 use App\Entity\AssignedWork;
 use App\Entity\AssignmentDisplayStatus;
@@ -54,25 +55,31 @@ final class MyAssignmentsServiceTest extends IntegrationTestCase
         );
     }
 
-    /**
-     * @return iterable<string, array{int}>
-     */
-    public static function nobodyAssigned(): iterable
-    {
-        yield 'employee without assignments' => [5];
-        yield 'manager of an assigned employee' => [2];
-        yield 'admin' => [1];
-    }
-
-    #[DataProvider('nobodyAssigned')]
-    public function testOnlyTheUsersOwnAssignmentsAreShown(int $employeeId): void
+    public function testEmployeeWithoutAssignmentsGetsEmptyLists(): void
     {
         $this->insert(6, 1, 1, -1, 1);
         $this->insert(6, 2, 1, -10, -5, AssignmentStatus::Done);
 
-        $mine = $this->myAssignments()->forEmployee($employeeId);
+        $mine = $this->myAssignments()->forEmployee(5);
 
         assertSame([[], []], [$mine->sites, $mine->history]);
+    }
+
+    /**
+     * @return iterable<string, array{int}>
+     */
+    public static function nonEmployees(): iterable
+    {
+        yield 'manager of an assigned employee' => [2];
+        yield 'admin' => [1];
+    }
+
+    #[DataProvider('nonEmployees')]
+    public function testOtherRolesAreForbidden(int $employeeId): void
+    {
+        $this->expectException(ForbiddenException::class);
+
+        $this->myAssignments()->forEmployee($employeeId);
     }
 
     /**

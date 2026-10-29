@@ -8,6 +8,7 @@ use App\Tests\Integration\IntegrationTestCase;
 use Psr\Http\Message\ResponseInterface;
 use PHPUnit\Framework\Attributes\DataProvider;
 
+use function PHPUnit\Framework\assertDoesNotMatchRegularExpression;
 use function PHPUnit\Framework\assertMatchesRegularExpression;
 use function PHPUnit\Framework\assertNotFalse;
 use function PHPUnit\Framework\assertSame;
@@ -397,6 +398,89 @@ final class AdminPagesTest extends IntegrationTestCase
         assertStringNotContainsString('btn btn-danger', $body);
         $this->resetServices();
         assertSame(1, (int) $this->db()->createCommand($stillThere)->queryScalar());
+    }
+
+    /**
+     * @return iterable<string, array{string}>
+     */
+    public static function nonEmployeeEditPages(): iterable
+    {
+        yield 'admin' => ['/employees/1/edit'];
+        yield 'manager' => ['/employees/2/edit'];
+    }
+
+    #[DataProvider('nonEmployeeEditPages')]
+    public function testManagerSelectIsLockedForAdminsAndManagers(string $path): void
+    {
+        $this->asAdmin();
+
+        $body = (string) $this->request('GET', $path)->getBody();
+
+        assertMatchesRegularExpression('#<select [^>]*id="managerId"[^>]* disabled>#', $body);
+        assertDoesNotMatchRegularExpression('#<option value="\d+" selected>#', $this->managerSelect($body));
+    }
+
+    public function testManagerSelectIsEnabledForEmployeesWithTheirManagerSelected(): void
+    {
+        $this->asAdmin();
+
+        $body = (string) $this->request('GET', '/employees/4/edit')->getBody();
+
+        assertDoesNotMatchRegularExpression('#<select [^>]*id="managerId"[^>]* disabled>#', $body);
+        assertStringContainsString('<option value="2" selected>', $this->managerSelect($body));
+    }
+
+    public function testManagerSelectIsEnabledOnTheCreatePage(): void
+    {
+        $this->asAdmin();
+
+        $body = (string) $this->request('GET', '/employees/create')->getBody();
+
+        assertDoesNotMatchRegularExpression('#<select [^>]*id="managerId"[^>]* disabled>#', $body);
+        assertMatchesRegularExpression('#<script src="/assets/employee/[^"]*employee\.js[^"]*"#', $body);
+    }
+
+    public function testRerenderedFormLocksTheManagerSelectForAPostedManagerRole(): void
+    {
+        $this->asAdmin();
+
+        $response = $this->submit('/employees/create', [
+            'firstName' => '', 'lastName' => 'Pārbaude', 'birthDate' => '1990-01-01', 'accessLevelId' => '1',
+            'role' => 'manager', 'managerId' => '3', 'email' => '', 'loginActive' => '1',
+        ]);
+        $body = (string) $response->getBody();
+
+        assertSame(200, $response->getStatusCode());
+        assertMatchesRegularExpression('#<select [^>]*id="managerId"[^>]* disabled>#', $body);
+        assertDoesNotMatchRegularExpression('#<option value="\d+" selected>#', $this->managerSelect($body));
+    }
+
+    public function testPostWithoutTheDisabledManagerSelectSavesNoManager(): void
+    {
+        $this->asAdmin();
+        $fields = [
+            'firstName' => 'Lapa', 'lastName' => 'Pārbaude', 'birthDate' => '1990-01-01', 'accessLevelId' => '1',
+            'role' => 'employee', 'managerId' => '3', 'email' => '', 'loginActive' => '1',
+        ];
+        $this->assertRedirectsTo('/employees', $this->submit('/employees/create', $fields));
+        $this->resetServices();
+        $id = (int) $this->db()->createCommand("SELECT ID FROM EMPLOYEE WHERE FIRST_NAME = N'Lapa' AND LAST_NAME = N'Pārbaude'")->queryScalar();
+        unset($fields['managerId']);
+
+        $this->assertRedirectsTo('/employees', $this->submit("/employees/$id/edit", [...$fields, 'role' => 'manager']));
+
+        $this->resetServices();
+        assertSame(
+            ['ROLE' => 'manager', 'MANAGER_ID' => null],
+            $this->db()->createCommand('SELECT ROLE, MANAGER_ID FROM EMPLOYEE WHERE ID = :id', [':id' => $id])->queryOne(),
+        );
+    }
+
+    private function managerSelect(string $body): string
+    {
+        preg_match('#<select [^>]*id="managerId".*?</select>#s', $body, $match);
+
+        return $match[0] ?? '';
     }
 
     private function asAdmin(): void

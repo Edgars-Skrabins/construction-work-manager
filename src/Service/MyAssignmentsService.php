@@ -20,7 +20,7 @@ final readonly class MyAssignmentsService
 
     public function forEmployee(int $employeeId): MyAssignments
     {
-        $this->accessChecker->ensure($employeeId, Permission::AssignmentRead);
+        $this->accessChecker->ensure($employeeId, Permission::AssignmentReadOwn);
 
         $sites = [];
         $history = [];
