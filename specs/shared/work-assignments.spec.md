@@ -150,16 +150,17 @@ The down script deletes IDs 1 to 6. Integration tests never depend on the seed r
 
 ### PHP: service
 
-`App\Service\AssignmentService`, depending on `AccessChecker`, `AccessScope`, `AssignmentRepositoryInterface`, `EmployeeRepositoryInterface`, `ConstructionSiteRepositoryInterface`, `WorkItemRepositoryInterface` and `ClockInterface`. Every method takes the acting employee's ID and role first.
+`App\Service\AssignmentService`, depending on `AssignmentRepositoryInterface`, `EmployeeRepositoryInterface`, `ConstructionSiteRepositoryInterface`, `WorkItemRepositoryInterface`, `AccessChecker`, `AccessScope` and `ClockInterface`. Every method takes the acting employee's ID first and never a role: the scope always comes from the actor's stored `EMPLOYEE.ROLE`, read through `EmployeeRepositoryInterface::find()` (decision 27).
 
-- `list(int $actorId, Role $role, string $sort): OffsetPaginator`: ensures `assignment.read`.
-- `find(int $actorId, Role $role, int $id): ?Assignment`: ensures `assignment.read`, and returns null when the row doesn't exist or is outside the scope. The action then returns `NotFoundHandler::handle()`.
-- `formOptions(int $actorId, Role $role)`: ensures `assignment.create`, and returns the assignable employees (`withRole(Role::Employee, managerId: …)`, with access levels), all sites (with required levels) and all work items for the pickers.
-- `create(int $actorId, Role $role, int $employeeId, int $workItemId, int $constructionSiteId, string $startDate, string $endDate): int`: ensures `assignment.create`, then the assignee rule (`ForbiddenException`), then dates, work item and site existence, access level and overlap (all collected into one `ValidationException`), then `create` with `createdById = $actorId`.
-- `update(int $actorId, Role $role, Assignment $assignment, string $startDate, string $endDate, string $status): void`: ensures `assignment.update`, then dates, status value, and, when the new status is Active, access level and overlap (excluding itself). `$assignment` is what `find` returned for the same actor, so it is always in scope.
-- `delete(int $actorId, Role $role, Assignment $assignment): void`: ensures `assignment.delete`, then deletes. `$assignment` comes from `find` like for `update`.
+- `list(int $actorId, string $sort): OffsetPaginator`: ensures `assignment.read`.
+- `find(int $actorId, int $id): ?Assignment`: ensures `assignment.read`, and returns null when the row doesn't exist or is outside the scope. The edit form's GET then returns `NotFoundHandler::handle()`.
+- `formOptions(int $actorId): AssignmentFormOptions`: ensures `assignment.create`, and returns the assignable employees (`withRole(Role::Employee, managerId: …)`, `null` for the `All` scope), all sites (with required levels) and all work items for the pickers, in the readonly `App\Service\AssignmentFormOptions`.
+- `create(int $actorId, int $employeeId, int $workItemId, int $constructionSiteId, string $startDate, string $endDate): int`: ensures `assignment.create`, then the assignee rule (`ForbiddenException`), then dates, work item and site existence and access level, and the overlap once everything else is valid, all collected into one `ValidationException`, then `create` with `createdById = $actorId`.
+- `update(int $actorId, int $id, string $startDate, string $endDate, string $status): void`: ensures `assignment.update`, loads the row through the scoped `find` (`App\Service\NotFoundException` when it is null), then dates, status value, and, when the new status is Active, access level and overlap (excluding itself).
+- `delete(int $actorId, int $id): void`: ensures `assignment.delete`, loads the row through the scoped `find` (`NotFoundException` when null), then deletes.
 - `displayStatus(Assignment $assignment): AssignmentDisplayStatus`: uses today from the clock.
-- Validation error fields: `employee`, `workItem`, `constructionSite`, `startDate`, `endDate`, `status`.
+- Validation error fields: `workItem`, `constructionSite`, `startDate` (also the overlap message), `endDate`, `status`. Dates are strict `Y-m-d` in input, messages and pages (decision 29).
+- The edit and delete actions map `NotFoundException` to `NotFoundHandler::handle()`.
 
 ### Web pages
 
@@ -199,7 +200,7 @@ The hardening branch sets a `Content-Security-Policy` that allows scripts only f
 - `tests/Integration/Service/AssignmentServiceTest.php` (rolled back, fixed clock):
   - Manager 2 creates an assignment for employee 5 at site 2; `CREATED_BY_ID` is 2 and the status Active.
   - Manager 2 assigning employee 7 (manager 3's), the admin (role admin) or manager 3 → `ForbiddenException`. The admin assigning employee 7 succeeds.
-  - Employee 4 calling any method → `ForbiddenException`.
+  - Employee 4 calling `formOptions`, `create`, `update` or `delete` → `ForbiddenException`; `list` and `find` only reach employee 4's own assignments, since employees have `assignment.read` with the `Own` scope.
   - Site above the employee's level → `ValidationException` on `constructionSite`; equal level passes.
   - End before start → error on `endDate`; overlap → error; the same dates after the other is Cancelled → allowed; several errors come back in one exception.
   - `find` of another manager's assignment → null.
@@ -238,6 +239,11 @@ Decisions 4 to 25 were first logged as rows #126 to #147 of the Decision Log; th
 25. **admin-management's repositories and shared pieces:** the service and pickers use admin-management's repositories, route guard, Twig helper, navigation, listing, validation, not-found and flash pieces listed in 2.1. So the service block waits until that branch merges; the table, entities, repository and clock come first. Rejected: own lookups in `AssignmentRepository`, which overlap.
 26. **Scripts 010 and 011 (assigned by the coordinating session):** this spec owns only these two. Admin-management owns 012 to 014, the pass-system API 015, and "My assignments" 017 if it needs one. Any other number is agreed with the coordinating session first.
 
+27. **Scope from the stored role (2026-10-29):** the service resolves the actor's role from `EMPLOYEE.ROLE` instead of taking a `Role` argument, so a caller can't widen the scope by passing the wrong role. Rejected: a `Role` parameter on every method (the first version of block C).
+28. **The service owns row access for writes (2026-10-29):** `update` and `delete` take the assignment ID, load it through the scoped `find` and throw `App\Service\NotFoundException`, which the actions map to 404. The service is the single enforcement point, and an action can't hand in an out-of-scope row. Rejected: passing the loaded `Assignment` object from the action.
+29. **`Y-m-d` everywhere (2026-10-29):** dates are entered, validated, shown in messages and listed as `Y-m-d`, like the admin employee list's birth dates and the "My assignments" page. Rejected: a local format such as `d.m.Y`.
+30. **Overlap race accepted (2026-10-29):** the overlap check and the insert are not atomic, so two concurrent creates of the same job can both pass. This is an accepted trade-off: contention is low, a duplicate is harmless and visible in the list, and it can be cancelled. No locking. Rejected: a serializable transaction or an application lock around create and update.
+
 # Part 3 — Implementation TODO
 
 Read Part 1 and Part 2 before starting. Work through the tasks in order and tick each one when it is done.
@@ -261,10 +267,10 @@ Baseline before starting: unit 52 tests, integration 143 tests, all passing (tak
 - [x] B4. Add `tests/Integration/Repository/AssignmentRepositoryTest.php`, and run `make test`. With an index hint, the access query's plan seeks `IX_ASSIGNMENT_SITE_PERIOD` on the site and start date, with the end date and status as residual predicates from the included columns and no key lookup.
 
 ### C. Service (after admin-management has merged)
-- [ ] C0. Once admin-management has merged, run `git merge origin/main` (never rebase, never force-push), resolving `config/common/di/repositories.php` by keeping both lists and `src/Repository/ListSort.php` by keeping one copy (admin-management's if they differ), and verify the class names and signatures listed in 2.1 against the merged code, including the page folder style. Ask before deviating from anything in this spec.
-- [ ] C0a. After the merge, switch admin-management's `EmployeeService`, `PasswordSetupService` and `AccountRepository` from their own `new DateTimeImmutable('now', UTC)` to the injected `ClockInterface`, keeping storage formatting in UTC, and give their tests a fixed clock where that makes them deterministic. One commit, "Use the shared clock in services". Also build the `DateTimeZone` once in `Clock`'s constructor, so a bad timezone fails on first resolve.
-- [ ] C1. Add `App\Service\AssignmentService` with every method and rule in 2.2.
-- [ ] C2. Add `tests/Integration/Service/AssignmentServiceTest.php`, and run `make test`.
+- [x] C0. Once admin-management has merged, run `git merge origin/main` (never rebase, never force-push), resolving `config/common/di/repositories.php` by keeping both lists and `src/Repository/ListSort.php` by keeping one copy (admin-management's if they differ), and verify the class names and signatures listed in 2.1 against the merged code, including the page folder style. Ask before deviating from anything in this spec.
+- [x] C0a. After the merge, switch admin-management's `EmployeeService`, `PasswordSetupService` and `AccountRepository` from their own `new DateTimeImmutable('now', UTC)` to the injected `ClockInterface`, keeping storage formatting in UTC, and give their tests a fixed clock where that makes them deterministic. One commit, "Use the shared clock in services". Also build the `DateTimeZone` once in `Clock`'s constructor, so a bad timezone fails on first resolve. `AccountRepositoryInterface::completeSetup()` now takes the `$now` that `PasswordSetupService` compared against, instead of `SYSUTCDATETIME()`, so the expiry has one time source; `tests/FixedClock.php` is the shared fixed clock for tests. The merge also made admin-management's three "unused row is deleted" tests remove the seed assignments that now reference site 2, work item 5 and employee 4.
+- [x] C1. Add `App\Service\AssignmentService` with every method and rule in 2.2.
+- [x] C2. Add `tests/Integration/Service/AssignmentServiceTest.php`, and run `make test`.
 
 ### D. Pages
 - [ ] D1. Add the list page with `ListParams`, the sort-link and pagination partials, status badges and the "Access level too low" badge.
