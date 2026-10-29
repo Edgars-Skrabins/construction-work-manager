@@ -4,10 +4,10 @@ declare(strict_types=1);
 
 namespace App\Migration;
 
-final class M261029000020CreateAuthThrottle extends SqlFileMigration
+final class M261029000018CreateAuthThrottle extends SqlFileMigration
 {
     protected function script(): string
     {
-        return '020_create_auth_throttle';
+        return '018_create_auth_throttle';
     }
 }
