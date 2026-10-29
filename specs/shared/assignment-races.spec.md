@@ -13,11 +13,14 @@ Saving an assignment checks two business rules from `work-assignments.spec.md` a
 2. **The employee's access level must reach the site's.** The service reads the employee's level and the site's required level, compares them, and writes.
    - To reproduce: an admin lowers the employee's access level (or raises the site's required level) while a manager saves an Active assignment for that employee at that site. The save compares the old levels, passes, and stores an Active assignment that the rule would have refused a moment later.
 
-Expected: every Active save behaves as if it ran alone. A second concurrent save of the same employee, work item and site waits for the first and is then refused with the usual overlap error. A concurrent level change either happens before the save, and the save sees the new level, or waits until the save has committed.
+3. **An employee with Active assignments can't change role** (role-change-assignments). `EmployeeService::update()` reads `hasActiveForEmployee()` in `validate()` before its transaction, then updates the row.
+   - To reproduce: an admin changes an employee's role to manager while a manager saves an Active assignment for that employee. The role check finds nothing, the save commits, then the role update commits, and a manager now has an Active assignment. (Added 2026-10-29: found while writing this fix; the coordinating session moved it into this spec because it is the same race class.)
+
+Expected: every Active save behaves as if it ran alone. A second concurrent save of the same employee, work item and site waits for the first and is then refused with the usual overlap error. A concurrent level change either happens before the save, and the save sees the new level, or waits until the save has committed. A role change and an assignment save of the same employee run one after the other: either the save comes first and the role change is refused with "Finish or cancel this employee's active assignments first.", or the role change comes first and the save refuses the employee, who is no longer assignable.
 
 `work-assignments.spec.md` decision 30 accepted the overlap race. The user decided to fix it, so this spec overrides that decision.
 
-- **Users:** managers and the admin creating and editing assignments; admins changing employees' and sites' access levels.
+- **Users:** managers and the admin creating and editing assignments; admins changing employees' roles and employees' and sites' access levels.
 - **Usage:**
   1. A manager saves an assignment. Nothing visible changes in the usual case: the same errors as today, all collected at once, or the redirect to the list with "Assignment saved."
   2. When another save of the same employee is in progress, the save waits for it (milliseconds) and then sees its result. If it now overlaps, the form shows the existing overlap message under Start date.
@@ -26,10 +29,12 @@ Expected: every Active save behaves as if it ran alone. A second concurrent save
   - Each Active save runs its checks and its write in one transaction. Saves that don't end Active (an update to Done or Cancelled) check nothing that can race and are unchanged.
   - Within the transaction the save locks, in this order: the employee's row, the site's row, then the employee's `ASSIGNMENT` index range read by the overlap check. The locks are held until commit.
   - All validation errors are still collected into one `ValidationException`, as today.
+  - `EmployeeService::update()` reads the employee row with `UPDLOCK` at the start of its transaction and runs all of `validate()`, including the active-assignments role check, after that lock. All its errors are still collected into one `ValidationException`.
   - The access-level rule itself doesn't change: it is checked only when a save ends Active. Lowering a level later still only flags existing assignments ("Access level too low").
 - **Out of scope:**
   - Locking in `EmployeeService` and `ConstructionSiteService`. A level change is a single `UPDATE` by primary key whose exclusive row lock already conflicts with the save's update lock, so they need no change. Their validation reads run before their transaction with shared locks released after each statement, and the `EMPLOYEE` (or `CONSTRUCTION_SITE`) row is the first lock their transaction takes, so they never hold a lock the save needs while waiting for the row.
-  - The role-change rule ("Finish or cancel this employee's active assignments first.") reads `hasActiveForEmployee()` in `EmployeeService::validate()` before its transaction. A save that commits between that read and the role update leaves an Active assignment on a non-employee. That race is in `EmployeeService` and needs its own spec.
+  - The "Reassign this manager's employees first." check in `EmployeeService::validate()`, which reads other employees' rows (`hasSubordinates()`), so the demoted manager's row lock doesn't cover it. No race on it has been reported.
+  - `EmployeeService::create()` and `delete()`. A new employee has no assignments, and delete is guarded by the foreign key.
   - Two concurrent edits of the same assignment to different dates or statuses. The last write wins, as for every other edit form; there is no rule they can break together.
   - A concurrent delete of the assignment being edited, which makes the update affect no row. That is the existing behaviour of every edit form.
   - Retrying a deadlocked save automatically (see decision 6).
@@ -51,6 +56,7 @@ Changed files:
   - `create()`: `ensure()` stays first. Everything else runs in a private `save(Closure $work)`: the employee is loaded with `employees->findForUpdate()` (the assignable check uses it), the work item with `find()`, the site with `sites->findForUpdate()`, then the level and overlap checks, the single `ValidationException`, and the insert.
   - `update()`: `ensure()` and `scopedOrFail()` stay before the transaction. The rest runs in `save()`, and for a new status of Active it loads the employee and site with `findForUpdate()` before the level and overlap checks, as today.
   - `save(Closure $work)` runs `$this->transaction->run($work)` and turns a `SerializationFailureException` into `ValidationException::forField('startDate', self::CONCURRENT_CHANGE)`, where `CONCURRENT_CHANGE` is "The assignment couldn't be saved because of a change made at the same time. Try again."
+- `src/Service/EmployeeService.php`: `update()` keeps `ensure()` first. Everything else moves into its transaction: the employee is loaded with `employees->findForUpdate()` (still `InvalidArgumentException` when missing), then `validate()`, then the writes. Because a save locks the same row first, the role check and a save serialize. Lock order stays the same: the `EMPLOYEE` row is the first lock either takes.
 - `CLAUDE.md`: the Architecture bullet on the access-level rule gains one sentence: an Active save locks the employee row, the site row and the overlap range in one transaction, and a deadlock becomes a "try again" error.
 - `specs/shared/work-assignments.spec.md` stays frozen; decision 30 is overridden here, not edited.
 
@@ -67,6 +73,7 @@ Tests:
   - The tests use employee 5 (manager 2's subordinate, level 2), site 2 (level 2) and work item 1 with dates in 2030, so neither the current seed nor the demo seed has an overlapping row.
   - A level change waits for an open save and then sees the new assignment (added 2026-10-29 at the coordinator's request): for the employee's level lowered through `EmployeeRepository::update()` and the site's level raised through `ConstructionSiteRepository::update()`, both on the second session, the update times out while the save is open. The test connection then commits, and the same update succeeds. The second session sees the new assignment Active, flagged (employee level below the site's), and missing from `findEmployeesNeedingAccess()`. Because this test commits, `tearDown()` deletes the committed assignment.
   - Without the hints, neither statement would wait (an `S` lock is compatible with `U`, and is released after reading), so these tests fail if a hint is removed.
+- A role change holds the employee row (in `AssignmentLockingTest`): the test builds `EmployeeService` with an `AssignmentRepositoryInterface` that delegates to the real one but, right after `hasActiveForEmployee()` returns, runs a save's first two steps on the second session (`findForUpdate()` of the employee and an Active insert, then commit). Employee 18 (role employee, no assignments in the demo seed) is changed to manager by the admin. With the fix the second session's `findForUpdate()` times out and the role change succeeds; without it the second session commits an Active assignment and the test fails (checked). `tearDown()` deletes an assignment the second session committed.
 - `tests/Integration/Service/AssignmentServiceTest.php`: a test builds the service with a `TransactionRunnerInterface` stub that throws `SerializationFailureException` and expects exactly `['startDate' => CONCURRENT_CHANGE message]` from `create()` and `update()`. The existing tests stay green unchanged, apart from `assignmentsAt()`.
 - There are no employee or site repository test classes; `findForUpdate()` is covered by the service and locking tests.
 
@@ -79,12 +86,13 @@ Tests:
 6. **A deadlock becomes a "try again" error under Start date, no retry.** With the fixed lock order, saves don't deadlock each other; a deadlock needs another writer in the cycle and is rare. When SQL Server picks the save as victim it has already rolled back the whole transaction, including any caller's outer transaction, so retrying inside the service is not safe in general. Start date is the one field both the create and edit forms show. Rejected: retrying once; a new form-level error area, which would change the web form for a rare case.
 7. **New `findForUpdate()` methods instead of a lock flag on `find()`.** The locking read is a different operation and only makes sense inside a transaction. `findOverlappingActive()` keeps its name and always locks, because its only caller is the save.
 8. **Lock-timeout tests with a second connection.** PHPUnit is single-threaded, so the tests let one session hold its locks in an open transaction and prove that the other session's conflicting statement waits (`SET LOCK_TIMEOUT 500`, error 1222). The deadlock mapping is tested with a stub transaction runner, because a real deadlock needs two sessions waiting at once.
+9. **The role-change race is fixed here (2026-10-29, coordinating session).** It was first recorded as out of scope. It is the same race class (a check and a write with an assignment save between them), and the user wants races fixed. Locking the employee row in `EmployeeService::update()` is enough because every Active save locks that row first. Rejected: re-checking `hasActiveForEmployee()` after the update, which still lets a save commit after the re-check.
 
 # Part 3 — Implementation TODO
 
 Read Part 1 and Part 2 before starting. Work through the tasks in order and tick each one when it is done.
 
-Baseline before starting: 180 unit tests and 608 integration tests. After: 180 unit and 614 integration.
+Baseline before starting: 180 unit tests and 608 integration tests. After: 180 unit and 614 integration. After block C, with main merged: 184 unit and 660 integration.
 
 ### A. Locking reads
 - [x] A1. Add `findForUpdate()` to `EmployeeRepositoryInterface` and `EmployeeRepository`, and to `ConstructionSiteRepositoryInterface` and `ConstructionSiteRepository`, as in 2.2.
@@ -96,6 +104,11 @@ Baseline before starting: 180 unit tests and 608 integration tests. After: 180 u
 - [x] B3. Add `AssignmentLockingTest` with the lock-timeout tests from 2.2.
 - [x] B4. Add the sentence to `CLAUDE.md` and run `make check`.
 - [x] B5. Add the level-change test from 2.2 (employee level lowered, site level raised) to `AssignmentLockingTest`, cleaning up the committed assignment in `tearDown()`.
+
+### C. Role change
+- [x] C1. Move `EmployeeService::update()`'s employee read and `validate()` into its transaction, reading the employee with `findForUpdate()`.
+- [x] C2. Add the role-change test from 2.2 to `AssignmentLockingTest` and check that it fails without C1.
+- [x] C3. Run `make check`.
 
 ### Z. Wrap-up
 - [x] Z1. `make check` green: code style, PHPStan, unit and integration tests.

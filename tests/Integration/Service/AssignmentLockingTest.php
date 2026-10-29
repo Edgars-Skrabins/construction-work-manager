@@ -4,23 +4,38 @@ declare(strict_types=1);
 
 namespace App\Tests\Integration\Service;
 
+use App\Access\AccessChecker;
+use App\Access\AccessScope;
+use App\Access\Role;
 use App\Access\Scope;
+use App\Entity\Assignment;
+use App\Entity\AssignmentListItem;
 use App\Entity\AssignmentStatus;
 use App\Entity\EmployeeNeedingAccess;
+use App\Repository\AccessLevelRepositoryInterface;
+use App\Repository\AccountRepositoryInterface;
 use App\Repository\AssignmentRepository;
 use App\Repository\AssignmentRepositoryInterface;
 use App\Repository\ConstructionSiteData;
 use App\Repository\ConstructionSiteRepository;
 use App\Repository\EmployeeData;
 use App\Repository\EmployeeRepository;
+use App\Repository\EmployeeRepositoryInterface;
+use App\Repository\TransactionRunnerInterface;
 use App\Service\AssignmentService;
+use App\Service\EmployeeInput;
+use App\Service\EmployeeService;
+use App\Service\SetupCodeGenerator;
 use App\Tests\Integration\IntegrationTestCase;
 use Closure;
 use DateTimeImmutable;
 use PHPUnit\Framework\Attributes\DataProvider;
+use Psr\Clock\ClockInterface;
+use Yiisoft\Data\Paginator\OffsetPaginator;
 use Yiisoft\Db\Connection\ConnectionInterface;
 use Yiisoft\Db\Driver\Pdo\PdoConnectionInterface;
 use Yiisoft\Db\Exception\Exception;
+use Yiisoft\Security\PasswordHasher;
 
 use function PHPUnit\Framework\assertContains;
 use function PHPUnit\Framework\assertInstanceOf;
@@ -132,6 +147,45 @@ final class AssignmentLockingTest extends IntegrationTestCase
         ));
     }
 
+    public function testAnAssignmentSaveWaitsForARoleChangeThatCheckedForActiveAssignments(): void
+    {
+        $saveBlocked = false;
+        $assignments = $this->assignmentsCheckedThen(function () use (&$saveBlocked): void {
+            try {
+                (new EmployeeRepository($this->other))->findForUpdate(18);
+                $this->committedId = (new AssignmentRepository($this->other))->create(
+                    18,
+                    1,
+                    1,
+                    new DateTimeImmutable('2030-01-10'),
+                    new DateTimeImmutable('2030-01-20'),
+                    1,
+                );
+                $this->other->getTransaction()?->commit();
+            } catch (Exception $e) {
+                assertContains($e->errorInfo[1] ?? null, [1222, '1222']);
+                $saveBlocked = true;
+            }
+        });
+        $employee = $this->service(EmployeeRepositoryInterface::class)->find(18);
+        assertNotNull($employee);
+        assertSame(Role::Employee, $employee->role);
+
+        $this->employees($assignments)->update(1, 18, new EmployeeInput(
+            $employee->firstName,
+            $employee->lastName,
+            $employee->birthDate,
+            $employee->accessLevelId,
+            Role::Manager,
+            null,
+            $employee->account?->email,
+            $employee->account->isActive ?? true,
+        ));
+
+        assertTrue($saveBlocked);
+        assertSame(Role::Manager, $this->service(EmployeeRepositoryInterface::class)->roleOf(18));
+    }
+
     public function testASaveWaitsForAnotherSaveOfTheSameWork(): void
     {
         assertNull((new AssignmentRepository($this->other))->findOverlappingActive(
@@ -164,6 +218,108 @@ final class AssignmentLockingTest extends IntegrationTestCase
         } catch (Exception $e) {
             assertContains($e->errorInfo[1] ?? null, [1222, '1222']);
         }
+    }
+
+    /**
+     * @param Closure(): void $afterCheck
+     */
+    private function assignmentsCheckedThen(Closure $afterCheck): AssignmentRepositoryInterface
+    {
+        return new readonly class ($this->service(AssignmentRepositoryInterface::class), $afterCheck) implements AssignmentRepositoryInterface {
+            /**
+             * @param Closure(): void $afterCheck
+             */
+            public function __construct(
+                private AssignmentRepositoryInterface $assignments,
+                private Closure $afterCheck,
+            ) {}
+
+            public function find(int $id, int $viewerId, Scope $scope): ?Assignment
+            {
+                return $this->assignments->find($id, $viewerId, $scope);
+            }
+
+            public function findListItem(int $id, int $viewerId, Scope $scope): ?AssignmentListItem
+            {
+                return $this->assignments->findListItem($id, $viewerId, $scope);
+            }
+
+            public function listPaginator(int $viewerId, Scope $scope, string $sort, string $search): OffsetPaginator
+            {
+                return $this->assignments->listPaginator($viewerId, $scope, $sort, $search);
+            }
+
+            public function listInPeriod(int $viewerId, Scope $scope, DateTimeImmutable $from, DateTimeImmutable $to, ?int $employeeId): array
+            {
+                return $this->assignments->listInPeriod($viewerId, $scope, $from, $to, $employeeId);
+            }
+
+            public function findAssignedWork(int $employeeId): array
+            {
+                return $this->assignments->findAssignedWork($employeeId);
+            }
+
+            public function hasActiveForEmployee(int $employeeId): bool
+            {
+                $hasActive = $this->assignments->hasActiveForEmployee($employeeId);
+                ($this->afterCheck)();
+
+                return $hasActive;
+            }
+
+            public function findOverlappingActive(
+                int $employeeId,
+                int $workItemId,
+                int $constructionSiteId,
+                DateTimeImmutable $startDate,
+                DateTimeImmutable $endDate,
+                ?int $exceptId,
+            ): ?Assignment {
+                return $this->assignments->findOverlappingActive($employeeId, $workItemId, $constructionSiteId, $startDate, $endDate, $exceptId);
+            }
+
+            public function create(
+                int $employeeId,
+                int $workItemId,
+                int $constructionSiteId,
+                DateTimeImmutable $startDate,
+                DateTimeImmutable $endDate,
+                int $createdById,
+            ): int {
+                return $this->assignments->create($employeeId, $workItemId, $constructionSiteId, $startDate, $endDate, $createdById);
+            }
+
+            public function updatePeriodAndStatus(int $id, DateTimeImmutable $startDate, DateTimeImmutable $endDate, AssignmentStatus $status): void
+            {
+                $this->assignments->updatePeriodAndStatus($id, $startDate, $endDate, $status);
+            }
+
+            public function delete(int $id): void
+            {
+                $this->assignments->delete($id);
+            }
+
+            public function findEmployeesNeedingAccess(int $constructionSiteId, DateTimeImmutable $date): array
+            {
+                return $this->assignments->findEmployeesNeedingAccess($constructionSiteId, $date);
+            }
+        };
+    }
+
+    private function employees(AssignmentRepositoryInterface $assignments): EmployeeService
+    {
+        return new EmployeeService(
+            $this->service(EmployeeRepositoryInterface::class),
+            $this->service(AccountRepositoryInterface::class),
+            $this->service(AccessLevelRepositoryInterface::class),
+            $assignments,
+            $this->service(TransactionRunnerInterface::class),
+            $this->service(AccessChecker::class),
+            $this->service(AccessScope::class),
+            $this->service(PasswordHasher::class),
+            $this->service(SetupCodeGenerator::class),
+            $this->service(ClockInterface::class),
+        );
     }
 
     private function assignments(): AssignmentService
