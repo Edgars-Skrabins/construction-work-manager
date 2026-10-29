@@ -23,7 +23,11 @@ interface ConstructionSiteRepositoryInterface
      */
     public function all(): array;
 
+    public function findByCode(string $code): ?ConstructionSite;
+
     public function nameExists(string $name, ?int $exceptId): bool;
+
+    public function codeExists(string $code, ?int $exceptId): bool;
 
     public function create(ConstructionSiteData $data): int;
 

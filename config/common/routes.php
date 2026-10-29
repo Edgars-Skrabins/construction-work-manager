@@ -111,7 +111,7 @@ return [
         ),
     Group::create('/api/v1')
         ->routes(
-            Route::get('/construction-sites/{id}/employees')
+            Route::get('/construction-sites/{code}/employees')
                 ->action(Api\V1\SiteEmployees\Action::class)
                 ->name('api.v1.site-employees'),
         ),

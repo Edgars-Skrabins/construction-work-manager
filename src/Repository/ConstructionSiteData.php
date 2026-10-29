@@ -7,6 +7,7 @@ namespace App\Repository;
 final readonly class ConstructionSiteData
 {
     public function __construct(
+        public string $code,
         public string $name,
         public string $street,
         public string $city,

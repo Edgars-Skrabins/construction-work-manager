@@ -78,17 +78,26 @@ final class ConstraintsTest extends IntegrationTestCase
     public static function invalidRows(): iterable
     {
         $employee = "INSERT INTO EMPLOYEE (FIRST_NAME, LAST_NAME, BIRTH_DATE, ACCESS_LEVEL_ID, ROLE, MANAGER_ID) VALUES (N'Test', N'Person', '1990-01-01', %s, %s, %s)";
-        $site = "INSERT INTO CONSTRUCTION_SITE (NAME, STREET, CITY, COUNTRY, AREA_M2, REQUIRED_ACCESS_LEVEL_ID) VALUES (%s, N'Street 1', N'Rīga', N'Latvia', %s, 1)";
+        $site = "INSERT INTO CONSTRUCTION_SITE (CODE, NAME, STREET, CITY, COUNTRY, AREA_M2, REQUIRED_ACCESS_LEVEL_ID) VALUES (%s, %s, N'Street 1', N'Rīga', N'Latvia', %s, 1)";
 
         yield 'unknown role' => [sprintf($employee, '1', "N'director'", 'NULL'), 'FK_EMPLOYEE_ROLE'];
         yield 'permission as role' => [sprintf($employee, '1', "N'site.read'", 'NULL'), 'FK_EMPLOYEE_ROLE'];
         yield 'unknown access level' => [sprintf($employee, '5', "N'employee'", 'NULL'), 'FK_EMPLOYEE_ACCESS_LEVEL_ID'];
         yield 'missing manager' => [sprintf($employee, '1', "N'employee'", '9999'), 'FK_EMPLOYEE_MANAGER_ID'];
         yield 'own manager' => ["UPDATE EMPLOYEE SET MANAGER_ID = ID WHERE ID = 4", 'CK_EMPLOYEE_NOT_OWN_MANAGER'];
-        yield 'zero area' => [sprintf($site, "N'Test site'", '0'), 'CK_CONSTRUCTION_SITE_AREA_M2'];
-        yield 'duplicate site name' => [sprintf($site, "N'Daugavpils School Renovation'", '100'), 'UQ_CONSTRUCTION_SITE_NAME'];
+        yield 'zero area' => [sprintf($site, "N'TST-001'", "N'Test site'", '0'), 'CK_CONSTRUCTION_SITE_AREA_M2'];
+        yield 'duplicate site name' => [sprintf($site, "N'TST-001'", "N'Daugavpils School Renovation'", '100'), 'UQ_CONSTRUCTION_SITE_NAME'];
+        yield 'duplicate site code' => [sprintf($site, "N'DGP-SCH-01'", "N'Test site'", '100'), 'UQ_CONSTRUCTION_SITE_CODE'];
+        yield 'lowercase site code' => [sprintf($site, "N'tst-001'", "N'Test site'", '100'), 'CK_CONSTRUCTION_SITE_CODE'];
+        yield 'short site code' => [sprintf($site, "N'T1'", "N'Test site'", '100'), 'CK_CONSTRUCTION_SITE_CODE'];
+        yield 'site code starting with a hyphen' => [sprintf($site, "N'-TST-001'", "N'Test site'", '100'), 'CK_CONSTRUCTION_SITE_CODE'];
+        yield 'site code with an underscore' => [sprintf($site, "N'TST_001'", "N'Test site'", '100'), 'CK_CONSTRUCTION_SITE_CODE'];
+        yield 'site without a code' => [
+            "INSERT INTO CONSTRUCTION_SITE (NAME, STREET, CITY, COUNTRY, AREA_M2, REQUIRED_ACCESS_LEVEL_ID) VALUES (N'Test site', N'Street 1', N'Rīga', N'Latvia', 100, 1)",
+            'CODE',
+        ];
         yield 'unknown site access level' => [
-            "INSERT INTO CONSTRUCTION_SITE (NAME, STREET, CITY, COUNTRY, AREA_M2, REQUIRED_ACCESS_LEVEL_ID) VALUES (N'Other site', N'Street 1', N'Rīga', N'Latvia', 100, 0)",
+            "INSERT INTO CONSTRUCTION_SITE (CODE, NAME, STREET, CITY, COUNTRY, AREA_M2, REQUIRED_ACCESS_LEVEL_ID) VALUES (N'TST-001', N'Other site', N'Street 1', N'Rīga', N'Latvia', 100, 0)",
             'FK_CONSTRUCTION_SITE_REQUIRED_ACCESS_LEVEL_ID',
         ];
         yield 'duplicate work item name' => ["INSERT INTO WORK_ITEM (NAME) VALUES (N'Welding')", 'UQ_WORK_ITEM_NAME'];

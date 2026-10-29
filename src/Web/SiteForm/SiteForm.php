@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Web\SiteForm;
 
 use App\Entity\ConstructionSite;
+use App\Entity\SiteCode;
 use App\Repository\ConstructionSiteData;
 use App\Web\Shared\Form\FormBody;
 use Yiisoft\Validator\Label;
@@ -15,6 +16,11 @@ use Yiisoft\Validator\Rule\Required;
 
 final class SiteForm
 {
+    #[Label('Site code')]
+    #[Required]
+    #[Regex(SiteCode::PATTERN, message: SiteCode::FORM_MESSAGE, skipOnEmpty: true)]
+    public string $code = '';
+
     #[Required]
     #[Length(max: 150)]
     public string $name = '';
@@ -43,6 +49,7 @@ final class SiteForm
     public static function fromBody(mixed $body): self
     {
         $form = new self();
+        $form->code = SiteCode::normalize(FormBody::string($body, 'code'));
         $form->name = FormBody::string($body, 'name');
         $form->street = FormBody::string($body, 'street');
         $form->city = FormBody::string($body, 'city');
@@ -56,6 +63,7 @@ final class SiteForm
     public static function fromSite(ConstructionSite $site): self
     {
         $form = new self();
+        $form->code = $site->code;
         $form->name = $site->name;
         $form->street = $site->street;
         $form->city = $site->city;
@@ -69,6 +77,7 @@ final class SiteForm
     public function toData(): ConstructionSiteData
     {
         return new ConstructionSiteData(
+            code: $this->code,
             name: $this->name,
             street: $this->street,
             city: $this->city,
