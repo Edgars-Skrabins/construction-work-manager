@@ -1,7 +1,7 @@
 # Dark theme — Spec
 
 **Type:** feature
-**Status:** in progress
+**Status:** done
 **Last updated:** 2026-10-29
 
 # Part 1 — Business logic and usage
@@ -25,7 +25,7 @@ The web UI uses Bootstrap's default light look: a light gray page, white tables 
 - **Out of scope:**
   - A light theme or a theme switch: the user chose a dark-only theme.
   - Grouping the Assignments list by site (decision 3).
-  - Layout changes on other pages beyond the color classes that block the dark theme (`bg-light`, `bg-white`, `navbar-dark bg-dark`, `btn-outline-light`).
+  - Layout changes on other pages beyond the color classes that block the dark theme (`bg-light`, `bg-white`, `navbar-dark bg-dark`, `btn-outline-light`, `link-dark`).
   - The API, which renders no HTML.
 
 # Part 2 — Technical details
@@ -93,6 +93,7 @@ No new dependencies. It builds on Bootstrap 5.3's own dark color mode (`data-bs-
 ### Other templates
 
 - `src/Web/EmployeeList/template.twig`, `src/Web/SiteList/template.twig` and `src/Web/WorkItemList/template.twig`: the tables lose `bg-white`. They keep `table-striped`.
+- `src/Web/Shared/Listing/sort-link.twig`: the column header links' `link-dark` becomes `link-body-emphasis`, because `link-dark` is near-black on the dark page.
 
 ### Tests
 
@@ -110,6 +111,7 @@ No new dependencies. It builds on Bootstrap 5.3's own dark color mode (`data-bs-
 5. **Overdue badge becomes `text-bg-danger`** and the "Access level too low" flag becomes a red outlined badge, so In progress (amber) and Overdue (red) are told apart, and Overdue and the flag look different. Rejected: keeping Overdue yellow, because it is too close to amber on dark.
 6. **Status colors live in CSS classes named after the status** (`status-<status>`) returned by `AssignmentDisplayStatus::stripeClass()`, next to `badgeClass()`, so the template never maps statuses itself.
 7. **Other list tables keep `table-striped`** and only lose `bg-white`; they have no status to show.
+8. **Sort links use `link-body-emphasis`**, Bootstrap's theme-aware link color, instead of `link-dark`. Found during the manual check (2026-10-29).
 
 # Part 3 — Implementation TODO
 
@@ -131,5 +133,5 @@ Baseline before starting: `make check` passes with 139 unit tests (470 assertion
 - [x] B5. Update `README.md` and `CLAUDE.md` if they describe the look or the markup changed here.
 
 ### Z. Wrap-up
-- [ ] Z1. `make check` passes.
-- [ ] Z2. Manual check in the built-in browser on the own stack: as admin, manager and employee, every page in the navbar, the create and edit forms, the login, set-password, 403 and 404 pages, at 375, 768 and 1280 px: dark everywhere, amber accent, badges readable, `document.documentElement.scrollWidth <= window.innerWidth`, and the Assignments list still sorts and paginates.
+- [x] Z1. `make check` passes: 145 unit tests (482 assertions) and 521 integration tests (4391 assertions).
+- [x] Z2. Manual check in the built-in browser on the own stack: as admin, manager and employee, every page in the navbar, the create and edit forms, the login, set-password, 403 and 404 pages, at 375, 768 and 1280 px: dark everywhere, amber accent, badges readable, `document.documentElement.scrollWidth <= window.innerWidth`, and the Assignments list still sorts and paginates.
