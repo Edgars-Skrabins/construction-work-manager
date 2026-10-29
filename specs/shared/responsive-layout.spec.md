@@ -103,8 +103,8 @@ Baseline before starting: record the test counts from `make check` in A0.
 - [x] A2. Add `tests/Integration/Web/LayoutTest.php` with the toggler, no-toggler-for-guests and no-inline-script tests from 2.2. `make check` passes.
 
 ### B. My assignments and table dates
-- [ ] B1. Make the My assignments rows wrap and split `period-status.twig` as in 2.2. Update the assertions in `MyAssignmentsPageTest` that match the old period-status markup, if any.
-- [ ] B2. Add `text-nowrap` to the date cells of the employee and assignment lists.
+- [x] B1. Make the My assignments rows wrap and split `period-status.twig` as in 2.2. Update the assertions in `MyAssignmentsPageTest` that match the old period-status markup, if any.
+- [x] B2. Add `text-nowrap` to the date cells of the employee and assignment lists.
 
 ### C. Landing redirects
 - [ ] C1. Change `src/Web/HomePage/Action.php` to redirect by role as in 2.2, and delete `src/Web/HomePage/template.twig`.

@@ -25,7 +25,7 @@
                 {% for employee in paginator.read() %}
                     <tr>
                         <td>{{ employee.lastName }}, {{ employee.firstName }}</td>
-                        <td>{{ employee.birthDate|date('Y-m-d') }}</td>
+                        <td class="text-nowrap">{{ employee.birthDate|date('Y-m-d') }}</td>
                         <td>{{ employee.accessLevelName }}</td>
                         <td>{{ employee.role.value }}</td>
                         <td>{{ employee.managerName ?? '—' }}</td>
