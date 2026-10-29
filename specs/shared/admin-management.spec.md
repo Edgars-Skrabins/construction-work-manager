@@ -151,7 +151,7 @@ Each interface has a `yiisoft/db` implementation next to it, bound in a new `con
 - `WorkItemRepositoryInterface` / `WorkItemRepository`: `listPaginator(string $sort)` with sort key `name`; `find`, `all(): list<WorkItem>` sorted by name, `nameExists`, `create(WorkItemData)`, `update`, `delete`.
 - `AccessLevelRepositoryInterface` / `AccessLevelRepository`: `all(): list<AccessLevel>` by ID, `exists(int)`.
 - `TransactionRunnerInterface` / `DbTransactionRunner`: `run(callable(): T): T` (`@template T`), implemented with `ConnectionInterface::transaction()`. Nested calls (in tests) use savepoints.
-- `delete()` methods let `Yiisoft\Db\Exception\IntegrityException` escape. Services treat it as "in use" only when the message is SQL Server's foreign key error for a delete (it contains `REFERENCE constraint`), and rethrow any other integrity error, so unique or check violations are never swallowed.
+- `delete()` methods let `Yiisoft\Db\Exception\IntegrityException` escape. Services treat it as "in use" only when the driver error number (`$e->errorInfo[1]`) is SQL Server's 547 (a constraint conflict), which inside a `DELETE` can only be a referencing foreign key, and rethrow any other integrity error. The number doesn't depend on the server language, unlike the message text.
 
 ### PHP: services (`src/Service/`)
 
@@ -185,7 +185,7 @@ Actions get the acting ID with `(int) $currentUser->getId()`, render through `We
 - `WorkItemList/`, `WorkItemForm/` (with `WorkItemForm.php`), `WorkItemDelete/`.
 - `SetPassword/` (with `SetPasswordForm.php`).
 - `src/Web/Login/template.twig` gets the "First login? Set your password" link.
-- Flash messages: the list actions, which are the redirect targets after saving and deleting, read `FlashInterface::get('success')` during the request and pass it to their template as `messages`. The template includes `src/Web/Shared/Flash/messages.twig`, which renders each message as an `alert-success`. Actions add messages with `FlashInterface::add('success', ...)`.
+- Flash messages: `src/Web/Shared/Flash/FlashMessages.php` wraps `FlashInterface` with `addSuccess(string $message)` and `success(): list<string>`. The list actions, which are the redirect targets after saving and deleting, read `success()` during the request and pass it to their template as `messages`. The template includes `src/Web/Shared/Flash/messages.twig`, which renders each message as an `alert-success`.
 - `src/Web/Shared/Form/field-errors.twig`: included with a list of messages, renders Bootstrap `invalid-feedback`. Fields with errors get `is-invalid`.
 
 ### Routes (`config/common/routes.php`)
@@ -243,6 +243,8 @@ Inside the authenticated group, each with `RequirePermission::for(...)`:
   - Validation errors show under their field. Deleting shows the flash; a blocked delete shows 409 with the reason. A missing ID gives 404.
   - As manager 2 and employee 4: no links, and every route gives 403.
   - As a guest, through the real routes: `/employees` gives a 302 to `/login`, never a 403, which proves the `Authentication` group runs before `RequirePermission`.
+- `tests/Integration/Web/WebClient.php`: a trait with `request()`, `logIn()`, `submit()` and `csrfToken()`, extracted from `AuthenticationTest`, which now uses it, so every page test drives the app the same way.
+- `tests/Unit/Service/InUseExceptionTest.php`: error 547 becomes `InUseException`, and any other integrity error is rethrown.
 - `tests/Integration/Web/SetPasswordTest.php`: an admin creates an employee with an email, then a guest sets a password with the code, is logged in, and can later log in on `/login`; a wrong code shows the generic error; a logged-in user is redirected.
 - `tests/Integration/Web/RequirePermissionTest.php`: passes for a permitted user, throws `ForbiddenException` for a guest and for a missing permission. Through the app, a guest opening `/employees` is redirected to `/login` (302), never 403.
 - `MigrationRoundTripTest` still passes with 012. `AuthenticationTest` still finds "Jānis Bērziņš (admin)".
@@ -259,6 +261,7 @@ Inside the authenticated group, each with `RequirePermission::for(...)`:
 3. **Demoting a manager with employees is refused:** "Reassign this manager's employees first." Rejected: silently unassigning them, and a replacement-manager field.
 4. **Deleting an employee deletes their account, other references block:** the account is only their login. Subordinates block with a message, and any other FK violation becomes "still in use". Rejected: blocking while an account exists (two steps) and soft delete (every query would have to filter it).
 5. **Sites and work items in use: catch the FK violation:** the service turns `IntegrityException` into "still in use", which keeps working once assignments exist without this spec knowing their table. Rejected: cascading deletes (loses history, needs the unknown table) and explicit pre-checks (needs the unknown table).
+   - 2026-10-29 (coordinating session's review): detected by SQL Server error number 547 in the delete context, not by the message text, which depends on the server language.
 6. **Pages of 20 with column sorting:** `?sort=-name&page=2` with a whitelist, default by name, ties broken by ID. Rejected: a fixed sort and no pagination.
    - 2026-10-29: built with `yiisoft/data` and `yiisoft/data-db` (`OffsetPaginator`, `Sort`, `QueryDataReader`), the packages `work-assignments` already chose (Decision Log #138), so the app has one paging mechanism and `work-assignments` reuses `ListParams` and the partials. Rejected: own `ListQuery` and `Page` classes (the first draft of this spec).
 7. **Optional email with an active checkbox:** a blank email means no login. Clearing it deletes the account, and the checkbox deactivates it. Rejected: a required email for everyone, and an email without the active toggle.
@@ -298,8 +301,8 @@ Baseline before starting: unit 52 tests, integration 143 tests, all passing.
 - [x] A5. Add `TransactionRunnerInterface`, `DbTransactionRunner`, `ListParams` with `ListParamsTest`, `sort-link.twig`, `pagination.twig`, `field-errors.twig` and `src/Web/Shared/Flash/messages.twig`. Add `config/common/di/repositories.php` and run `composer yii-config-rebuild`.
 
 ### B. Work items and construction sites
-- [ ] B1. Add `WorkItem`, `WorkItemData`, `WorkItemRepositoryInterface`, `WorkItemRepository`, `ValidationException`, `InUseException` and `WorkItemService`, with `WorkItemServiceTest`.
-- [ ] B2. Add the `WorkItemList`, `WorkItemForm` and `WorkItemDelete` pages and their routes.
+- [x] B1. Add `WorkItem`, `WorkItemData`, `WorkItemRepositoryInterface`, `WorkItemRepository`, `ValidationException`, `InUseException` and `WorkItemService`, with `WorkItemServiceTest`.
+- [x] B2. Add the `WorkItemList`, `WorkItemForm` and `WorkItemDelete` pages and their routes.
 - [ ] B3. Add `AccessLevel` with its repository, `ConstructionSite`, `ConstructionSiteData`, the site repository and `ConstructionSiteService`, with `ConstructionSiteServiceTest`.
 - [ ] B4. Add the `SiteList`, `SiteForm` and `SiteDelete` pages and their routes.
 
