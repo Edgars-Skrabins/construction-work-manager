@@ -129,7 +129,7 @@ final readonly class AssignmentRepository implements AssignmentRepositoryInterfa
     ): ?Assignment {
         $query = (new Query($this->db))
             ->select(self::COLUMNS)
-            ->from(['a' => 'ASSIGNMENT'])
+            ->from(new Expression('ASSIGNMENT a WITH (UPDLOCK, HOLDLOCK, INDEX(IX_ASSIGNMENT_EMPLOYEE_ID))'))
             ->where([
                 'a.EMPLOYEE_ID' => $employeeId,
                 'a.WORK_ITEM_ID' => $workItemId,
