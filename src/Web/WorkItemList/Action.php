@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace App\Web\WorkItemList;
 
 use App\Service\WorkItemService;
-use App\Web\Shared\Flash\FlashMessages;
 use App\Web\Shared\Listing\ListParams;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
@@ -18,7 +17,6 @@ final readonly class Action
         private WebViewRenderer $viewRenderer,
         private CurrentUser $currentUser,
         private WorkItemService $workItems,
-        private FlashMessages $flash,
     ) {}
 
     public function __invoke(ServerRequestInterface $request): ResponseInterface
@@ -26,9 +24,6 @@ final readonly class Action
         $params = ListParams::fromRequest($request);
         $paginator = $params->applyTo($this->workItems->listPaginator((int) $this->currentUser->getId(), $params->sort));
 
-        return $this->viewRenderer->render(__DIR__ . '/template', [
-            'paginator' => $paginator,
-            'messages' => $this->flash->success(),
-        ]);
+        return $this->viewRenderer->render(__DIR__ . '/template', ['paginator' => $paginator]);
     }
 }

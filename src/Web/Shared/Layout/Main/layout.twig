@@ -47,6 +47,9 @@
 </header>
 
 <main class="container flex-grow-1 py-5">
+    {% for message in flash.success() %}
+        <div class="alert alert-success" role="status">{{ message }}</div>
+    {% endfor %}
     {{ content|raw }}
 </main>
 

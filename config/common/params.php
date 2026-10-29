@@ -5,6 +5,7 @@ declare(strict_types=1);
 use App\Environment;
 use App\Shared\ApplicationParams;
 use App\Web\Shared\Access\ViewAccess;
+use App\Web\Shared\Flash\FlashMessages;
 use Yiisoft\Aliases\Aliases;
 use Yiisoft\Assets\AssetManager;
 use Yiisoft\Definitions\DynamicReference;
@@ -36,6 +37,7 @@ return [
             'currentRoute' => Reference::to(CurrentRoute::class),
             'currentUser' => Reference::to(CurrentUser::class),
             'access' => Reference::to(ViewAccess::class),
+            'flash' => Reference::to(FlashMessages::class),
         ],
     ],
 

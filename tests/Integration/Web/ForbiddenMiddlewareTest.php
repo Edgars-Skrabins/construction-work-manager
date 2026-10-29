@@ -7,6 +7,7 @@ namespace App\Tests\Integration\Web;
 use App\Access\ForbiddenException;
 use App\Tests\Integration\IntegrationTestCase;
 use App\Web\Forbidden\ForbiddenMiddleware;
+use App\Web\Shared\Rendering\RenderBeforeSessionClose;
 use Psr\Http\Message\ResponseFactoryInterface;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestFactoryInterface;
@@ -80,6 +81,16 @@ final class ForbiddenMiddlewareTest extends IntegrationTestCase
         $position = array_search(ForbiddenMiddleware::class, $middlewares, true);
 
         assertSame(array_search(Router::class, $middlewares, true), $position + 1);
+        assertGreaterThan(array_search(SessionMiddleware::class, $middlewares, true), $position);
+        assertGreaterThan(array_search(CsrfTokenMiddleware::class, $middlewares, true), $position);
+    }
+
+    public function testPagesRenderRightBeforeTheForbiddenMiddlewareWhileTheSessionIsOpen(): void
+    {
+        $middlewares = $this->webMiddlewares();
+        $position = array_search(RenderBeforeSessionClose::class, $middlewares, true);
+
+        assertSame(array_search(ForbiddenMiddleware::class, $middlewares, true), $position + 1);
         assertGreaterThan(array_search(SessionMiddleware::class, $middlewares, true), $position);
         assertGreaterThan(array_search(CsrfTokenMiddleware::class, $middlewares, true), $position);
     }
