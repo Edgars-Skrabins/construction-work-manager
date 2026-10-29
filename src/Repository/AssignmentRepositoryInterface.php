@@ -29,6 +29,8 @@ interface AssignmentRepositoryInterface
      */
     public function findAssignedWork(int $employeeId): array;
 
+    public function hasActiveForEmployee(int $employeeId): bool;
+
     public function findOverlappingActive(
         int $employeeId,
         int $workItemId,

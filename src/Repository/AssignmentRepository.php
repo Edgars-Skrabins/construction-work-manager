@@ -88,6 +88,14 @@ final readonly class AssignmentRepository implements AssignmentRepositoryInterfa
             ->all();
     }
 
+    public function hasActiveForEmployee(int $employeeId): bool
+    {
+        return (new Query($this->db))
+            ->from('ASSIGNMENT')
+            ->where(['EMPLOYEE_ID' => $employeeId, 'STATUS' => AssignmentStatus::Active->value])
+            ->exists();
+    }
+
     public function findOverlappingActive(
         int $employeeId,
         int $workItemId,
