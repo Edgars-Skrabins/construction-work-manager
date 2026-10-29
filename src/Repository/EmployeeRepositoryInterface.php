@@ -15,7 +15,7 @@ interface EmployeeRepositoryInterface
     /**
      * @return OffsetPaginator<int, EmployeeListItem>
      */
-    public function listPaginator(int $viewerId, Scope $scope, string $sort): OffsetPaginator;
+    public function listPaginator(int $viewerId, Scope $scope, string $sort, string $search): OffsetPaginator;
 
     public function find(int $id): ?Employee;
 

@@ -23,12 +23,12 @@ final readonly class Action
     public function __invoke(ServerRequestInterface $request): ResponseInterface
     {
         $params = ListParams::fromRequest($request);
-        $paginator = $params->applyTo($this->assignments->list((int) $this->currentUser->getId(), $params->sort));
+        $paginator = $params->applyTo($this->assignments->list((int) $this->currentUser->getId(), $params->sort, $params->q));
         $rows = array_map(
             fn(AssignmentListItem $item): array => ['item' => $item, 'status' => $this->assignments->displayStatus($item->assignment)],
             iterator_to_array($paginator->read(), false),
         );
 
-        return $this->viewRenderer->render(__DIR__ . '/template', ['paginator' => $paginator, 'rows' => $rows]);
+        return $this->viewRenderer->render(__DIR__ . '/template', ['paginator' => $paginator, 'rows' => $rows, 'q' => $params->q]);
     }
 }

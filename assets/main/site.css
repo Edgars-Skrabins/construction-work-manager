@@ -159,6 +159,11 @@ body {
     border-radius: 0 var(--bs-border-radius) var(--bs-border-radius) 0;
 }
 
+.list-search-input {
+    flex: 1 1 12rem;
+    max-width: 24rem;
+}
+
 .work-calendar {
     table-layout: fixed;
 }

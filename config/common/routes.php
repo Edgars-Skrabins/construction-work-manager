@@ -32,7 +32,7 @@ return [
                         ->action(Web\HomePage\Action::class)
                         ->name('home'),
                     Route::get('/my-assignments')
-                        ->middleware(RequirePermission::for(Permission::AssignmentRead))
+                        ->middleware(RequirePermission::for(Permission::AssignmentReadOwn))
                         ->action(Web\MyAssignments\Action::class)
                         ->name('my-assignments'),
                     Route::get('/employees')

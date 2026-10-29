@@ -47,13 +47,13 @@ final readonly class EmployeeService
     /**
      * @return OffsetPaginator<int, EmployeeListItem>
      */
-    public function listPaginator(int $actorId, string $sort): OffsetPaginator
+    public function listPaginator(int $actorId, string $sort, string $search): OffsetPaginator
     {
         $this->accessChecker->ensure($actorId, Permission::EmployeeList);
         $role = $this->employees->roleOf($actorId)
             ?? throw new ForbiddenException(sprintf('Employee %d does not exist.', $actorId));
 
-        return $this->employees->listPaginator($actorId, $this->accessScope->forRole($role, Entity::Employee), $sort);
+        return $this->employees->listPaginator($actorId, $this->accessScope->forRole($role, Entity::Employee), $sort, $search);
     }
 
     public function find(int $actorId, int $id): ?Employee

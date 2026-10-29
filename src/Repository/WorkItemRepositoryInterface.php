@@ -12,7 +12,7 @@ interface WorkItemRepositoryInterface
     /**
      * @return OffsetPaginator<int, WorkItem>
      */
-    public function listPaginator(string $sort): OffsetPaginator;
+    public function listPaginator(string $sort, string $search): OffsetPaginator;
 
     public function find(int $id): ?WorkItem;
 

@@ -305,7 +305,7 @@ final class EmployeeServiceTest extends IntegrationTestCase
             $this->expectException(ForbiddenException::class);
         }
 
-        $rows = iterator_to_array($this->employees()->listPaginator($actorId, 'name')->read(), false);
+        $rows = iterator_to_array($this->employees()->listPaginator($actorId, 'name', '')->read(), false);
 
         assertSame($expected, array_map(static fn(EmployeeListItem $row): int => $row->id, $rows));
     }

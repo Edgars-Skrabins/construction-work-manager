@@ -21,6 +21,7 @@ enum Permission: string
     case WorkItemDelete = 'workItem.delete';
     case AssignmentCreate = 'assignment.create';
     case AssignmentRead = 'assignment.read';
+    case AssignmentReadOwn = 'assignment.readOwn';
     case AssignmentUpdate = 'assignment.update';
     case AssignmentDelete = 'assignment.delete';
 }
