@@ -43,6 +43,12 @@ final readonly class ConstructionSiteRepository implements ConstructionSiteRepos
         return $this->query()->where(['s.ID' => $id])->one();
     }
 
+    public function findForUpdate(int $id): ?ConstructionSite
+    {
+        /** @var ConstructionSite|null */
+        return $this->query()->from(new Expression('CONSTRUCTION_SITE s WITH (UPDLOCK)'))->where(['s.ID' => $id])->one();
+    }
+
     public function all(): array
     {
         /** @var list<ConstructionSite> */

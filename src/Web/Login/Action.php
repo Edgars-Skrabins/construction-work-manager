@@ -5,8 +5,11 @@ declare(strict_types=1);
 namespace App\Web\Login;
 
 use App\Service\LoginService;
+use App\Service\TooManyAttemptsException;
+use App\Shared\ClientIp;
 use App\Web\Shared\Authentication\ReturnUrl;
 use App\Web\Shared\Redirect\Redirector;
+use App\Web\Shared\Throttling\TooManyAttempts;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Yiisoft\Http\Method;
@@ -39,13 +42,23 @@ final readonly class Action
 
             if (trim($email) === '' || $password === '') {
                 $error = 'Enter your email and password.';
-            } elseif ($this->loginService->login($email, $password)) {
-                return $this->redirector->to($this->returnUrl->pull());
             } else {
-                $error = 'Invalid email or password.';
+                try {
+                    if ($this->loginService->login($email, $password, ClientIp::of($request))) {
+                        return $this->redirector->to($this->returnUrl->pull());
+                    }
+                    $error = 'Invalid email or password.';
+                } catch (TooManyAttemptsException $exception) {
+                    return TooManyAttempts::respond($this->render($email, TooManyAttempts::message($exception)), $exception);
+                }
             }
         }
 
+        return $this->render($email, $error);
+    }
+
+    private function render(string $email, ?string $error): ResponseInterface
+    {
         return $this->viewRenderer->render(__DIR__ . '/template', [
             'email' => $email,
             'error' => $error,

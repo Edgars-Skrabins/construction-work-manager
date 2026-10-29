@@ -246,6 +246,11 @@ final class ConstructionSiteServiceTest extends IntegrationTestCase
                 return $this->sites->find($id);
             }
 
+            public function findForUpdate(int $id): ?ConstructionSite
+            {
+                return $this->sites->findForUpdate($id);
+            }
+
             public function all(): array
             {
                 return $this->sites->all();

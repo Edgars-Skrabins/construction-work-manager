@@ -16,6 +16,8 @@ interface ConstructionSiteRepositoryInterface
 
     public function find(int $id): ?ConstructionSite;
 
+    public function findForUpdate(int $id): ?ConstructionSite;
+
     /**
      * @return list<ConstructionSite>
      */
