@@ -1,7 +1,7 @@
 # Caching hardening — Spec
 
 **Type:** bug fix
-**Status:** ready for implementation
+**Status:** in progress
 **Last updated:** 2026-10-29
 
 # Part 1 — Business logic and usage
@@ -109,9 +109,9 @@ Read Part 1 and Part 2 before starting. Work through the tasks in order and tick
 Baseline before starting: `make check` on `main` at `a51744f` passes with 136 unit tests (465 assertions) and 485 integration tests (4090 assertions). Query counts per page from the `yiisoft/db` query logger: `/employees` 30, `/sites` 30, `/work-items` 30, `/assignments` 31 (admin and manager), `/my-assignments` 23.
 
 ### A. No-store middleware
-- [ ] A1. Add `src/Web/Shared/Caching/NoStore.php` and `tests/Unit/Web/Shared/Caching/NoStoreTest.php` as in 2.2.
-- [ ] A2. Add `->middleware(NoStore::class)` to the outer web group in `config/common/routes.php`, and remove the `Cache-Control` header from `src/Web/EmployeeSetupCode/Action.php`. `AdminPagesTest::testSetupCodePageIsNeverCached` still passes.
-- [ ] A3. Add `tests/Integration/Web/NoStoreTest.php` as in 2.2. `make check` passes.
+- [x] A1. Add `src/Web/Shared/Caching/NoStore.php` and `tests/Unit/Web/Shared/Caching/NoStoreTest.php` as in 2.2.
+- [x] A2. Add `->middleware(NoStore::class)` to the outer web group in `config/common/routes.php`, and remove the `Cache-Control` header from `src/Web/EmployeeSetupCode/Action.php`. `AdminPagesTest::testSetupCodePageIsNeverCached` still passes.
+- [x] A3. Add `tests/Integration/Web/NoStoreTest.php` as in 2.2. `make check` passes.
 
 ### B. Permission memoization
 - [ ] B1. Memoize `AccessChecker::can()` as in 2.2 and add `tests/Unit/Access/AccessCheckerTest.php`.
