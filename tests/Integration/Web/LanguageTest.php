@@ -85,13 +85,13 @@ final class LanguageTest extends IntegrationTestCase
 
     public function testPageLanguageFollowsTheCookie(): void
     {
-        assertStringContainsString('<html lang="en">', (string) $this->request('GET', '/login')->getBody());
+        assertStringContainsString('<html lang="en" ', (string) $this->request('GET', '/login')->getBody());
 
         $this->switchLanguage('lv', '/login');
-        assertStringContainsString('<html lang="lv">', (string) $this->request('GET', '/login')->getBody());
+        assertStringContainsString('<html lang="lv" ', (string) $this->request('GET', '/login')->getBody());
 
         $this->cookies['locale'] = 'xx';
-        assertStringContainsString('<html lang="en">', (string) $this->request('GET', '/login')->getBody());
+        assertStringContainsString('<html lang="en" ', (string) $this->request('GET', '/login')->getBody());
     }
 
     /**
@@ -151,7 +151,7 @@ final class LanguageTest extends IntegrationTestCase
         $this->switchLanguage('ru', '/assignments');
         $russian = (string) $this->request('GET', '/assignments')->getBody();
 
-        assertStringContainsString('<html lang="ru">', $russian);
+        assertStringContainsString('<html lang="ru" ', $russian);
         assertStringContainsString('<h1 class="h3 mb-0">Задания</h1>', $russian);
         assertStringContainsString('>Сотрудник</a>', $russian);
         assertStringContainsString('<span class="badge text-bg-info">Запланировано</span>', $russian);
@@ -206,6 +206,43 @@ final class LanguageTest extends IntegrationTestCase
     }
 
     /**
+     * @return iterable<string, array{string, string, list<string>}>
+     */
+    public static function calendarNames(): iterable
+    {
+        yield 'en' => ['en', 'March 2030', ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']];
+        yield 'lv' => ['lv', 'Marts 2030', ['Pirmd.', 'Otrd.', 'Trešd.', 'Ceturtd.', 'Piektd.', 'Sestd.', 'Svētd.']];
+        yield 'ru' => ['ru', 'Март 2030', ['Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб', 'Вс']];
+        yield 'sv' => ['sv', 'Mars 2030', ['Mån', 'Tis', 'Ons', 'Tors', 'Fre', 'Lör', 'Sön']];
+    }
+
+    /**
+     * @param list<string> $weekdays
+     */
+    #[DataProvider('calendarNames')]
+    public function testCalendarMonthAndDayNamesFollowTheLanguage(string $locale, string $month, array $weekdays): void
+    {
+        $this->logIn('manager@mail.test', '123123123');
+        $this->switchLanguage($locale, '/');
+
+        $body = (string) $this->request('GET', '/employees/calendar?month=2030-03')->getBody();
+        preg_match_all('#<th scope="col" class="text-center">([^<]+)</th>#u', $body, $matches);
+
+        assertStringContainsString('<h2 class="h5 mb-0 text-nowrap">' . $month . '</h2>', $body);
+        assertSame($weekdays, $matches[1]);
+    }
+
+    public function testCalendarDayHeadingsUseLocalWeekdayNames(): void
+    {
+        $this->logIn('manager@mail.test', '123123123');
+        $this->switchLanguage('lv', '/');
+
+        $body = (string) $this->request('GET', '/employees/calendar')->getBody();
+
+        assertMatchesRegularExpression('#<h3 class="card-header h6[^"]*">(Pirmd|Otrd|Trešd|Ceturtd|Piektd|Sestd|Svētd)\., \d{4}-\d{2}-\d{2}#u', $body);
+    }
+
+    /**
      * @return iterable<string, array{?string, string, string, array<string, string>}>
      */
     public static function everyPage(): iterable
@@ -236,6 +273,15 @@ final class LanguageTest extends IntegrationTestCase
         yield 'assignment create errors' => ['manager@mail.test', 'POST', '/assignments/create', ['employee' => '', 'workItem' => '', 'constructionSite' => '', 'startDate' => '', 'endDate' => '']];
         yield 'assignment edit' => ['manager@mail.test', 'GET', '/assignments/1/edit', []];
         yield 'admin assignments' => ['admin@mail.test', 'GET', '/assignments', []];
+        yield 'assignment search without results' => ['manager@mail.test', 'GET', '/assignments?q=zzz', []];
+        yield 'employee search' => ['admin@mail.test', 'GET', '/employees?q=a', []];
+        yield 'employee search without results' => ['admin@mail.test', 'GET', '/employees?q=zzz', []];
+        yield 'site search without results' => ['admin@mail.test', 'GET', '/sites?q=zzz', []];
+        yield 'work item search without results' => ['admin@mail.test', 'GET', '/work-items?q=zzz', []];
+        yield 'manager team' => ['manager@mail.test', 'GET', '/employees', []];
+        yield 'calendar' => ['manager@mail.test', 'GET', '/employees/calendar', []];
+        yield 'empty calendar month' => ['manager@mail.test', 'GET', '/employees/calendar?month=2030-03', []];
+        yield 'admin calendar' => ['admin@mail.test', 'GET', '/employees/calendar?employee=4', []];
     }
 
     /**

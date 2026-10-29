@@ -30,6 +30,14 @@ return [
     '{Property} must contain at most {max, number} {max, plural, one{character} other{characters}}.' => 'Lauke „{Property}“ gali būti ne daugiau kaip {max, number} {max, plural, one{simbolis} few{simboliai} many{simbolio} other{simbolių}}.',
     '{Property} is not a valid email address.' => 'Lauke „{Property}“ nurodytas neteisingas el. pašto adresas.',
 
+    'Search' => 'Ieškoti',
+    'Clear' => 'Išvalyti',
+    'No results for “{query}”.' => 'Pagal „{query}“ nieko nerasta.',
+    'Name or email' => 'Vardas arba el. paštas',
+    'Name or address' => 'Pavadinimas arba adresas',
+    'Name or description' => 'Pavadinimas arba aprašymas',
+    'Employee, work item or site' => 'Darbuotojas, darbo rūšis arba statybos objektas',
+
     'Log in' => 'Prisijungti',
     'Email' => 'El. paštas',
     'Password' => 'Slaptažodis',
@@ -103,6 +111,15 @@ return [
     "You can't deactivate your own login." => 'Negalite išjungti savo paskyros.',
     "Finish or cancel this employee's active assignments first." => 'Pirmiausia užbaikite arba atšaukite aktyvias šio darbuotojo užduotis.',
     'This email is already used by another login.' => 'Šis el. paštas jau naudojamas kitoje paskyroje.',
+
+    'Work calendar' => 'Darbų kalendorius',
+    'Employees list' => 'Darbuotojų sąrašas',
+    'Months' => 'Mėnesiai',
+    'Today' => 'Šiandien',
+    'All employees' => 'Visi darbuotojai',
+    'Show' => 'Rodyti',
+    'Status legend' => 'Būsenų paaiškinimas',
+    'No assigned work this month.' => 'Šį mėnesį priskirtų darbų nėra.',
 
     'Setup code for {name}' => 'Aktyvinimo kodas – {name}',
     'Give this code to the employee. It is shown only once and is valid for 72 hours. They enter it on the Set password page.' => 'Perduokite šį kodą darbuotojui. Jis rodomas tik vieną kartą ir galioja 72 valandas. Darbuotojas jį įveda puslapyje „Nustatyti slaptažodį“.',

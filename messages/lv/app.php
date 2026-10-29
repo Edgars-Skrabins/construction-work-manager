@@ -16,8 +16,8 @@ return [
     'employee' => 'darbinieks',
 
     'Pages' => 'Lapas',
-    'Previous' => 'Iepriekšējā',
-    'Next' => 'Nākamā',
+    'Previous' => 'Atpakaļ',
+    'Next' => 'Tālāk',
     'Actions' => 'Darbības',
     'Edit' => 'Rediģēt',
     'Delete' => 'Dzēst',
@@ -29,6 +29,14 @@ return [
     '{Property} cannot be blank.' => 'Lauks „{Property}” ir obligāts.',
     '{Property} must contain at most {max, number} {max, plural, one{character} other{characters}}.' => 'Laukā „{Property}” drīkst būt ne vairāk kā {max, number} {max, plural, zero{rakstzīmes} one{rakstzīme} other{rakstzīmes}}.',
     '{Property} is not a valid email address.' => 'Laukā „{Property}” nav derīgas e-pasta adreses.',
+
+    'Search' => 'Meklēt',
+    'Clear' => 'Notīrīt',
+    'No results for “{query}”.' => 'Pēc „{query}” nekas netika atrasts.',
+    'Name or email' => 'Vārds vai e-pasts',
+    'Name or address' => 'Nosaukums vai adrese',
+    'Name or description' => 'Nosaukums vai apraksts',
+    'Employee, work item or site' => 'Darbinieks, darba veids vai būvobjekts',
 
     'Log in' => 'Pieteikties',
     'Email' => 'E-pasts',
@@ -103,6 +111,15 @@ return [
     "You can't deactivate your own login." => 'Jūs nevarat deaktivizēt savu kontu.',
     "Finish or cancel this employee's active assignments first." => 'Vispirms pabeidziet vai atceliet šī darbinieka aktīvos uzdevumus.',
     'This email is already used by another login.' => 'Šis e-pasts jau tiek izmantots citā kontā.',
+
+    'Work calendar' => 'Darbu kalendārs',
+    'Employees list' => 'Darbinieku saraksts',
+    'Months' => 'Mēneši',
+    'Today' => 'Šodien',
+    'All employees' => 'Visi darbinieki',
+    'Show' => 'Rādīt',
+    'Status legend' => 'Statusu skaidrojums',
+    'No assigned work this month.' => 'Šomēnes nav piešķirtu darbu.',
 
     'Setup code for {name}' => 'Aktivizācijas kods — {name}',
     'Give this code to the employee. It is shown only once and is valid for 72 hours. They enter it on the Set password page.' => 'Nododiet šo kodu darbiniekam. Tas tiek parādīts tikai vienreiz un ir derīgs 72 stundas. Darbinieks to ievada lapā „Iestatīt paroli”.',

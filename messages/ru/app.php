@@ -30,6 +30,14 @@ return [
     '{Property} must contain at most {max, number} {max, plural, one{character} other{characters}}.' => 'Поле «{Property}» может содержать не более {max, number} {max, plural, one{символа} few{символов} many{символов} other{символа}}.',
     '{Property} is not a valid email address.' => 'В поле «{Property}» указан недействительный адрес эл. почты.',
 
+    'Search' => 'Поиск',
+    'Clear' => 'Сбросить',
+    'No results for “{query}”.' => 'По запросу «{query}» ничего не найдено.',
+    'Name or email' => 'Имя или эл. почта',
+    'Name or address' => 'Название или адрес',
+    'Name or description' => 'Название или описание',
+    'Employee, work item or site' => 'Сотрудник, вид работ или объект',
+
     'Log in' => 'Войти',
     'Email' => 'Эл. почта',
     'Password' => 'Пароль',
@@ -103,6 +111,15 @@ return [
     "You can't deactivate your own login." => 'Нельзя отключить собственный вход.',
     "Finish or cancel this employee's active assignments first." => 'Сначала завершите или отмените активные задания этого сотрудника.',
     'This email is already used by another login.' => 'Эта эл. почта уже используется для другого входа.',
+
+    'Work calendar' => 'Календарь работ',
+    'Employees list' => 'Список сотрудников',
+    'Months' => 'Месяцы',
+    'Today' => 'Сегодня',
+    'All employees' => 'Все сотрудники',
+    'Show' => 'Показать',
+    'Status legend' => 'Обозначения статусов',
+    'No assigned work this month.' => 'В этом месяце заданий нет.',
 
     'Setup code for {name}' => 'Код активации — {name}',
     'Give this code to the employee. It is shown only once and is valid for 72 hours. They enter it on the Set password page.' => 'Передайте этот код сотруднику. Он показывается только один раз и действует 72 часа. Сотрудник вводит его на странице «Задать пароль».',

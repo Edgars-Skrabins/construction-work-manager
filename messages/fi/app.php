@@ -30,6 +30,14 @@ return [
     '{Property} must contain at most {max, number} {max, plural, one{character} other{characters}}.' => 'Kentässä ”{Property}” voi olla enintään {max, number} {max, plural, one{merkki} other{merkkiä}}.',
     '{Property} is not a valid email address.' => 'Kentän ”{Property}” sähköpostiosoite ei kelpaa.',
 
+    'Search' => 'Hae',
+    'Clear' => 'Tyhjennä',
+    'No results for “{query}”.' => 'Haulla ”{query}” ei löytynyt tuloksia.',
+    'Name or email' => 'Nimi tai sähköposti',
+    'Name or address' => 'Nimi tai osoite',
+    'Name or description' => 'Nimi tai kuvaus',
+    'Employee, work item or site' => 'Työntekijä, työlaji tai työmaa',
+
     'Log in' => 'Kirjaudu sisään',
     'Email' => 'Sähköposti',
     'Password' => 'Salasana',
@@ -103,6 +111,15 @@ return [
     "You can't deactivate your own login." => 'Et voi poistaa omaa käyttäjätiliäsi käytöstä.',
     "Finish or cancel this employee's active assignments first." => 'Päätä tai peru ensin tämän työntekijän aktiiviset työtehtävät.',
     'This email is already used by another login.' => 'Tämä sähköposti on jo toisen käyttäjätilin käytössä.',
+
+    'Work calendar' => 'Työkalenteri',
+    'Employees list' => 'Työntekijäluettelo',
+    'Months' => 'Kuukaudet',
+    'Today' => 'Tänään',
+    'All employees' => 'Kaikki työntekijät',
+    'Show' => 'Näytä',
+    'Status legend' => 'Tilojen selitykset',
+    'No assigned work this month.' => 'Tälle kuulle ei ole annettu töitä.',
 
     'Setup code for {name}' => 'Aktivointikoodi – {name}',
     'Give this code to the employee. It is shown only once and is valid for 72 hours. They enter it on the Set password page.' => 'Anna tämä koodi työntekijälle. Se näytetään vain kerran ja on voimassa 72 tuntia. Työntekijä syöttää sen sivulla ”Aseta salasana”.',

@@ -30,6 +30,14 @@ return [
     '{Property} must contain at most {max, number} {max, plural, one{character} other{characters}}.' => 'Fältet ”{Property}” får innehålla högst {max, number} {max, plural, one{tecken} other{tecken}}.',
     '{Property} is not a valid email address.' => 'Fältet ”{Property}” innehåller ingen giltig e-postadress.',
 
+    'Search' => 'Sök',
+    'Clear' => 'Rensa',
+    'No results for “{query}”.' => 'Inga träffar för ”{query}”.',
+    'Name or email' => 'Namn eller e-post',
+    'Name or address' => 'Namn eller adress',
+    'Name or description' => 'Namn eller beskrivning',
+    'Employee, work item or site' => 'Medarbetare, arbetsmoment eller byggarbetsplats',
+
     'Log in' => 'Logga in',
     'Email' => 'E-post',
     'Password' => 'Lösenord',
@@ -103,6 +111,15 @@ return [
     "You can't deactivate your own login." => 'Du kan inte inaktivera ditt eget konto.',
     "Finish or cancel this employee's active assignments first." => 'Slutför eller avbryt först den här medarbetarens aktiva uppdrag.',
     'This email is already used by another login.' => 'E-postadressen används redan av ett annat konto.',
+
+    'Work calendar' => 'Arbetskalender',
+    'Employees list' => 'Medarbetarlista',
+    'Months' => 'Månader',
+    'Today' => 'Idag',
+    'All employees' => 'Alla medarbetare',
+    'Show' => 'Visa',
+    'Status legend' => 'Statusförklaring',
+    'No assigned work this month.' => 'Inga tilldelade uppdrag den här månaden.',
 
     'Setup code for {name}' => 'Aktiveringskod – {name}',
     'Give this code to the employee. It is shown only once and is valid for 72 hours. They enter it on the Set password page.' => 'Ge koden till medarbetaren. Den visas bara en gång och gäller i 72 timmar. Medarbetaren anger den på sidan ”Välj lösenord”.',

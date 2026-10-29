@@ -30,6 +30,14 @@ return [
     '{Property} must contain at most {max, number} {max, plural, one{character} other{characters}}.' => 'Väljal „{Property}“ võib olla kuni {max, number} {max, plural, one{märk} other{märki}}.',
     '{Property} is not a valid email address.' => 'Väljal „{Property}“ ei ole kehtivat e-posti aadressi.',
 
+    'Search' => 'Otsi',
+    'Clear' => 'Tühjenda',
+    'No results for “{query}”.' => 'Päringule „{query}“ ei leitud tulemusi.',
+    'Name or email' => 'Nimi või e-post',
+    'Name or address' => 'Nimi või aadress',
+    'Name or description' => 'Nimi või kirjeldus',
+    'Employee, work item or site' => 'Töötaja, tööliik või ehitusobjekt',
+
     'Log in' => 'Logi sisse',
     'Email' => 'E-post',
     'Password' => 'Parool',
@@ -103,6 +111,15 @@ return [
     "You can't deactivate your own login." => 'Sa ei saa oma kontot deaktiveerida.',
     "Finish or cancel this employee's active assignments first." => 'Lõpeta või tühista kõigepealt selle töötaja aktiivsed tööülesanded.',
     'This email is already used by another login.' => 'See e-posti aadress on juba teise konto kasutuses.',
+
+    'Work calendar' => 'Töökalender',
+    'Employees list' => 'Töötajate nimekiri',
+    'Months' => 'Kuud',
+    'Today' => 'Täna',
+    'All employees' => 'Kõik töötajad',
+    'Show' => 'Näita',
+    'Status legend' => 'Olekute selgitus',
+    'No assigned work this month.' => 'Sel kuul pole tööd määratud.',
 
     'Setup code for {name}' => 'Aktiveerimiskood – {name}',
     'Give this code to the employee. It is shown only once and is valid for 72 hours. They enter it on the Set password page.' => 'Anna see kood töötajale. Seda näidatakse ainult üks kord ja see kehtib 72 tundi. Töötaja sisestab selle lehel „Määra parool“.',
