@@ -12,6 +12,9 @@ concurrency:
 permissions:
   contents: read
 
+env:
+  XDEBUG_MODE: "off"
+
 jobs:
   lint:
     name: lint

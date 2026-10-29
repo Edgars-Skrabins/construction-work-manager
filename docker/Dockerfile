@@ -6,8 +6,9 @@ ARG GROUP_ID=10001
 ARG USER_NAME=appuser
 ARG GROUP_NAME=appuser
 
-RUN apt update && apt -y install \
-    unzip
+RUN apt-get update \
+ && apt-get install -y --no-install-recommends unzip \
+ && rm -rf /var/lib/apt/lists/*
 
 RUN install-php-extensions \
     opcache \
