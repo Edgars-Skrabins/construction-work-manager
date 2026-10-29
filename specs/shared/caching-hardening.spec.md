@@ -1,7 +1,7 @@
 # Caching hardening — Spec
 
 **Type:** bug fix
-**Status:** in progress
+**Status:** done
 **Last updated:** 2026-10-29
 
 # Part 1 — Business logic and usage
@@ -126,4 +126,4 @@ Baseline before starting: `make check` on `main` at `a51744f` passes with 136 un
 ### Z. Wrap-up
 - [x] Z1. Update `CLAUDE.md` and `README.md` as in 2.2. `make check` passes. Done: 141 unit tests (478 assertions) and 485 + 6 = 491 integration tests (4126 assertions).
 - [x] Z2. Manual check at http://127.0.0.1:8086: curl output with the headers of a logged-in page, `/login` and an asset; log in, log out, press Back in the browser and confirm the login page appears. Done: a logged-in `/employees` and `/login` both send `Cache-Control: no-store`, `/assets/main/988f2e65/site.css` sends `Cache-Control: public, max-age=31536000, immutable`, and the API keeps its own `no-store`. After logout, Back reloaded `/employees`, which redirected to the login page.
-- [ ] Z3. Push and confirm CI is green, including the "Security headers" and "Cache headers" steps.
+- [x] Z3. Push and confirm CI is green, including the "Security headers" and "Cache headers" steps. CI run 40913616879 on `20703bc` passed, with both steps green.
