@@ -118,7 +118,7 @@ final class AssignmentLockingTest extends IntegrationTestCase
             $sites = new ConstructionSiteRepository($db);
             $site = $sites->find(2);
             assertNotNull($site);
-            $sites->update(2, new ConstructionSiteData($site->name, $site->street, $site->city, $site->country, $site->areaM2, 3));
+            $sites->update(2, new ConstructionSiteData($site->code, $site->name, $site->street, $site->city, $site->country, $site->areaM2, 3));
         }];
     }
 
