@@ -1,7 +1,7 @@
 # Role change with active assignments — Spec
 
 **Type:** bug fix
-**Status:** ready for implementation
+**Status:** done
 **Last updated:** 2026-10-29
 
 # Part 1 — Business logic and usage
@@ -94,12 +94,12 @@ Baseline before starting: `make check` green on `main` @ a51744f.
 
 ### A. Rule
 
-- [ ] A1. Add `hasActiveForEmployee(int $employeeId): bool` to `src/Repository/AssignmentRepositoryInterface.php` and implement it in `src/Repository/AssignmentRepository.php` as in 2.2.
-- [ ] A2. Inject `AssignmentRepositoryInterface` into `src/Service/EmployeeService.php` and add the role check to `validate()` as in 2.2.
-- [ ] A3. Update `tests/Integration/Service/EmployeeServiceTest.php` as in 2.2: the two refused cases, the Done/Cancelled case, the other-edits case, the role-assigned-at test on a created employee, and `employeesAt()`.
-- [ ] A4. Add the admin page test to `tests/Integration/Web/AdminPagesTest.php` as in 2.2.
+- [x] A1. Add `hasActiveForEmployee(int $employeeId): bool` to `src/Repository/AssignmentRepositoryInterface.php` and implement it in `src/Repository/AssignmentRepository.php` as in 2.2.
+- [x] A2. Inject `AssignmentRepositoryInterface` into `src/Service/EmployeeService.php` and add the role check to `validate()` as in 2.2.
+- [x] A3. Update `tests/Integration/Service/EmployeeServiceTest.php` as in 2.2: the two refused cases, the Done/Cancelled case, the other-edits case, the role-assigned-at test on a created employee, and `employeesAt()`.
+- [x] A4. Add the admin page test to `tests/Integration/Web/AdminPagesTest.php` as in 2.2.
 
 ### Z. Wrap-up
 
-- [ ] Z1. `make check` green.
-- [ ] Z2. Manual check in the running app: as the admin, change employee 4's role to manager and see the error under the role field; cancel assignment 1 as manager 2, then change the role again and see it saved.
+- [x] Z1. `make check` green.
+- [x] Z2. Manual check in the running app: as the admin, change employee 4's role to manager and see the error under the role field; cancel assignment 1 as manager 2, then change the role again and see it saved.
