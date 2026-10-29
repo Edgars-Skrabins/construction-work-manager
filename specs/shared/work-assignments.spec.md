@@ -48,7 +48,7 @@ An assignment says that one employee does one work item at one construction site
   - **No overlapping duplicates:** when the saved status is Active, there must be no other Active assignment for the same employee, work item and site whose period overlaps (`START_DATE <= new end AND END_DATE >= new start`, excluding the assignment being edited). Otherwise a validation error naming the other period. Done and Cancelled assignments never block, and different work items or sites may overlap freely: an employee can work two sites in the same week.
   - Saving with status Done or Cancelled skips the access level and overlap checks, so a flagged assignment can still be closed. Setting it back to Active runs them again.
   - **Level changes later:** when the admin lowers an employee's level or raises a site's required level, existing assignments stay unchanged. They are flagged in the list, can't be saved as Active until the conflict is gone, and don't grant site access.
-  - **Deleting referenced rows:** an employee, work item or site that has assignments can't be deleted (foreign keys with `NO ACTION`). Admin-management's delete pages turn that foreign-key violation into "still in use". The same applies to the employee in `CREATED_BY_ID`.
+  - **Deleting referenced rows:** an employee, work item or site that has assignments can't be deleted (foreign keys with `NO ACTION`). Admin-management's delete pages turn that foreign-key violation into "still in use". The same applies to the employee in `CREATED_BY_ID`: a manager (or the admin) who has created assignments can't be deleted while that history exists, and admin-management shows "still in use" for them too.
 - **Out of scope:**
   - The employee's own "My assignments" page (requirement 5c), which has its own spec. The repository already supports the `Own` scope so that spec can reuse it.
   - The pass-system API endpoint and API keys (requirement 6). This spec builds and tests only the repository query that defines who needs access, which the API reuses.
@@ -204,6 +204,7 @@ The hardening branch sets a `Content-Security-Policy` that allows scripts only f
   - End before start → error on `endDate`; overlap → error; the same dates after the other is Cancelled → allowed; several errors come back in one exception.
   - `find` of another manager's assignment → null.
   - An assignment flagged by a level drop can be updated to Done but not saved as Active.
+  - Today comes from the Riga date: with a fixed `ClockInterface` at `2026-11-09T22:30:00Z` (00:30 on 10 November in Riga), an Active assignment starting on 2026-11-10 is displayed as In progress, not Planned.
 - `tests/Integration/Web/AssignmentPagesTest.php`: logged in as manager 2, the list shows only their employees' rows; the create form's employee select lists only employees 4 to 6 and each site option carries its level; no page contains an inline `<script>` or an `on…=` attribute; logged in as employee 4, `/assignments` is 403; a non-existent or other manager's ID on edit and delete is 404.
 
 ## 2.3 Decisions
