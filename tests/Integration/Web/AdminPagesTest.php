@@ -342,7 +342,10 @@ final class AdminPagesTest extends IntegrationTestCase
 
         preg_match_all('#<td class="text-nowrap">([A-Z0-9-]+)</td>#', (string) $this->request('GET', '/sites?sort=code')->getBody(), $codes);
 
-        assertSame(['ADZ-DEF-01', 'DGP-SCH-01', 'RIX-AGK-01', 'RIX-TEC-01'], array_slice($codes[1], 0, 4));
+        assertSame(
+            ['ADZ-DEF-01', 'DGP-SCH-01', 'JLG-LIB-01', 'KUN-LOG-01', 'LPX-PRT-01', 'RIX-AGK-01', 'RIX-TEC-01', 'TLL-DCN-01', 'VLM-HSP-01', 'VNO-OFC-01', 'VNT-WTP-01'],
+            $codes[1],
+        );
     }
 
     public function testRoleChangeOfAnEmployeeWithActiveAssignmentsIsShownUnderTheRoleField(): void
