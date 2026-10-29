@@ -38,6 +38,11 @@
                             <a class="nav-link{% if routeName starts with 'workItem.' %} active{% endif %}" href="{{ urlGenerator.generate('workItem.list') }}">Work items</a>
                         </li>
                     {% endif %}
+                    {% if access.can('assignment.update') %}
+                        <li class="nav-item">
+                            <a class="nav-link{% if routeName starts with 'assignment.' %} active{% endif %}" href="{{ urlGenerator.generate('assignment.list') }}">Assignments</a>
+                        </li>
+                    {% endif %}
                 </ul>
             {% endif %}
             {% if not currentUser.isGuest() %}
