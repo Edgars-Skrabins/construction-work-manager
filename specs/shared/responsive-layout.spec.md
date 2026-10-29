@@ -1,7 +1,7 @@
 # Responsive layout — Spec
 
 **Type:** bug fix
-**Status:** in progress
+**Status:** done
 **Last updated:** 2026-10-29
 
 # Part 1 — Business logic and usage
@@ -112,5 +112,5 @@ Baseline before starting: record the test counts from `make check` in A0.
 - [x] C3. Update `README.md` (Running the app: where each role lands after login) and `CLAUDE.md` if they mention the home page.
 
 ### Z. Wrap-up
-- [ ] Z1. `make check` passes.
-- [ ] Z2. Manual check in the built-in browser on the own stack: as admin, manager and employee, at 375, 768 and 1280 px, every page in the navbar, the create and edit forms, and the login page have `document.documentElement.scrollWidth <= window.innerWidth`. The toggler opens and closes the menu at 375 and 768 px, and the brand link lands on the role's page.
+- [x] Z1. `make check` passes.
+- [x] Z2. Manual check in the built-in browser on the own stack: as admin, manager and employee, at 375, 768 and 1280 px, every page in the navbar, the create and edit forms, and the login page have `document.documentElement.scrollWidth <= window.innerWidth`. The toggler opens and closes the menu at 375 and 768 px, and the brand link lands on the role's page.
