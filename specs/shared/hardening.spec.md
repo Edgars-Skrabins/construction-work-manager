@@ -1,7 +1,7 @@
 # Hardening — Spec
 
 **Type:** bug fix
-**Status:** in progress
+**Status:** done
 **Last updated:** 2026-10-29
 
 # Part 1 — Business logic and usage
@@ -161,5 +161,5 @@ Baseline before starting: CI run 40860644200 on `main` took lint 42 s, unit 56 s
 
 ### Z. Wrap-up
 - [x] Z1. `make check` passes, and `README.md` and `CLAUDE.md` are checked against the changes.
-- [ ] Z2. Push and confirm CI is green: the "Security headers" step passes, and the job and test step times are recorded here next to the baseline.
+- [x] Z2. Push and confirm CI is green: the "Security headers" step passes, and the job and test step times are recorded here next to the baseline. CI run 40869986575 on `7d2c60d` passed. "Security headers" passed in 1 s. The log shows all four actions downloaded at their pinned SHAs and the setup action writing `XDEBUG_MODE=off` to `docker/dev.override.env`. Job wall time with a warm image cache: lint 40 s (was 42), unit 41 s (was 56), integration 69 s (was 72). Steps: static analysis 2 s (was 3), unit tests 9 s (was 8), integration tests 10 s (was 12). Turning off Xdebug made no measurable difference to the test steps, because the suites are short; the job savings come from setup and cache time.
 - [x] Z3. Manual check at http://127.0.0.1:8085: log in, browse the pages and an unknown URL, and confirm the headers in the browser's network tab and no CSP violations in the console.
