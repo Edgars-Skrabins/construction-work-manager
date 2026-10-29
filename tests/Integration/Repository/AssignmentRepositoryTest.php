@@ -287,18 +287,18 @@ final class AssignmentRepositoryTest extends IntegrationTestCase
         $this->repository()->updatePeriodAndStatus($done, new DateTimeImmutable('2026-11-10'), new DateTimeImmutable('2026-11-20'), AssignmentStatus::Done);
         $cancelled = $this->insert(8, 1, 2, '2026-11-10', '2026-11-20');
         $this->repository()->updatePeriodAndStatus($cancelled, new DateTimeImmutable('2026-11-10'), new DateTimeImmutable('2026-11-20'), AssignmentStatus::Cancelled);
-        $this->insert(6, 1, 3, '2026-11-10', '2026-11-20');
+        $this->insert(19, 1, 3, '2026-11-10', '2026-11-20');
 
         assertSame([], $this->employeeIdsNeedingAccess(2, '2026-11-15'));
-        assertSame([6], $this->employeeIdsNeedingAccess(3, '2026-11-15'));
+        assertSame([19], $this->employeeIdsNeedingAccess(3, '2026-11-15'));
     }
 
     public function testNeedsAccessRechecksAccessLevelsLive(): void
     {
-        $this->insert(6, 1, 3, '2026-11-10', '2026-11-20');
+        $this->insert(19, 1, 3, '2026-11-10', '2026-11-20');
         $this->insert(7, 1, 3, '2026-11-10', '2026-11-20');
 
-        $this->db()->createCommand('UPDATE EMPLOYEE SET ACCESS_LEVEL_ID = 2 WHERE ID = 6')->execute();
+        $this->db()->createCommand('UPDATE EMPLOYEE SET ACCESS_LEVEL_ID = 2 WHERE ID = 19')->execute();
         assertSame([7], $this->employeeIdsNeedingAccess(3, '2026-11-15'));
 
         $this->db()->createCommand('UPDATE CONSTRUCTION_SITE SET REQUIRED_ACCESS_LEVEL_ID = 4 WHERE ID = 3')->execute();
@@ -321,7 +321,7 @@ final class AssignmentRepositoryTest extends IntegrationTestCase
             [
                 new EmployeeNeedingAccess(5, 'Laura', 'Krūmiņa', 2, 'Restricted'),
                 new EmployeeNeedingAccess(4, 'Mārtiņš', 'Liepiņš', 1, 'General'),
-                new EmployeeNeedingAccess(6, 'Kristaps', 'Vītols', 3, 'Critical infrastructure'),
+                new EmployeeNeedingAccess(6, 'Kristaps', 'Vītols', 2, 'Restricted'),
             ],
             $employees,
         );
