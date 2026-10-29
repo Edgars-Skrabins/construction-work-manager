@@ -1,7 +1,7 @@
 # Demo data — Spec
 
 **Type:** feature
-**Status:** in progress
+**Status:** done
 **Last updated:** 2026-10-29
 
 # Part 1 — Business logic and usage
@@ -134,5 +134,5 @@ Baseline before starting: `make check` on `main` at `6de8a4d` passes with 139 un
 - [x] B3. (Decision 10) Update the tests that pin manager 2's team or employee 4's work: `AssignmentServiceTest` (manager 2's picker is 4–6 and 59–70), `AssignmentPagesTest` (the manager's 3 pages hold the team's names and none from other teams; the admin's page 1 names), `MyAssignmentsPageTest` (employee 4's three site cards, every status badge and History (3)), and the flagged and size seed tests. The integration suite passes.
 ### Z. Wrap-up
 - [x] Z1. Update `README.md` as in 2.2. `make check` passes.
-- [ ] Z3. (Decision 10) Update the README for the new manager and employee data, merge `origin/main`, run `make check`, and repeat the manual check for `manager@mail.test` and `employee@mail.test`.
+- [x] Z3. (Decision 10) Update the README for the new manager and employee data, merge `origin/main`, run `make check`, and repeat the manual check for `manager@mail.test` and `employee@mail.test`. Done: merged `origin/main` at 87269a5 (dark theme, list search, role-aware UI's 017), which needed the new search tests in `ListingTest` and `AdminPagesTest` and the new My assignments markup updated for the data. `make check` passes with 156 unit tests (494 assertions) and 594 integration tests (5030 assertions). `manager@mail.test` has 3 pages, 45 assignments at 10 sites with every status and one "Access level too low" badge; `employee@mail.test` has cards for Āgenskalns, Jelgava and Vilnius with Planned, In progress and Overdue, and History (3) with two Done and one Cancelled.
 - [x] Z2. Manual check in the running app: log in as `admin@mail.test` (Employees has 4 pages, Assignments 9), `manager3@mail.test` (the flagged badges on Zane Pētersone's rows), `manager4@mail.test` (empty assignment list and picker), `employee6@mail.test` (three site cards), `employee9@mail.test` (today's work) and `employee8@mail.test` (empty My assignments), and call the API for sites 7 and 11 with a new API key. Done at http://127.0.0.1:8186: Employees has pages up to 4 and Assignments up to 9 for the admin; `manager3@mail.test` has 2 pages with both "Access level too low" badges on page 1; `manager4@mail.test` sees "No assignments yet." and no employee in the picker; `employee6@mail.test` has cards for Rīga Thermal Power Plant, Liepāja Port Terminal and Tallinn Data Centre, with the Ādaži welding under History; `employee9@mail.test` has 4 In progress and 1 Planned; `employee8@mail.test` sees the empty state. The API for site 7 (Valmiera) lists 6 employees and leaves out Zane Pētersone's flagged assignment, and site 11 (Kaunas) returns an empty list. The manual key was revoked afterwards.
