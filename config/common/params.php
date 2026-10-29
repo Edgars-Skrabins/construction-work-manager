@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use App\Environment;
 use App\Shared\ApplicationParams;
+use App\Web\Shared\Access\ViewAccess;
 use Yiisoft\Aliases\Aliases;
 use Yiisoft\Assets\AssetManager;
 use Yiisoft\Definitions\DynamicReference;
@@ -34,6 +35,7 @@ return [
             'urlGenerator' => Reference::to(UrlGeneratorInterface::class),
             'currentRoute' => Reference::to(CurrentRoute::class),
             'currentUser' => Reference::to(CurrentUser::class),
+            'access' => Reference::to(ViewAccess::class),
         ],
     ],
 
