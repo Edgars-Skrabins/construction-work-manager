@@ -5,7 +5,10 @@
         <a class="btn btn-primary" href="{{ urlGenerator.generate('employee.create') }}">Add employee</a>
     {% endif %}
 </div>
-{% if paginator.getTotalItems() == 0 %}
+{% include 'Web/Shared/Listing/search-form.twig' with {route: 'employee.list', placeholder: 'Name or email'} %}
+{% if paginator.getTotalItems() == 0 and q != '' %}
+    <p class="text-secondary">No results for “{{ q }}”.</p>
+{% elseif paginator.getTotalItems() == 0 %}
     <p class="text-secondary">No employees yet.</p>
 {% else %}
     <div class="table-responsive">
