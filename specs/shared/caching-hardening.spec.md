@@ -124,6 +124,6 @@ Baseline before starting: `make check` on `main` at `a51744f` passes with 136 un
 - [x] C3. Add the "Cache headers" step to `.github/workflows/ci.yml` as in 2.2. Run its commands locally against port 8086 once as is and once with the Caddyfile rule removed to confirm it fails, then restore the rule. Done: both the "Security headers" and "Cache headers" commands pass against port 8086; without the rule "Cache headers" fails on `/assets/bootstrap/ef714d25/css/bootstrap.min.css`.
 
 ### Z. Wrap-up
-- [ ] Z1. Update `CLAUDE.md` and `README.md` as in 2.2. `make check` passes.
-- [ ] Z2. Manual check at http://127.0.0.1:8086: curl output with the headers of a logged-in page, `/login` and an asset; log in, log out, press Back in the browser and confirm the login page appears.
+- [x] Z1. Update `CLAUDE.md` and `README.md` as in 2.2. `make check` passes. Done: 141 unit tests (478 assertions) and 485 + 6 = 491 integration tests (4126 assertions).
+- [x] Z2. Manual check at http://127.0.0.1:8086: curl output with the headers of a logged-in page, `/login` and an asset; log in, log out, press Back in the browser and confirm the login page appears. Done: a logged-in `/employees` and `/login` both send `Cache-Control: no-store`, `/assets/main/988f2e65/site.css` sends `Cache-Control: public, max-age=31536000, immutable`, and the API keeps its own `no-store`. After logout, Back reloaded `/employees`, which redirected to the login page.
 - [ ] Z3. Push and confirm CI is green, including the "Security headers" and "Cache headers" steps.
