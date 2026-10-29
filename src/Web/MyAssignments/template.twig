@@ -1,15 +1,15 @@
-{% do this.setTitle('My assignments') %}
-<h1 class="h3 mb-4">My assignments</h1>
+{% do this.setTitle(t('My assignments')) %}
+<h1 class="h3 mb-4">{{ t('My assignments') }}</h1>
 {% if myAssignments.sites is empty %}
-    <div class="alert alert-info" role="status">You have no assigned work yet. Your manager will assign work to you.</div>
+    <div class="alert alert-info" role="status">{{ t('You have no assigned work yet. Your manager will assign work to you.') }}</div>
 {% endif %}
 {% for site in myAssignments.sites %}
     {% set first = site.first() %}
     <section class="mb-4">
         <h2 class="h6 text-secondary text-uppercase mb-1">{{ first.item.constructionSiteName }}</h2>
         <p class="small text-secondary mb-2">
-            {{ first.address() }} · Required access level: {{ first.requiredAccessLevelName }} ·
-            <a href="https://www.google.com/maps/search/?api=1&amp;query={{ first.address()|url_encode }}" target="_blank" rel="noopener noreferrer">Open in Google Maps</a>
+            {{ first.address() }} · {{ t('Required access level: {level}', {level: first.requiredAccessLevelName}) }} ·
+            <a href="https://www.google.com/maps/search/?api=1&amp;query={{ first.address()|url_encode }}" target="_blank" rel="noopener noreferrer">{{ t('Open in Google Maps') }}</a>
         </p>
         {% for row in site.rows %}
             <div class="assignment-block {{ row.status.stripeClass() }}">
@@ -26,7 +26,7 @@
 {% endfor %}
 {% if myAssignments.history is not empty %}
     <details class="mt-4">
-        <summary>History ({{ myAssignments.history|length }})</summary>
+        <summary>{{ t('History ({count})', {count: myAssignments.history|length}) }}</summary>
         <div class="mt-2">
             {% for row in myAssignments.history %}
                 <div class="assignment-block {{ row.status.stripeClass() }} d-flex flex-wrap justify-content-between align-items-center column-gap-3 row-gap-1">

@@ -1,4 +1,4 @@
-{% set title = workItem ? 'Edit work item' : 'Add work item' %}
+{% set title = workItem ? t('Edit work item') : t('Add work item') %}
 {% do this.setTitle(title) %}
 <div class="row justify-content-center">
     <div class="col-lg-8">
@@ -6,17 +6,17 @@
         <form method="post" action="{{ workItem ? urlGenerator.generate('workItem.edit', {id: workItem.id}) : urlGenerator.generate('workItem.create') }}" novalidate>
             {{ csrf.hiddenInput()|raw }}
             <div class="mb-3">
-                <label for="name" class="form-label">Name</label>
+                <label for="name" class="form-label">{{ t('Name') }}</label>
                 <input type="text" class="form-control{% if errors.name is defined %} is-invalid{% endif %}" id="name" name="name" value="{{ form.name }}" maxlength="150" required>
                 {% include 'Web/Shared/Form/field-errors.twig' with {errors: errors.name ?? []} %}
             </div>
             <div class="mb-3">
-                <label for="description" class="form-label">Description</label>
+                <label for="description" class="form-label">{{ t('Description') }}</label>
                 <textarea class="form-control{% if errors.description is defined %} is-invalid{% endif %}" id="description" name="description" rows="4" maxlength="1000">{{ form.description }}</textarea>
                 {% include 'Web/Shared/Form/field-errors.twig' with {errors: errors.description ?? []} %}
             </div>
-            <button type="submit" class="btn btn-primary">Save</button>
-            <a class="btn btn-link" href="{{ urlGenerator.generate('workItem.list') }}">Cancel</a>
+            <button type="submit" class="btn btn-primary">{{ t('Save') }}</button>
+            <a class="btn btn-link" href="{{ urlGenerator.generate('workItem.list') }}">{{ t('Cancel') }}</a>
         </form>
     </div>
 </div>

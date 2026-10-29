@@ -1,10 +1,10 @@
-{% set title = site ? 'Edit construction site' : 'Add construction site' %}
+{% set title = site ? t('Edit construction site') : t('Add construction site') %}
 {% do this.setTitle(title) %}
 {% set fields = [
-    {name: 'name', label: 'Name', maxlength: 150},
-    {name: 'street', label: 'Street', maxlength: 200},
-    {name: 'city', label: 'City', maxlength: 100},
-    {name: 'country', label: 'Country', maxlength: 100},
+    {name: 'name', label: t('Name'), maxlength: 150},
+    {name: 'street', label: t('Street'), maxlength: 200},
+    {name: 'city', label: t('City'), maxlength: 100},
+    {name: 'country', label: t('Country'), maxlength: 100},
 ] %}
 <div class="row justify-content-center">
     <div class="col-lg-8">
@@ -12,11 +12,11 @@
         <form method="post" action="{{ site ? urlGenerator.generate('site.edit', {id: site.id}) : urlGenerator.generate('site.create') }}" novalidate>
             {{ csrf.hiddenInput()|raw }}
             <div class="mb-3">
-                <label for="code" class="form-label">Site code</label>
+                <label for="code" class="form-label">{{ t('Site code') }}</label>
                 <input type="text" class="form-control{% if errors.code is defined %} is-invalid{% endif %}" id="code" name="code" value="{{ form.code }}" maxlength="30" autocapitalize="characters" spellcheck="false"{% if site %} aria-describedby="codeHelp"{% endif %} required>
                 {% include 'Web/Shared/Form/field-errors.twig' with {errors: errors.code ?? []} %}
                 {% if site %}
-                    <div id="codeHelp" class="form-text">Pass systems identify the site by this code. If you change it, update them too.</div>
+                    <div id="codeHelp" class="form-text">{{ t('Pass systems identify the site by this code. If you change it, update them too.') }}</div>
                 {% endif %}
             </div>
             {% for field in fields %}
@@ -27,22 +27,22 @@
                 </div>
             {% endfor %}
             <div class="mb-3">
-                <label for="area" class="form-label">Area (m²)</label>
+                <label for="area" class="form-label">{{ t('Area (m²)') }}</label>
                 <input type="text" inputmode="decimal" class="form-control{% if errors.area is defined %} is-invalid{% endif %}" id="area" name="area" value="{{ form.area }}" required>
                 {% include 'Web/Shared/Form/field-errors.twig' with {errors: errors.area ?? []} %}
             </div>
             <div class="mb-3">
-                <label for="requiredAccessLevelId" class="form-label">Required access level</label>
+                <label for="requiredAccessLevelId" class="form-label">{{ t('Required access level') }}</label>
                 <select class="form-select{% if errors.requiredAccessLevelId is defined %} is-invalid{% endif %}" id="requiredAccessLevelId" name="requiredAccessLevelId" required>
-                    <option value="">Choose…</option>
+                    <option value="">{{ t('Choose…') }}</option>
                     {% for level in accessLevels %}
                         <option value="{{ level.id }}"{% if form.requiredAccessLevelId == level.id ~ '' %} selected{% endif %}>{{ level.id }} – {{ level.name }}</option>
                     {% endfor %}
                 </select>
                 {% include 'Web/Shared/Form/field-errors.twig' with {errors: errors.requiredAccessLevelId ?? []} %}
             </div>
-            <button type="submit" class="btn btn-primary">Save</button>
-            <a class="btn btn-link" href="{{ urlGenerator.generate('site.list') }}">Cancel</a>
+            <button type="submit" class="btn btn-primary">{{ t('Save') }}</button>
+            <a class="btn btn-link" href="{{ urlGenerator.generate('site.list') }}">{{ t('Cancel') }}</a>
         </form>
     </div>
 </div>

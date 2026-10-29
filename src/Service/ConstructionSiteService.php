@@ -13,16 +13,15 @@ use App\Repository\ConstructionSiteData;
 use App\Repository\ConstructionSiteRepositoryInterface;
 use Closure;
 use Yiisoft\Data\Paginator\OffsetPaginator;
+use Yiisoft\Translator\TranslatorInterface;
 
 final readonly class ConstructionSiteService
 {
-    private const string NAME_TAKEN = 'A construction site with this name already exists.';
-    private const string CODE_TAKEN = 'A construction site with this code already exists.';
-
     public function __construct(
         private ConstructionSiteRepositoryInterface $sites,
         private AccessLevelRepositoryInterface $accessLevels,
         private AccessChecker $accessChecker,
+        private TranslatorInterface $translator,
     ) {}
 
     /**
@@ -72,20 +71,20 @@ final readonly class ConstructionSiteService
     {
         $this->accessChecker->ensure($actorId, Permission::SiteDelete);
 
-        InUseException::guard(fn() => $this->sites->delete($id), "This construction site is still in use and can't be deleted.");
+        InUseException::guard(fn() => $this->sites->delete($id), $this->translator->translate("This construction site is still in use and can't be deleted."));
     }
 
     private function validate(ConstructionSiteData $data, ?int $exceptId): void
     {
         $errors = [];
         if ($this->sites->codeExists($data->code, $exceptId)) {
-            $errors['code'] = self::CODE_TAKEN;
+            $errors['code'] = $this->codeTaken();
         }
         if ($this->sites->nameExists($data->name, $exceptId)) {
-            $errors['name'] = self::NAME_TAKEN;
+            $errors['name'] = $this->nameTaken();
         }
         if (!$this->accessLevels->exists($data->requiredAccessLevelId)) {
-            $errors['requiredAccessLevelId'] = 'Choose an access level.';
+            $errors['requiredAccessLevelId'] = $this->translator->translate('Choose an access level.');
         }
 
         if ($errors !== []) {
@@ -101,10 +100,20 @@ final readonly class ConstructionSiteService
     private function guardUnique(Closure $write): mixed
     {
         return ValidationException::guardUnique(
-            fn(): mixed => ValidationException::guardUnique($write, 'UQ_CONSTRUCTION_SITE_NAME', 'name', self::NAME_TAKEN),
+            fn(): mixed => ValidationException::guardUnique($write, 'UQ_CONSTRUCTION_SITE_NAME', 'name', $this->nameTaken()),
             'UQ_CONSTRUCTION_SITE_CODE',
             'code',
-            self::CODE_TAKEN,
+            $this->codeTaken(),
         );
+    }
+
+    private function nameTaken(): string
+    {
+        return $this->translator->translate('A construction site with this name already exists.');
+    }
+
+    private function codeTaken(): string
+    {
+        return $this->translator->translate('A construction site with this code already exists.');
     }
 }

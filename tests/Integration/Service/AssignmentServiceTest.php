@@ -27,6 +27,7 @@ use DateTimeImmutable;
 use DateTimeZone;
 use PHPUnit\Framework\Attributes\DataProvider;
 use Yiisoft\Db\Exception\SerializationFailureException;
+use Yiisoft\Translator\TranslatorInterface;
 
 use function PHPUnit\Framework\assertCount;
 use function PHPUnit\Framework\assertNotNull;
@@ -427,6 +428,7 @@ final class AssignmentServiceTest extends IntegrationTestCase
             $this->service(AccessScope::class),
             new FixedClock($now),
             $transaction ?? $this->service(TransactionRunnerInterface::class),
+            $this->service(TranslatorInterface::class),
         );
     }
 }

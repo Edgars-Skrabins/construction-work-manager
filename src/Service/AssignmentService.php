@@ -27,14 +27,13 @@ use DateTimeImmutable;
 use Psr\Clock\ClockInterface;
 use Yiisoft\Data\Paginator\OffsetPaginator;
 use Yiisoft\Db\Exception\SerializationFailureException;
+use Yiisoft\Translator\TranslatorInterface;
 
 use function sprintf;
 
 final readonly class AssignmentService
 {
     private const string DATE_FORMAT = 'Y-m-d';
-    private const array INVALID_PERIOD = ['startDate' => 'Enter a valid start date.'];
-    private const string CONCURRENT_CHANGE = "The assignment couldn't be saved because of a change made at the same time. Try again.";
 
     public function __construct(
         private AssignmentRepositoryInterface $assignments,
@@ -45,6 +44,7 @@ final readonly class AssignmentService
         private AccessScope $accessScope,
         private ClockInterface $clock,
         private TransactionRunnerInterface $transaction,
+        private TranslatorInterface $translator,
     ) {}
 
     /**
@@ -115,11 +115,11 @@ final readonly class AssignmentService
             $errors = [];
             $period = $this->period($startDate, $endDate, $errors);
             if ($this->workItems->find($workItemId) === null) {
-                $errors['workItem'] = 'Choose a work item.';
+                $errors['workItem'] = $this->translator->translate('Choose a work item.');
             }
             $site = $this->sites->findForUpdate($constructionSiteId);
             if ($site === null) {
-                $errors['constructionSite'] = 'Choose a construction site.';
+                $errors['constructionSite'] = $this->translator->translate('Choose a construction site.');
             } else {
                 $this->checkAccessLevel($employee, $site, $errors);
             }
@@ -128,7 +128,7 @@ final readonly class AssignmentService
             }
 
             if ($errors !== [] || $period === null) {
-                throw new ValidationException($errors !== [] ? $errors : self::INVALID_PERIOD);
+                throw new ValidationException($errors !== [] ? $errors : $this->invalidPeriod());
             }
 
             return $this->assignments->create($employeeId, $workItemId, $constructionSiteId, $period[0], $period[1], $actorId);
@@ -145,7 +145,7 @@ final readonly class AssignmentService
             $period = $this->period($startDate, $endDate, $errors);
             $newStatus = AssignmentStatus::tryFrom($status);
             if ($newStatus === null) {
-                $errors['status'] = 'Choose a status.';
+                $errors['status'] = $this->translator->translate('Choose a status.');
             }
 
             if ($newStatus === AssignmentStatus::Active) {
@@ -160,7 +160,7 @@ final readonly class AssignmentService
             }
 
             if ($errors !== [] || $period === null || $newStatus === null) {
-                throw new ValidationException($errors !== [] ? $errors : self::INVALID_PERIOD);
+                throw new ValidationException($errors !== [] ? $errors : $this->invalidPeriod());
             }
 
             $this->assignments->updatePeriodAndStatus($assignment->id, $period[0], $period[1], $newStatus);
@@ -189,7 +189,7 @@ final readonly class AssignmentService
         try {
             return $this->transaction->run($work);
         } catch (SerializationFailureException) {
-            throw ValidationException::forField('startDate', self::CONCURRENT_CHANGE);
+            throw ValidationException::forField('startDate', $this->translator->translate("The assignment couldn't be saved because of a change made at the same time. Try again."));
         }
     }
 
@@ -238,12 +238,12 @@ final readonly class AssignmentService
         $end = self::date($endDate);
 
         if ($start === null) {
-            $errors['startDate'] = self::INVALID_PERIOD['startDate'];
+            $errors['startDate'] = $this->invalidPeriod()['startDate'];
         }
         if ($end === null) {
-            $errors['endDate'] = 'Enter a valid end date.';
+            $errors['endDate'] = $this->translator->translate('Enter a valid end date.');
         } elseif ($start !== null && $end < $start) {
-            $errors['endDate'] = "The end date can't be before the start date.";
+            $errors['endDate'] = $this->translator->translate("The end date can't be before the start date.");
         }
 
         return $start !== null && $end !== null && $end >= $start ? [$start, $end] : null;
@@ -255,10 +255,9 @@ final readonly class AssignmentService
     private function checkAccessLevel(Employee $employee, ConstructionSite $site, array &$errors): void
     {
         if ($employee->accessLevelId < $site->requiredAccessLevelId) {
-            $errors['constructionSite'] = sprintf(
-                'The site requires access level %d; the employee has level %d.',
-                $site->requiredAccessLevelId,
-                $employee->accessLevelId,
+            $errors['constructionSite'] = $this->translator->translate(
+                'The site requires access level {required}; the employee has level {actual}.',
+                ['required' => $site->requiredAccessLevelId, 'actual' => $employee->accessLevelId],
             );
         }
     }
@@ -277,10 +276,9 @@ final readonly class AssignmentService
     ): void {
         $other = $this->assignments->findOverlappingActive($employeeId, $workItemId, $constructionSiteId, $period[0], $period[1], $exceptId);
         if ($other !== null) {
-            $errors['startDate'] = sprintf(
-                'The employee already has this work item at this site from %s to %s.',
-                $other->startDate->format(self::DATE_FORMAT),
-                $other->endDate->format(self::DATE_FORMAT),
+            $errors['startDate'] = $this->translator->translate(
+                'The employee already has this work item at this site from {start} to {end}.',
+                ['start' => $other->startDate->format(self::DATE_FORMAT), 'end' => $other->endDate->format(self::DATE_FORMAT)],
             );
         }
     }
@@ -290,5 +288,13 @@ final readonly class AssignmentService
         $date = DateTimeImmutable::createFromFormat('!' . self::DATE_FORMAT, trim($value));
 
         return $date !== false && $date->format(self::DATE_FORMAT) === trim($value) ? $date : null;
+    }
+
+    /**
+     * @return non-empty-array<string, string>
+     */
+    private function invalidPeriod(): array
+    {
+        return ['startDate' => $this->translator->translate('Enter a valid start date.')];
     }
 }

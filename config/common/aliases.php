@@ -9,6 +9,7 @@ return [
     '@assetsUrl' => '@baseUrl/assets',
     '@assetsSource' => '@root/assets',
     '@baseUrl' => '/',
+    '@messages' => '@root/messages',
     '@public' => '@root/public',
     '@runtime' => '@root/runtime',
     '@sql' => '@root/SQL',

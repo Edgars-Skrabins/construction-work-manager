@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Web\Shared\Flash;
 
 use Yiisoft\Session\Flash\FlashInterface;
+use Yiisoft\Translator\TranslatorInterface;
 
 final readonly class FlashMessages
 {
@@ -13,11 +14,12 @@ final readonly class FlashMessages
 
     public function __construct(
         private FlashInterface $flash,
+        private TranslatorInterface $translator,
     ) {}
 
     public function addSuccess(string $message): void
     {
-        $this->flash->add(self::SUCCESS, $message);
+        $this->flash->add(self::SUCCESS, $this->translator->translate($message));
     }
 
     /**

@@ -1,10 +1,11 @@
 {% do this.setTitle('404') %}
 <div class="text-center">
     <h1 class="display-1 fw-bold">404</h1>
+    {% set parts = t('The page {path} was not found.', {path: '{path}'})|split('{path}', 2) %}
     <p class="lead">
-        The page <strong>{{ currentRoute.getUri() ? currentRoute.getUri().getPath() : 'unknown' }}</strong> was not found.
+        {{ parts[0] }}<strong>{{ currentRoute.getUri() ? currentRoute.getUri().getPath() : t('unknown') }}</strong>{{ parts[1] ?? '' }}
     </p>
     <p>
-        <a class="btn btn-primary" href="{{ urlGenerator.generate('home') }}">Go back home</a>
+        <a class="btn btn-primary" href="{{ urlGenerator.generate('home') }}">{{ t('Go back home') }}</a>
     </p>
 </div>
