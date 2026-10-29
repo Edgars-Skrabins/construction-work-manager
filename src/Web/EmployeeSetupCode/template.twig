@@ -2,6 +2,9 @@
 <div class="row justify-content-center">
     <div class="col-lg-8">
         <h1 class="h3 mb-4">Setup code for {{ employee.fullName() }}</h1>
+        {% if error %}
+            <div class="alert alert-danger" role="alert">{{ error }}</div>
+        {% endif %}
         {% if employee.account %}
             <p>Login email: <strong>{{ employee.account.email }}</strong></p>
         {% endif %}

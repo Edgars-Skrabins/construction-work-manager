@@ -12,6 +12,7 @@ use App\Web\Shared\Redirect\Redirector;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Yiisoft\Http\Method;
+use Yiisoft\Http\Status;
 use Yiisoft\Router\CurrentRoute;
 use Yiisoft\User\CurrentUser;
 use Yiisoft\Yii\View\Renderer\WebViewRenderer;
@@ -37,19 +38,32 @@ final readonly class Action
             return $this->notFoundHandler->handle($request);
         }
 
+        $pending = $employee->account !== null && $employee->account->passwordHash === null;
+
         if ($request->getMethod() === Method::POST) {
             try {
                 $this->flash->setSetupCode($this->employees->newSetupCode($actorId, $employee->id));
-            } catch (ValidationException) {
-            }
 
-            return $this->redirector->toRoute('employee.setupCode', ['id' => $employee->id]);
+                return $this->redirector->toRoute('employee.setupCode', ['id' => $employee->id]);
+            } catch (ValidationException $e) {
+                return $this->viewRenderer
+                    ->render(__DIR__ . '/template', [
+                        'employee' => $employee,
+                        'setupCode' => null,
+                        'pending' => $pending,
+                        'error' => implode(' ', $e->errors),
+                    ])
+                    ->withStatus(Status::CONFLICT);
+            }
         }
 
-        return $this->viewRenderer->render(__DIR__ . '/template', [
-            'employee' => $employee,
-            'setupCode' => $this->flash->setupCode(),
-            'pending' => $employee->account !== null && $employee->account->passwordHash === null,
-        ]);
+        return $this->viewRenderer
+            ->render(__DIR__ . '/template', [
+                'employee' => $employee,
+                'setupCode' => $this->flash->setupCode(),
+                'pending' => $pending,
+                'error' => null,
+            ])
+            ->withHeader('Cache-Control', 'no-store');
     }
 }
