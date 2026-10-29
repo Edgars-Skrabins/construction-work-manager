@@ -40,7 +40,7 @@ final class AdminPagesTest extends IntegrationTestCase
     {
         $this->asAdmin();
 
-        $body = (string) $this->request('GET', '/')->getBody();
+        $body = (string) $this->request('GET', '/employees')->getBody();
 
         assertStringContainsString('href="/employees">Employees</a>', $body);
         assertStringContainsString('href="/sites">Construction sites</a>', $body);
@@ -85,7 +85,7 @@ final class AdminPagesTest extends IntegrationTestCase
     public function testOtherRolesSeeNoAdminLinksAndCannotPost(): void
     {
         $this->logIn('manager@mail.test', '123123123');
-        $body = (string) $this->request('GET', '/')->getBody();
+        $body = (string) $this->request('GET', '/assignments')->getBody();
 
         assertStringNotContainsString('href="/employees"', $body);
         assertStringNotContainsString('href="/sites"', $body);
@@ -172,7 +172,7 @@ final class AdminPagesTest extends IntegrationTestCase
         $id = (int) $this->db()->createCommand("SELECT ID FROM EMPLOYEE WHERE FIRST_NAME = N'Lapa' AND LAST_NAME = N'Pārbaude'")->queryScalar();
 
         $this->assertRedirectsTo('/employees', $this->submit("/employees/$id/edit", [...$fields, 'accessLevelId' => '2', 'birthDate' => '1991-02-03']));
-        assertStringContainsString('<td>1991-02-03</td>', (string) $this->request('GET', '/employees')->getBody());
+        assertStringContainsString('<td class="text-nowrap">1991-02-03</td>', (string) $this->request('GET', '/employees')->getBody());
         $this->resetServices();
         assertSame(2, (int) $this->db()->createCommand('SELECT ACCESS_LEVEL_ID FROM EMPLOYEE WHERE ID = :id', [':id' => $id])->queryScalar());
 

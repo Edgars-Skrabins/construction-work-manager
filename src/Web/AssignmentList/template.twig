@@ -29,8 +29,8 @@
                         <td>{{ item.employeeName }}</td>
                         <td>{{ item.workItemName }}</td>
                         <td>{{ item.constructionSiteName }}</td>
-                        <td>{{ item.assignment.startDate|date('Y-m-d') }}</td>
-                        <td>{{ item.assignment.endDate|date('Y-m-d') }}</td>
+                        <td class="text-nowrap">{{ item.assignment.startDate|date('Y-m-d') }}</td>
+                        <td class="text-nowrap">{{ item.assignment.endDate|date('Y-m-d') }}</td>
                         <td>
                             <span class="badge {{ row.status.badgeClass() }}">{{ row.status.label() }}</span>
                             {% if item.accessLevelTooLow() %}
