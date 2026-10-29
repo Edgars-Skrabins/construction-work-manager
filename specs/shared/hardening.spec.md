@@ -13,7 +13,7 @@ The project skeleton's security and quality review found items that were deliber
   1. Any response from the app, whether a page, a static asset, an error page or an `/api/v1` JSON response, carries `X-Content-Type-Options`, `X-Frame-Options`, `Referrer-Policy` and `Content-Security-Policy`.
   2. Pages keep working and look the same: Bootstrap, the app's CSS and JS, Bootstrap's form control icons and the framework's error pages render as before. The dev error page loses only its inline scripts (syntax highlighting and the copy button).
   3. Every pull request's CI starts the app behind Caddy and fails if any header is missing or has the wrong value.
-  4. CI runs with Xdebug off, so it's faster. Locally Xdebug stays in `develop` mode unless `XDEBUG_MODE` is set.
+  4. CI runs with Xdebug off, so it's faster. Locally Xdebug stays in `develop` mode unless `docker/dev.override.env` sets another `XDEBUG_MODE`.
   5. Once a month Dependabot opens at most one grouped pull request that bumps the pinned actions' SHAs and their version notes.
 - **Rules:**
   - The headers are set by Caddy, for all responses, in one place. PHP sets none of them.
@@ -96,9 +96,9 @@ PHPDoc type tags (`@var`, `@param`, `@return`, `@phpstan-*`) stay. The `@psalm-v
 
 ### Xdebug off in CI
 
-- `docker/dev.env`: remove `XDEBUG_MODE=develop`.
-- `compose.yaml`: the `app` service gets `environment: XDEBUG_MODE: ${XDEBUG_MODE:-develop}`. `environment` overrides `env_file`, so it's the single place the mode is set.
-- `.github/workflows/ci.yml`: a workflow-level `env: XDEBUG_MODE: "off"`, quoted so YAML keeps it a string.
+- `docker/dev.env` keeps `XDEBUG_MODE=develop`, and `compose.yaml` is unchanged, so `docker/dev.override.env` can still set any mode locally (decision 14).
+- `.github/actions/setup/action.yml`: a step "Turn off Xdebug" right after "Match container user to runner" appends `XDEBUG_MODE=off` to `docker/dev.override.env`. Every job runs the setup action first, so every container in CI runs with Xdebug off.
+- `.github/workflows/ci.yml`: the failure step dumps `docker compose logs sqlserver app`, so a failed "Start app" or "Security headers" step shows the app's output too.
 - The same image is used locally and in CI (skeleton decision 12).
 
 ### Dockerfile apt step
@@ -123,10 +123,12 @@ RUN apt-get update \
 6. **Dependabot:** version updates for `github-actions` only, monthly, grouped into one pull request, so the pins don't go stale. This revises the skeleton's alerts-only decision for actions. Composer stays alerts only. Rejected: weekly (more PRs) and alerts only (pins updated by hand).
 7. **Application name:** `ApplicationParams::$name` has no default, so `config/common/params.php` is its only source. Rejected: defaulting to the real name, which would keep it in two places.
 8. **Comments:** remove the template's comments from the code files, `.dockerignore`, `.gitattributes`, and the Psalm-only block in `config/common/bootstrap.php`. Keep `docker/dev.env`'s dev-only warning, which the skeleton spec requires, and PHPDoc type tags. Rejected: code files only, and removing the dev.env warning too.
-9. **Xdebug in CI:** `XDEBUG_MODE` moves from `dev.env` to `compose.yaml` as `${XDEBUG_MODE:-develop}`, and the workflow sets it to `off`. One image for local and CI. Rejected: a build arg that leaves Xdebug out of the CI image, which splits the images and the layer cache.
+9. **Xdebug in CI:** Xdebug is turned off in CI through an environment setting, with the same image as locally (mechanism revised in 14). One image for local and CI. Rejected: a build arg that leaves Xdebug out of the CI image, which splits the images and the layer cache.
 10. **apt:** `apt-get` with `--no-install-recommends` and the lists removed, for a smaller image and a stable CLI. Rejected: only removing the lists.
 11. **hello command:** delete it and keep `config/console/commands.php` returning `[]`, so the next command has its place. Rejected: removing the registry as well.
 12. **Dockerfile user setup (2026-10-29, from review):** one `&&` chain with `groupadd --force`, and `useradd` names the user `${USER_NAME}`. Any failing step now fails the build, while an already existing GID (20 or 100 in the base image) still builds as before: `--force` picks a free GID for `appuser`, and the user's primary group is the existing one. Verified by building with GID 1001, 100 and 20. Rejected: the template's `;` chain (failures pass silently) and a plain `&&` chain (fails on hosts whose GID exists in the image).
+13. **Dev error page under the CSP (2026-10-29, from review):** accepted as decided in 1. Confirmed with a deliberate Twig error under `APP_DEBUG`: the page still shows the exception, file, line and code excerpt, styled. The browser blocks its two inline scripts (`script-src` falls back to `default-src 'self'`) and its Google Fonts stylesheet, which is a third-party request the policy should block anyway. The CSP stays the same in every environment. Rejected: a dev-only relaxed CSP, which needs a second Caddy config and leaves dev testing a different policy than everything else; a nonce mechanism; widening `script-src`.
+14. **Xdebug off in CI through the override file (2026-10-29, from review, replaces the mechanism in 9):** `XDEBUG_MODE=develop` stays in `docker/dev.env`, and the composite setup action writes `XDEBUG_MODE=off` into `docker/dev.override.env` before the image build and every run. A `compose.yaml` `environment:` entry would override every `env_file`, so `docker/dev.override.env` could no longer set `XDEBUG_MODE=debug` for step debugging. This keeps one override mechanism. Rejected: the compose variable `${XDEBUG_MODE:-develop}` with local overrides through the shell or `.env`.
 
 # Part 3 — Implementation TODO
 
@@ -151,8 +153,11 @@ Baseline before starting: CI run 40860644200 on `main` took lint 42 s, unit 56 s
 - [x] C5. `make check` passes, and the image still builds.
 
 ### D. Docker and CI speed
-- [x] D1. Move `XDEBUG_MODE` from `docker/dev.env` to `compose.yaml` and add the workflow-level `XDEBUG_MODE: "off"` as in 2.2. Locally `docker compose exec app php -r 'echo json_encode(xdebug_info("mode"));'` prints `["develop"]`, and in a container started with `XDEBUG_MODE=off` it prints `[]`. `ini_get("xdebug.mode")` isn't a valid probe, because it shows the ini value and ignores the environment override.
+- [x] D1. ~~Move `XDEBUG_MODE` from `docker/dev.env` to `compose.yaml` and add the workflow-level `XDEBUG_MODE: "off"`~~ (replaced by D3, decision 14). Locally `docker compose exec app php -r 'echo json_encode(xdebug_info("mode"));'` prints `["develop"]`, and in a container started with `XDEBUG_MODE=off` it prints `[]`. `ini_get("xdebug.mode")` isn't a valid probe, because it shows the ini value and ignores the environment override.
 - [x] D2. Rewrite the Dockerfile apt step as in 2.2. The image builds, and the security baseline check still runs.
+
+- [x] D3. Restore `XDEBUG_MODE=develop` in `docker/dev.env`, drop the `compose.yaml` `environment:` entry and the workflow-level `env`, and add the "Turn off Xdebug" step to the setup action as in 2.2. Locally `xdebug_info("mode")` is `["develop"]` by default, `[]` with `XDEBUG_MODE=off` in `docker/dev.override.env`, and `["debug"]` with `XDEBUG_MODE=debug` there.
+- [x] D4. The CI failure step dumps `sqlserver` and `app` logs.
 
 ### Z. Wrap-up
 - [x] Z1. `make check` passes, and `README.md` and `CLAUDE.md` are checked against the changes.
