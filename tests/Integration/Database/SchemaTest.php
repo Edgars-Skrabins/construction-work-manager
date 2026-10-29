@@ -86,7 +86,7 @@ final class SchemaTest extends IntegrationTestCase
         )->queryColumn();
 
         assertSame(
-            ['1 active 2 -7 14', '2 active 2 7 30', '3 active 2 -30 -3', '4 active 3 -2 20', '5 done 3 -40 -10', '6 cancelled 3 3 10'],
+            ['1 active 2 -7 14', '2 cancelled 2 7 30', '3 done 2 -30 -3', '4 active 3 -2 20', '5 done 3 -40 -10', '6 cancelled 3 3 10'],
             $rows,
         );
     }
@@ -106,7 +106,7 @@ final class SchemaTest extends IntegrationTestCase
             "SELECT CONCAT(a.ID, N' ', a.STATUS) FROM ASSIGNMENT a JOIN EMPLOYEE e ON e.ID = a.EMPLOYEE_ID JOIN CONSTRUCTION_SITE s ON s.ID = a.CONSTRUCTION_SITE_ID WHERE e.ACCESS_LEVEL_ID < s.REQUIRED_ACCESS_LEVEL_ID ORDER BY a.ID",
         )->queryColumn();
 
-        assertSame(['12 active', '13 active', '33 active'], $rows);
+        assertSame(['3 done', '12 active', '13 active', '33 active', '34 active'], $rows);
     }
 
     public function testSeedAssignmentsNeverOverlapForTheSameWorkAtTheSameSite(): void
@@ -125,7 +125,7 @@ final class SchemaTest extends IntegrationTestCase
         )->queryColumn();
         sort($sizes);
 
-        assertSame(['account 15', 'admin 3', 'assignment 174', 'employee 70', 'manager 7', 'site 11', 'work item 25'], $sizes);
+        assertSame(['account 7', 'admin 3', 'assignment 177', 'employee 70', 'manager 7', 'site 11', 'work item 25'], $sizes);
     }
 
     public function testSeedBirthDatesKeepTheAgeRule(): void

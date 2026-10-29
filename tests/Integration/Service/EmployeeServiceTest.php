@@ -153,10 +153,10 @@ final class EmployeeServiceTest extends IntegrationTestCase
 
     public function testEmployeeWithOnlyDoneOrCancelledAssignmentsCanBecomeAManager(): void
     {
-        $this->employees()->update(1, 8, self::input(role: Role::Manager, managerId: null, email: 'employee5@mail.test'));
+        $this->employees()->update(1, 5, self::input(role: Role::Manager, managerId: null, email: 'employee2@mail.test'));
 
-        assertSame(Role::Manager, $this->find(8)->role);
-        assertNull($this->find(8)->managerId);
+        assertSame(Role::Manager, $this->find(5)->role);
+        assertNull($this->find(5)->managerId);
     }
 
     public function testEmployeeWithActiveAssignmentsCanStillBeEdited(): void

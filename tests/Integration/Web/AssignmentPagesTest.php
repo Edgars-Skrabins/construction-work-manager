@@ -20,7 +20,7 @@ final class AssignmentPagesTest extends IntegrationTestCase
 {
     use WebClient;
 
-    private const int LAST_SEED_ID = 174;
+    private const int LAST_SEED_ID = 177;
 
     protected function tearDown(): void
     {
@@ -107,11 +107,12 @@ final class AssignmentPagesTest extends IntegrationTestCase
 
         $body = (string) $this->request('GET', '/assignments/create')->getBody();
 
-        foreach ([4 => 1, 5 => 2, 6 => 3] as $id => $level) {
+        foreach ([4 => 1, 5 => 2, 6 => 2, 59 => 3, 65 => 1] as $id => $level) {
             assertStringContainsString(sprintf('<option value="%d" data-access-level="%d"', $id, $level), $body);
         }
         assertStringNotContainsString('<option value="7" data-access-level', $body);
-        foreach ([1 => 1, 2 => 2, 3 => 3, 4 => 4] as $id => $level) {
+        assertStringNotContainsString('<option value="16" data-access-level', $body);
+        foreach ([1 => 1, 2 => 2, 3 => 3, 4 => 4, 10 => 4, 11 => 2] as $id => $level) {
             assertStringContainsString(sprintf('<option value="%d" data-required-level="%d"', $id, $level), $body);
         }
     }

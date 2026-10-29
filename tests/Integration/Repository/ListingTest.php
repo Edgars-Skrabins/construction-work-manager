@@ -113,7 +113,7 @@ final class ListingTest extends IntegrationTestCase
         yield 'employees by last and first name' => ['employees', 'Bērziņš, Jānis', [1]];
         yield 'employees ignoring case' => ['employees', 'ANNA zariņa', [7]];
         yield 'employees by email' => ['employees', 'manager2@', [3]];
-        yield 'employees by part of an email' => ['employees', 'employee5', [8]];
+        yield 'employees by part of an email' => ['employees', 'employee3', [6]];
         yield 'employees without a match' => ['employees', 'Nobody', []];
         yield 'sites by name' => ['sites', 'school', [2]];
         yield 'sites by street' => ['sites', 'Viskaļu', [3]];

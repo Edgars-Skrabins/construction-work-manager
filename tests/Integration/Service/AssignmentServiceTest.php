@@ -143,7 +143,7 @@ final class AssignmentServiceTest extends IntegrationTestCase
         yield 'several errors at once' => [9999, 4, '2026-11-20', '2026-11-10', [
             'endDate' => "The end date can't be before the start date.",
             'workItem' => 'Choose a work item.',
-            'constructionSite' => 'The site requires access level 4; the employee has level 3.',
+            'constructionSite' => 'The site requires access level 4; the employee has level 2.',
         ]];
     }
 

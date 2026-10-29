@@ -28,7 +28,7 @@ final class MigrationRoundTripTest extends IntegrationTestCase
             assertNotNull($this->db()->getTableSchema($table, true), "$table should be recreated.");
         }
         assertSame('80', (string) $this->db()->createCommand('SELECT COUNT(*) FROM EMPLOYEE')->queryScalar());
-        assertSame('174', (string) $this->db()->createCommand('SELECT COUNT(*) FROM ASSIGNMENT')->queryScalar());
+        assertSame('177', (string) $this->db()->createCommand('SELECT COUNT(*) FROM ASSIGNMENT')->queryScalar());
     }
 
     private function console(string $command): void

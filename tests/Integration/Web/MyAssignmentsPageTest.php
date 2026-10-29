@@ -79,7 +79,7 @@ final class MyAssignmentsPageTest extends IntegrationTestCase
 
     public function testEmployeeWithOnlyFinishedWorkSeesTheEmptyStateAndHistory(): void
     {
-        $this->logIn('employee5@mail.test', '123123123');
+        $this->logIn('employee2@mail.test', '123123123');
 
         $body = (string) $this->request('GET', '/my-assignments')->getBody();
 
