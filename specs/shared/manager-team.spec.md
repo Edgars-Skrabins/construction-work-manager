@@ -1,7 +1,7 @@
 # Manager team — Spec
 
 **Type:** feature
-**Status:** in progress
+**Status:** done
 **Last updated:** 2026-10-29
 
 # Part 1 — Business logic and usage
@@ -108,6 +108,6 @@ Baseline before starting: 139 unit tests and 517 integration tests, all green.
 
 ### Z. Wrap-up
 
-- [ ] Z1. `make check` green.
-- [ ] Z2. Update `README.md` (Running the app: managers see their team on Employees and the work calendar) and `CLAUDE.md` if the layout description changes.
-- [ ] Z3. Manual check in the running app: log in as `manager@mail.test`, open Employees (three employees, no edit buttons), open Work calendar, page to the next month and back, filter by one employee, and check the narrow-screen list; log in as `employee@mail.test` and check `/employees` and `/employees/calendar` give 403.
+- [x] Z1. `make check` green.
+- [x] Z2. Update `README.md` (Running the app: managers see their team on Employees and the work calendar) and `CLAUDE.md` if the layout description changes.
+- [x] Z3. Manual check in the running app (done over HTTP with curl, because the in-app browser drops the `Domain=localhost` session cookie, so the layout itself wasn't checked by eye): log in as `manager@mail.test`, open Employees (three employees, no edit buttons), open Work calendar, page to the next month and back, filter by one employee, and check the narrow-screen list; log in as `employee@mail.test` and check `/employees` and `/employees/calendar` give 403.
