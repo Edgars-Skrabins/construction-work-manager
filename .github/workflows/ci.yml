@@ -45,6 +45,25 @@ jobs:
         run: docker compose up -d --wait sqlserver
       - name: Create database and logins
         run: docker compose run --rm -T db-init
+      - name: Start app
+        run: docker compose up -d --no-deps app
+      - name: Security headers
+        run: |
+          status=0
+          for path in /login /api/v1; do
+            headers=$(curl -sS -D - -o /dev/null --retry 15 --retry-all-errors --retry-delay 1 "http://127.0.0.1:8080$path" | tr -d '\r')
+            for expected in \
+              "X-Content-Type-Options: nosniff" \
+              "X-Frame-Options: DENY" \
+              "Referrer-Policy: strict-origin-when-cross-origin" \
+              "Content-Security-Policy: default-src 'self'; img-src 'self' data:; style-src 'self' 'unsafe-inline'; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'"; do
+              if ! grep -Fqix "$expected" <<< "$headers"; then
+                echo "::error::$path is missing '$expected'"
+                status=1
+              fi
+            done
+          done
+          exit $status
       - name: Integration tests
         run: docker compose run --rm --no-deps -T app composer test:integration
       - name: SQL Server logs

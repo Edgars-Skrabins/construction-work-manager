@@ -12,6 +12,12 @@
 
 {$SERVER_NAME::80} {
     encode zstd br gzip
+    header {
+        X-Content-Type-Options "nosniff"
+        X-Frame-Options "DENY"
+        Referrer-Policy "strict-origin-when-cross-origin"
+        Content-Security-Policy "default-src 'self'; img-src 'self' data:; style-src 'self' 'unsafe-inline'; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'"
+    }
     php_server {
         try_files {path} index.php
         root /app/public
