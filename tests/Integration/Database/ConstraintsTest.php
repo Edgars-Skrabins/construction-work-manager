@@ -35,6 +35,20 @@ final class ConstraintsTest extends IntegrationTestCase
         $this->assertRejected("DELETE FROM RBAC_ITEM WHERE name = N'manager'", 'FK_EMPLOYEE_ROLE');
     }
 
+    public function testAccessLevelOfEmployeesCannotBeDeleted(): void
+    {
+        $this->db()->createCommand('UPDATE CONSTRUCTION_SITE SET REQUIRED_ACCESS_LEVEL_ID = 2 WHERE REQUIRED_ACCESS_LEVEL_ID = 1')->execute();
+
+        $this->assertRejected('DELETE FROM ACCESS_LEVEL WHERE ID = 1', 'FK_EMPLOYEE_ACCESS_LEVEL_ID');
+    }
+
+    public function testAccessLevelRequiredBySitesCannotBeDeleted(): void
+    {
+        $this->db()->createCommand('UPDATE EMPLOYEE SET ACCESS_LEVEL_ID = 2 WHERE ACCESS_LEVEL_ID = 1')->execute();
+
+        $this->assertRejected('DELETE FROM ACCESS_LEVEL WHERE ID = 1', 'FK_CONSTRUCTION_SITE_REQUIRED_ACCESS_LEVEL_ID');
+    }
+
     public function testManagerWithEmployeesCannotBeDeleted(): void
     {
         $this->db()->createCommand('DELETE FROM ACCOUNT WHERE EMPLOYEE_ID = 2')->execute();
@@ -78,7 +92,6 @@ final class ConstraintsTest extends IntegrationTestCase
             'FK_CONSTRUCTION_SITE_REQUIRED_ACCESS_LEVEL_ID',
         ];
         yield 'duplicate work item name' => ["INSERT INTO WORK_ITEM (NAME) VALUES (N'Welding')", 'UQ_WORK_ITEM_NAME'];
-        yield 'referenced access level deleted' => ['DELETE FROM ACCESS_LEVEL WHERE ID = 1', 'FK_EMPLOYEE_ACCESS_LEVEL_ID'];
         yield 'role item type other than role' => ["UPDATE EMPLOYEE SET ROLE_ITEM_TYPE = N'permission' WHERE ID = 4", 'CK_EMPLOYEE_ROLE_ITEM_TYPE'];
         $assignment = "INSERT INTO ASSIGNMENT (EMPLOYEE_ID, WORK_ITEM_ID, CONSTRUCTION_SITE_ID, START_DATE, END_DATE, STATUS, CREATED_BY_ID) VALUES (%s, %s, %s, %s, %s, %s, %s)";
 
