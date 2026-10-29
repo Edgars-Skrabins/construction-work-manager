@@ -39,16 +39,17 @@ final readonly class AttemptThrottle
         return $retryAfter;
     }
 
-    public function recordFailure(ThrottleScope $scope, string $key): void
+    /**
+     * @param list<array{ThrottleScope, string}> $keys
+     */
+    public function recordFailure(array $keys): void
     {
         $now = $this->clock->now();
+        $windowStartsAfter = $now->modify(sprintf('-%d minutes', $this->limits->windowMinutes));
 
-        $this->repository->recordFailure(
-            $scope->value,
-            self::hash($key),
-            $now,
-            $now->modify(sprintf('-%d minutes', $this->limits->windowMinutes)),
-        );
+        foreach ($keys as [$scope, $key]) {
+            $this->repository->recordFailure($scope->value, self::hash($key), $now, $windowStartsAfter);
+        }
     }
 
     public function clear(ThrottleScope $scope, string $key): void

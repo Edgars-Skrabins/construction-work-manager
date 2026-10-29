@@ -6,7 +6,9 @@ namespace App\Tests\Integration\Web;
 
 use App\Tests\Integration\IntegrationTestCase;
 
+use function PHPUnit\Framework\assertGreaterThan;
 use function PHPUnit\Framework\assertMatchesRegularExpression;
+use function PHPUnit\Framework\assertNull;
 use function PHPUnit\Framework\assertSame;
 use function PHPUnit\Framework\assertStringContainsString;
 use function PHPUnit\Framework\assertStringNotContainsString;
@@ -17,9 +19,15 @@ final class SetPasswordTest extends IntegrationTestCase
 
     private const string EMAIL = 'set.password@mail.test';
 
+    protected function setUp(): void
+    {
+        $this->clearThrottle();
+    }
+
     protected function tearDown(): void
     {
         $this->resetServices();
+        $this->clearThrottle();
         $this->db()->createCommand('DELETE FROM ACCOUNT WHERE EMAIL = :email', [':email' => self::EMAIL])->execute();
         $this->db()->createCommand("DELETE FROM EMPLOYEE WHERE FIRST_NAME = N'Iveta' AND LAST_NAME = N'Paroļa'")->execute();
     }
@@ -71,6 +79,27 @@ final class SetPasswordTest extends IntegrationTestCase
 
         assertSame(302, $response->getStatusCode());
         assertSame('/', $response->getHeaderLine('Location'));
+    }
+
+    public function testFifthWrongCodeLocksTheEmailEvenForTheRightCode(): void
+    {
+        $code = $this->createEmployeeAsAdmin();
+        $this->cookies = [];
+
+        for ($i = 0; $i < 5; $i++) {
+            $this->submit('/set-password', ['email' => self::EMAIL, 'setupCode' => 'AAAAA-AAAAA', 'password' => 'new password', 'passwordRepeat' => 'new password']);
+        }
+        $response = $this->submit('/set-password', ['email' => self::EMAIL, 'setupCode' => $code, 'password' => 'new password', 'passwordRepeat' => 'new password']);
+
+        assertSame(429, $response->getStatusCode());
+        assertGreaterThan(840, (int) $response->getHeaderLine('Retry-After'));
+        assertStringContainsString('Too many attempts. Try again in 15 minutes.', (string) $response->getBody());
+        assertNull($this->db()->createCommand('SELECT PASSWORD_HASH FROM ACCOUNT WHERE EMAIL = :email', [':email' => self::EMAIL])->queryScalar());
+    }
+
+    private function clearThrottle(): void
+    {
+        $this->db()->createCommand('DELETE FROM AUTH_THROTTLE')->execute();
     }
 
     private function createEmployeeAsAdmin(): string

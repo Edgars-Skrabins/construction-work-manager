@@ -111,7 +111,7 @@ final class AttemptThrottleTest extends IntegrationTestCase
     {
         $throttle = $this->throttleAt($time);
         for ($i = 0; $i < $times; $i++) {
-            $throttle->recordFailure($scope, $key);
+            $throttle->recordFailure([[$scope, $key]]);
         }
     }
 

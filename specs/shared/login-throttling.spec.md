@@ -81,15 +81,15 @@ CREATE TABLE AUTH_THROTTLE (
 - `src/Service/TooManyAttemptsException.php`: `RuntimeException` with a public `int $retryAfterSeconds` and `minutes(): int` (`ceil(seconds / 60)`).
 - `src/Service/AttemptThrottle.php`: depends on the repository, `ThrottleLimits` and `ClockInterface`. Hashes every key with SHA-256 before it reaches the repository.
   - `retryAfter(list<array{ThrottleScope, string}> $keys): ?int`: takes `[scope, key]` pairs and returns the longest remaining wait in seconds (at least 1) over the keys that are at their limit within an open window, or `null` when all are allowed. Remaining wait is `windowStart + windowMinutes − now`.
-  - `recordFailure(ThrottleScope, string $key)` for one key, `clear(ThrottleScope, string $key)`.
+  - `recordFailure(list<array{ThrottleScope, string}> $keys)` records one failure for each key, `clear(ThrottleScope, string $key)` deletes one key.
 - `src/Shared/ClientIp.php`: `ClientIp::of(ServerRequestInterface): string` returns `REMOTE_ADDR` from the server params, or `''` when it is missing.
 
 ### Login and set-password
-- `LoginService::login(string $email, string $password, string $clientIp)`:
+- `LoginService::login(string $email, string $password, string $clientIp)` (`tests/Unit/Service/LoginServiceTest.php` covers it with an in-memory throttle repository):
   1. If `retryAfter()` over `LoginEmail` (normalized email) and `LoginIp` isn't null, verify the password against `DUMMY_HASH` and throw `TooManyAttemptsException`.
   2. Otherwise check the credentials as today. Every `false` result from the credential check records a failure for both keys. A successful check clears `LoginEmail`.
 - `PasswordSetupService::setPassword(string $email, string $code, string $password, string $clientIp)`: the same with `SetupEmail` and `SetupIp`, the dummy verification of the code (as in the existing unknown-account branch), recording on every `false`, clearing `SetupEmail` on success.
-- `src/Web/Login/Action.php` and `src/Web/SetPassword/Action.php` pass `ClientIp::of($request)`, catch `TooManyAttemptsException`, set the error to `Too many attempts. Try again in N minutes.` (`1 minute` for one), and return the rendered page with status 429 and `Retry-After` in seconds.
+- `src/Web/Shared/Throttling/TooManyAttempts.php` builds the message and turns a rendered page into the 429 response with `Retry-After`. `src/Web/Login/Action.php` and `src/Web/SetPassword/Action.php` pass `ClientIp::of($request)`, catch `TooManyAttemptsException`, set the error to `Too many attempts. Try again in N minutes.` (`1 minute` for one), and return the rendered page with status 429 and `Retry-After` in seconds.
 
 ### API
 - `ApiKeyAuthentication` gets `AttemptThrottle`. It first calls `retryAfter()` for `ApiIp` and, when blocked, returns `problem(Status::TOO_MANY_REQUESTS, null, ['Retry-After' => seconds])`. Every `401` it returns records an `ApiIp` failure first.
@@ -100,7 +100,7 @@ CREATE TABLE AUTH_THROTTLE (
 - `tests/Integration/Web/AuthenticationTest.php`: after 5 wrong passwords the right one gets 429 with the throttle message and `Retry-After`; an unknown email gets exactly the same response after 5 failures; 4 failures, a successful login, then 4 more failures still don't block; 20 failures over different emails block a sixth email from the same IP.
 - `tests/Integration/Web/SetPasswordTest.php`: after 5 wrong codes the right code gets 429 with the throttle message and the password isn't set.
 - `tests/Integration/Api/ApiPipelineTest.php`: after 20 rejected requests the next one, with a valid key, gets 429 with `Retry-After` and the problem body.
-- Web test classes that log in with wrong credentials outside a transaction delete the `AUTH_THROTTLE` rows in `setUp()`, so failures from one test can't block another (all test requests share the empty client IP).
+- `AuthenticationTest` and `SetPasswordTest`, whose throttling tests run outside a transaction, delete the `AUTH_THROTTLE` rows in `setUp()` and `tearDown()`, so failures from one test can't block another (all test requests share the empty client IP). The other web tests fail at most one login each, far below the limits.
 - Schema tests that list the tables or round-trip the migrations include `AUTH_THROTTLE`.
 
 ## 2.3 Decisions
@@ -127,9 +127,9 @@ Baseline before starting: `make check` green on `main`.
 - [x] A3. Add `ThrottleScope`, `ThrottleLimits` (params and DI), `TooManyAttemptsException`, `AttemptThrottle` and `ClientIp`, with `AttemptThrottleTest`.
 
 ### B. Login and set-password
-- [ ] B1. Throttle `LoginService::login()` and the login action (429, message, `Retry-After`); update its callers and tests, add the throttling tests to `AuthenticationTest`.
-- [ ] B2. Throttle `PasswordSetupService::setPassword()` and the set-password action; update `PasswordSetupServiceTest` and add the throttling test to `SetPasswordTest`.
-- [ ] B3. Clear `AUTH_THROTTLE` in `setUp()` of the web test classes that fail logins or setups outside a transaction.
+- [x] B1. Throttle `LoginService::login()` and the login action (429, message, `Retry-After`); update its callers and tests, add the throttling tests to `AuthenticationTest`.
+- [x] B2. Throttle `PasswordSetupService::setPassword()` and the set-password action; update `PasswordSetupServiceTest` and add the throttling test to `SetPasswordTest`.
+- [x] B3. Clear `AUTH_THROTTLE` in `setUp()` and `tearDown()` of `AuthenticationTest` and `SetPasswordTest`.
 
 ### C. API
 - [ ] C1. Throttle `ApiKeyAuthentication` per IP and add the 429 test to `ApiPipelineTest`.
