@@ -6,4 +6,5 @@ return [
     'charset' => 'UTF-8',
     'locale' => 'en',
     'name' => 'Construction Work Manager',
+    'timezone' => 'Europe/Riga',
 ];

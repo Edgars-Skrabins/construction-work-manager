@@ -80,6 +80,22 @@ return [
                         ->middleware(RequirePermission::for(Permission::WorkItemDelete))
                         ->action(Web\WorkItemDelete\Action::class)
                         ->name('workItem.delete'),
+                    Route::get('/assignments')
+                        ->middleware(RequirePermission::for(Permission::AssignmentUpdate))
+                        ->action(Web\AssignmentList\Action::class)
+                        ->name('assignment.list'),
+                    Route::methods([Method::GET, Method::POST], '/assignments/create')
+                        ->middleware(RequirePermission::for(Permission::AssignmentCreate))
+                        ->action(Web\AssignmentForm\Action::class)
+                        ->name('assignment.create'),
+                    Route::methods([Method::GET, Method::POST], '/assignments/{id:\d+}/edit')
+                        ->middleware(RequirePermission::for(Permission::AssignmentUpdate))
+                        ->action(Web\AssignmentForm\Action::class)
+                        ->name('assignment.edit'),
+                    Route::post('/assignments/{id:\d+}/delete')
+                        ->middleware(RequirePermission::for(Permission::AssignmentDelete))
+                        ->action(Web\AssignmentDelete\Action::class)
+                        ->name('assignment.delete'),
                 ),
         ),
 ];

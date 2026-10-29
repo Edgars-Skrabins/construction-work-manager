@@ -18,6 +18,8 @@ interface EmployeeRepositoryInterface
 
     public function find(int $id): ?Employee;
 
+    public function roleOf(int $id): ?Role;
+
     /**
      * @return list<Employee>
      */

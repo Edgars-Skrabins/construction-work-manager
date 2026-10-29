@@ -6,6 +6,7 @@ namespace App\Web\SiteForm;
 
 use App\Entity\ConstructionSite;
 use App\Repository\ConstructionSiteData;
+use App\Web\Shared\Form\FormBody;
 use Yiisoft\Validator\Label;
 use Yiisoft\Validator\Rule\In;
 use Yiisoft\Validator\Rule\Length;
@@ -42,12 +43,12 @@ final class SiteForm
     public static function fromBody(mixed $body): self
     {
         $form = new self();
-        $form->name = self::field($body, 'name');
-        $form->street = self::field($body, 'street');
-        $form->city = self::field($body, 'city');
-        $form->country = self::field($body, 'country');
-        $form->area = self::field($body, 'area');
-        $form->requiredAccessLevelId = self::field($body, 'requiredAccessLevelId');
+        $form->name = FormBody::string($body, 'name');
+        $form->street = FormBody::string($body, 'street');
+        $form->city = FormBody::string($body, 'city');
+        $form->country = FormBody::string($body, 'country');
+        $form->area = FormBody::string($body, 'area');
+        $form->requiredAccessLevelId = FormBody::string($body, 'requiredAccessLevelId');
 
         return $form;
     }
@@ -75,10 +76,5 @@ final class SiteForm
             areaM2: $this->area,
             requiredAccessLevelId: (int) $this->requiredAccessLevelId,
         );
-    }
-
-    private static function field(mixed $body, string $name): string
-    {
-        return is_array($body) && is_string($body[$name] ?? null) ? trim($body[$name]) : '';
     }
 }

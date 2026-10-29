@@ -64,7 +64,7 @@ final readonly class AccountRepository implements AccountRepositoryInterface
         $this->update($employeeId, ['SETUP_CODE_HASH' => $setupCodeHash, 'SETUP_CODE_EXPIRES_AT' => self::utc($expiresAt)]);
     }
 
-    public function completeSetup(int $employeeId, string $setupCodeHash, string $passwordHash): bool
+    public function completeSetup(int $employeeId, string $setupCodeHash, string $passwordHash, DateTimeImmutable $now): bool
     {
         $updated = $this->db->createCommand()
             ->update(
@@ -78,7 +78,7 @@ final readonly class AccountRepository implements AccountRepositoryInterface
                 [
                     'and',
                     ['EMPLOYEE_ID' => $employeeId, 'SETUP_CODE_HASH' => $setupCodeHash, 'PASSWORD_HASH' => null, 'IS_ACTIVE' => 1],
-                    ['>', 'SETUP_CODE_EXPIRES_AT', new Expression('SYSUTCDATETIME()')],
+                    ['>', 'SETUP_CODE_EXPIRES_AT', self::utc($now)],
                 ],
             )
             ->execute();

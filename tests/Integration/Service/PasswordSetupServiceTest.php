@@ -8,8 +8,11 @@ use App\Access\Role;
 use App\Repository\AccountRepositoryInterface;
 use App\Service\EmployeeInput;
 use App\Service\EmployeeService;
+use App\Service\LoginService;
 use App\Service\PasswordSetupService;
 use App\Service\SavedEmployee;
+use App\Service\SetupCodeGenerator;
+use App\Tests\FixedClock;
 use App\Tests\Integration\IntegrationTestCase;
 use DateTimeImmutable;
 use Yiisoft\Security\PasswordHasher;
@@ -74,9 +77,11 @@ final class PasswordSetupServiceTest extends IntegrationTestCase
     public function testExpiredCodeIsRejected(): void
     {
         $saved = $this->newEmployee();
-        $this->db()->createCommand('UPDATE ACCOUNT SET SETUP_CODE_EXPIRES_AT = DATEADD(MINUTE, -1, SYSUTCDATETIME()) WHERE EMPLOYEE_ID = :id', [':id' => $saved->id])->execute();
+        $expiresAt = $this->accounts()->findByEmployeeId($saved->id)?->setupCodeExpiresAt;
+        assertNotNull($expiresAt);
 
-        assertFalse($this->passwordSetup()->setPassword(self::EMAIL, (string) $saved->setupCode, self::PASSWORD));
+        assertFalse($this->passwordSetupAt($expiresAt)->setPassword(self::EMAIL, (string) $saved->setupCode, self::PASSWORD));
+        assertNull($this->accounts()->findByEmployeeId($saved->id)?->passwordHash);
     }
 
     public function testCodeReplacedByANewOneIsRejected(): void
@@ -122,6 +127,17 @@ final class PasswordSetupServiceTest extends IntegrationTestCase
     private function passwordSetup(): PasswordSetupService
     {
         return $this->service(PasswordSetupService::class);
+    }
+
+    private function passwordSetupAt(DateTimeImmutable $now): PasswordSetupService
+    {
+        return new PasswordSetupService(
+            $this->service(AccountRepositoryInterface::class),
+            $this->service(PasswordHasher::class),
+            $this->service(SetupCodeGenerator::class),
+            $this->service(LoginService::class),
+            new FixedClock($now),
+        );
     }
 
     private function accounts(): AccountRepositoryInterface

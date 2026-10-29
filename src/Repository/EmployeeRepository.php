@@ -59,6 +59,13 @@ final readonly class EmployeeRepository implements EmployeeRepositoryInterface
         return $this->query()->where(['e.ID' => $id])->one();
     }
 
+    public function roleOf(int $id): ?Role
+    {
+        $role = (new Query($this->db))->select('ROLE')->from('EMPLOYEE')->where(['ID' => $id])->scalar();
+
+        return is_string($role) ? Role::tryFrom($role) : null;
+    }
+
     public function withRole(Role $role, ?int $managerId = null, ?int $exceptId = null): array
     {
         $query = $this->query()

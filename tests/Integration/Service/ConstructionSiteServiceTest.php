@@ -73,6 +73,7 @@ final class ConstructionSiteServiceTest extends IntegrationTestCase
 
     public function testUnusedSiteIsDeleted(): void
     {
+        $this->db()->createCommand('DELETE FROM ASSIGNMENT WHERE CONSTRUCTION_SITE_ID = 2')->execute();
         $this->sites()->delete(1, 2);
 
         assertNull($this->sites()->find(1, 2));
