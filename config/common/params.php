@@ -6,6 +6,7 @@ use App\Environment;
 use App\Shared\ApplicationParams;
 use App\Web\Shared\Access\ViewAccess;
 use App\Web\Shared\Flash\FlashMessages;
+use App\Web\Shared\Language\ViewLanguage;
 use Yiisoft\Aliases\Aliases;
 use Yiisoft\Assets\AssetManager;
 use Yiisoft\Definitions\DynamicReference;
@@ -38,6 +39,7 @@ return [
             'currentUser' => Reference::to(CurrentUser::class),
             'access' => Reference::to(ViewAccess::class),
             'flash' => Reference::to(FlashMessages::class),
+            'language' => Reference::to(ViewLanguage::class),
         ],
     ],
 
@@ -51,6 +53,20 @@ return [
                 'gc_maxlifetime' => 28800,
             ],
         ],
+    ],
+
+    'yiisoft/translator' => [
+        'locale' => 'en',
+        'fallbackLocale' => null,
+        'defaultCategory' => 'app',
+    ],
+
+    'yiisoft/validator' => [
+        'translation.category' => 'app',
+    ],
+
+    'app/language' => [
+        'cookieSecure' => false,
     ],
 
     'yiisoft/user' => [

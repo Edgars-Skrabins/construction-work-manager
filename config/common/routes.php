@@ -25,6 +25,9 @@ return [
             Route::post('/logout')
                 ->action(Web\Logout\Action::class)
                 ->name('logout'),
+            Route::post('/language')
+                ->action(Web\Language\Action::class)
+                ->name('language'),
             Group::create()
                 ->middleware(Authentication::class)
                 ->routes(

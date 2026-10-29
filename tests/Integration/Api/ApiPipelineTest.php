@@ -15,6 +15,7 @@ use App\Tests\CallableRequestHandler;
 use App\Tests\RecordingLogger;
 use App\Web\Forbidden\ForbiddenMiddleware;
 use App\Web\Shared\Rendering\RenderBeforeSessionClose;
+use App\Web\Shared\Language\LanguageMiddleware;
 use PHPUnit\Framework\Attributes\DataProvider;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
@@ -88,6 +89,11 @@ final class ApiPipelineTest extends IntegrationTestCase
             $test->db()->createCommand()->update('API_KEY', ['EXPIRES_AT' => '2020-01-01 00:00:00'], ['KEY_ID' => explode('_', $key)[1]])->execute();
             return 'Bearer ' . $key;
         }];
+    }
+
+    public function testLanguageCookieDoesNotTranslateProblems(): void
+    {
+        $this->assertUnauthorized($this->handleRequest('GET', '/api/v1/anything', [], ['locale' => 'lv']));
     }
 
     public function testDuplicateAuthorizationHeaderIsRejected(): void
@@ -212,6 +218,7 @@ final class ApiPipelineTest extends IntegrationTestCase
     {
         assertSame([
             ApiPipelineMiddleware::class,
+            LanguageMiddleware::class,
             ErrorCatcher::class,
             SessionMiddleware::class,
             CsrfTokenMiddleware::class,
