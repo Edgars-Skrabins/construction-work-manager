@@ -104,6 +104,36 @@ final class EmployeeServiceTest extends IntegrationTestCase
         yield 'own login deactivated' => [1, self::input(role: Role::Admin, managerId: null, email: 'admin@mail.test', loginActive: false), ['loginActive' => "You can't deactivate your own login."]];
     }
 
+    #[DataProvider('birthDates')]
+    public function testAgeIsCheckedAgainstTodayInRiga(string $now, string $birthDate, ?string $error): void
+    {
+        $service = $this->employeesAt(new DateTimeImmutable($now, new DateTimeZone('Europe/Riga')));
+
+        try {
+            $saved = $service->create(1, self::input(birthDate: $birthDate));
+            assertNull($error);
+            assertSame($birthDate, $this->find($saved->id)->birthDate->format('Y-m-d'));
+        } catch (ValidationException $e) {
+            assertSame(['birthDate' => $error], $e->errors);
+        }
+    }
+
+    /**
+     * @return iterable<string, array{string, string, ?string}>
+     */
+    public static function birthDates(): iterable
+    {
+        $tooYoung = 'The employee must be at least 16 years old.';
+        $tooOld = 'The employee must be at most 100 years old.';
+
+        yield '16 today' => ['2026-10-29 12:00', '2010-10-29', null];
+        yield 'a day short of 16' => ['2026-10-29 12:00', '2010-10-30', $tooYoung];
+        yield '101 tomorrow' => ['2026-10-29 12:00', '1925-10-30', null];
+        yield '101 today' => ['2026-10-29 12:00', '1925-10-29', $tooOld];
+        yield '16 after Riga midnight while UTC is a day behind' => ['2026-10-29 00:30', '2010-10-29', null];
+        yield '16 tomorrow just before Riga midnight' => ['2026-10-28 23:59', '2010-10-29', $tooYoung];
+    }
+
     public function testManagerIsClearedForManagersAndAdmins(): void
     {
         $saved = $this->employees()->create(1, self::input(role: Role::Manager, managerId: 2));
@@ -306,8 +336,9 @@ final class EmployeeServiceTest extends IntegrationTestCase
         ?int $managerId = 2,
         ?string $email = null,
         bool $loginActive = true,
+        string $birthDate = '1992-06-15',
     ): EmployeeInput {
-        return new EmployeeInput($firstName, $lastName, new DateTimeImmutable('1992-06-15'), $accessLevelId, $role, $managerId, $email, $loginActive);
+        return new EmployeeInput($firstName, $lastName, new DateTimeImmutable($birthDate), $accessLevelId, $role, $managerId, $email, $loginActive);
     }
 
     private function codeMatches(string $code, ?string $hash): bool
