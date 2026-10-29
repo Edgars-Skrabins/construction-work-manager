@@ -1,7 +1,7 @@
 # Validation races — Spec
 
 **Type:** bug fix
-**Status:** in progress
+**Status:** done
 **Last updated:** 2026-10-29
 
 # Part 1 — Business logic and usage
@@ -77,5 +77,5 @@ Read Part 1 and Part 2 before starting. Work through the tasks in order and tick
 - [x] B4. Run `make check`.
 
 ### Z. Wrap-up
-- [ ] Z1. `make check` green: code style, PHPStan, unit and integration tests.
-- [ ] Z2. Manual check in the running app: add an employee born exactly 16 years ago today and one born a day later; the first saves, the second shows the 16-year message under Birth date. Add a work item with an existing name and see the name error.
+- [x] Z1. `make check` green: code style, PHPStan, unit and integration tests.
+- [x] Z2. Manual check in the running app: add an employee born exactly 16 years ago today and one born a day later; the first saves, the second shows the 16-year message under Birth date. Add a work item with an existing name and see the name error.
