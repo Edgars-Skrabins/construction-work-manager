@@ -24,7 +24,7 @@ final class SchemaTest extends IntegrationTestCase
      */
     public static function tables(): iterable
     {
-        foreach (['ACCESS_LEVEL', 'EMPLOYEE', 'CONSTRUCTION_SITE', 'WORK_ITEM'] as $table) {
+        foreach (['ACCESS_LEVEL', 'EMPLOYEE', 'CONSTRUCTION_SITE', 'WORK_ITEM', 'RBAC_ITEM', 'RBAC_ITEM_CHILD'] as $table) {
             yield $table => [$table];
         }
     }
@@ -68,5 +68,14 @@ final class SchemaTest extends IntegrationTestCase
         )->queryScalar();
 
         assertSame(0, $invalid);
+    }
+
+    public function testRoleAssignedAtIsBackfilledFromCreatedAt(): void
+    {
+        $mismatched = (int) $this->db()->createCommand(
+            'SELECT COUNT(*) FROM EMPLOYEE WHERE ROLE_ASSIGNED_AT <> CREATED_AT',
+        )->queryScalar();
+
+        assertSame(0, $mismatched);
     }
 }
