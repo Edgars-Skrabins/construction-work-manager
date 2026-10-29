@@ -5,7 +5,7 @@
         <a class="btn btn-primary" href="{{ urlGenerator.generate('site.create') }}">{{ t('Add construction site') }}</a>
     {% endif %}
 </div>
-{% include 'Web/Shared/Listing/search-form.twig' with {route: 'site.list', placeholder: t('Name or address')} %}
+{% include 'Web/Shared/Listing/search-form.twig' with {route: 'site.list', placeholder: t('Code, name or address')} %}
 {% if paginator.getTotalItems() == 0 and q != '' %}
     <p class="text-secondary">{{ t('No results for “{query}”.', {query: q}) }}</p>
 {% elseif paginator.getTotalItems() == 0 %}
@@ -15,6 +15,7 @@
         <table class="table table-striped align-middle">
             <thead>
                 <tr>
+                    <th scope="col">{% include 'Web/Shared/Listing/sort-link.twig' with {label: t('Code'), key: 'code', route: 'site.list'} %}</th>
                     <th scope="col">{% include 'Web/Shared/Listing/sort-link.twig' with {label: t('Name'), key: 'name', route: 'site.list'} %}</th>
                     <th scope="col">{% include 'Web/Shared/Listing/sort-link.twig' with {label: t('City'), key: 'city', route: 'site.list'} %}</th>
                     <th scope="col">{% include 'Web/Shared/Listing/sort-link.twig' with {label: t('Country'), key: 'country', route: 'site.list'} %}</th>
@@ -26,6 +27,7 @@
             <tbody>
                 {% for site in paginator.read() %}
                     <tr>
+                        <td class="text-nowrap">{{ site.code }}</td>
                         <td>{{ site.name }}</td>
                         <td>{{ site.city }}</td>
                         <td>{{ site.country }}</td>

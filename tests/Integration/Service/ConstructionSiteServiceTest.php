@@ -38,10 +38,11 @@ final class ConstructionSiteServiceTest extends IntegrationTestCase
     public function testCreateAndUpdate(): void
     {
         $id = $this->sites()->create(1, self::data('Jelgava Bridge', '1200.5', 2));
-        $this->sites()->update(1, $id, self::data('Jelgava Bridge Repair', '99999999.99', 3));
+        $this->sites()->update(1, $id, self::data('Jelgava Bridge Repair', '99999999.99', 3, 'JLG-BRG-02'));
 
         $site = $this->sites()->find(1, $id);
         assertNotNull($site);
+        assertSame('JLG-BRG-02', $site->code);
         assertSame('Jelgava Bridge Repair', $site->name);
         assertSame('99999999.99', $site->areaM2);
         assertSame(3, $site->requiredAccessLevelId);
@@ -61,6 +62,56 @@ final class ConstructionSiteServiceTest extends IntegrationTestCase
         }
     }
 
+    #[DataProvider('takenCodes')]
+    public function testDuplicateCodeIsRejectedTogetherWithOtherErrors(string $code): void
+    {
+        try {
+            $this->sites()->create(1, self::data('Daugavpils School Renovation', '10', 1, $code));
+            self::fail('Expected the site to be rejected.');
+        } catch (ValidationException $e) {
+            assertSame([
+                'code' => 'A construction site with this code already exists.',
+                'name' => 'A construction site with this name already exists.',
+            ], $e->errors);
+        }
+    }
+
+    /**
+     * @return iterable<string, array{string}>
+     */
+    public static function takenCodes(): iterable
+    {
+        yield 'same case' => ['ADZ-DEF-01'];
+        yield 'other case' => ['adz-def-01'];
+    }
+
+    /**
+     * @param Closure(ConstructionSiteService): void $save
+     */
+    #[DataProvider('racedCodeSaves')]
+    public function testDuplicateCodeMissedByThePreCheckIsRejectedByTheConstraint(Closure $save): void
+    {
+        try {
+            $save($this->sitesWithoutPreChecks());
+            self::fail('Expected a duplicate code to be rejected.');
+        } catch (ValidationException $e) {
+            assertSame(['code' => 'A construction site with this code already exists.'], $e->errors);
+        }
+    }
+
+    /**
+     * @return iterable<string, array{Closure(ConstructionSiteService): void}>
+     */
+    public static function racedCodeSaves(): iterable
+    {
+        yield 'create' => [static function (ConstructionSiteService $s): void {
+            $s->create(1, self::data('New site', '10', 1, 'ADZ-DEF-01'));
+        }];
+        yield 'update' => [static function (ConstructionSiteService $s): void {
+            $s->update(1, 1, self::data('Āgenskalns Residential Block', '10', 1, 'ADZ-DEF-01'));
+        }];
+    }
+
     /**
      * @param Closure(ConstructionSiteService): void $save
      */
@@ -68,7 +119,7 @@ final class ConstructionSiteServiceTest extends IntegrationTestCase
     public function testDuplicateNameMissedByThePreCheckIsRejectedByTheConstraint(Closure $save): void
     {
         try {
-            $save($this->sitesWithoutNamePreCheck());
+            $save($this->sitesWithoutPreChecks());
             self::fail('Expected a duplicate name to be rejected.');
         } catch (ValidationException $e) {
             assertSame(['name' => 'A construction site with this name already exists.'], $e->errors);
@@ -90,7 +141,7 @@ final class ConstructionSiteServiceTest extends IntegrationTestCase
 
     public function testKeepingTheOwnNameOnUpdateIsAllowed(): void
     {
-        $this->sites()->update(1, 4, self::data('Ādaži Defence Facility', '9000', 4));
+        $this->sites()->update(1, 4, self::data('Ādaži Defence Facility', '9000', 4, 'ADZ-DEF-01'));
 
         assertSame('9000.00', $this->sites()->find(1, 4)?->areaM2);
     }
@@ -169,9 +220,9 @@ final class ConstructionSiteServiceTest extends IntegrationTestCase
         }];
     }
 
-    private static function data(string $name, string $area, int $level): ConstructionSiteData
+    private static function data(string $name, string $area, int $level, string $code = 'JLG-TST-01'): ConstructionSiteData
     {
-        return new ConstructionSiteData($name, 'Brīvības iela 1', 'Jelgava', 'Latvia', $area, $level);
+        return new ConstructionSiteData($code, $name, 'Brīvības iela 1', 'Jelgava', 'Latvia', $area, $level);
     }
 
     private function sites(): ConstructionSiteService
@@ -179,7 +230,7 @@ final class ConstructionSiteServiceTest extends IntegrationTestCase
         return $this->service(ConstructionSiteService::class);
     }
 
-    private function sitesWithoutNamePreCheck(): ConstructionSiteService
+    private function sitesWithoutPreChecks(): ConstructionSiteService
     {
         $sites = new readonly class ($this->service(ConstructionSiteRepositoryInterface::class)) implements ConstructionSiteRepositoryInterface {
             public function __construct(
@@ -206,7 +257,17 @@ final class ConstructionSiteServiceTest extends IntegrationTestCase
                 return $this->sites->all();
             }
 
+            public function findByCode(string $code): ?ConstructionSite
+            {
+                return $this->sites->findByCode($code);
+            }
+
             public function nameExists(string $name, ?int $exceptId): bool
+            {
+                return false;
+            }
+
+            public function codeExists(string $code, ?int $exceptId): bool
             {
                 return false;
             }

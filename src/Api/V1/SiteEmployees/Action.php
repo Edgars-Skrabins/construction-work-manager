@@ -6,6 +6,7 @@ namespace App\Api\V1\SiteEmployees;
 
 use App\Api\Shared\JsonResponseFactory;
 use App\Entity\EmployeeNeedingAccess;
+use App\Entity\SiteCode;
 use App\Service\SiteAccessService;
 use Psr\Http\Message\ResponseInterface;
 use Yiisoft\Http\Status;
@@ -13,8 +14,6 @@ use Yiisoft\Router\CurrentRoute;
 
 final readonly class Action
 {
-    private const int MAX_ID = 2147483647;
-
     public function __construct(
         private CurrentRoute $currentRoute,
         private SiteAccessService $siteAccess,
@@ -23,12 +22,15 @@ final readonly class Action
 
     public function __invoke(): ResponseInterface
     {
-        $id = (string) $this->currentRoute->getArgument('id');
-        if (preg_match('/^[1-9][0-9]{0,9}$/D', $id) !== 1 || (int) $id > self::MAX_ID) {
-            return $this->responseFactory->problem(Status::UNPROCESSABLE_ENTITY, 'The site ID must be a positive integer.');
+        $code = strtoupper((string) $this->currentRoute->getArgument('code'));
+        if (!SiteCode::isValid($code)) {
+            return $this->responseFactory->problem(
+                Status::UNPROCESSABLE_ENTITY,
+                'The site code must be 3 to 30 letters, digits or hyphens, starting with a letter or digit.',
+            );
         }
 
-        $access = $this->siteAccess->forSite((int) $id);
+        $access = $this->siteAccess->forSite($code);
         if ($access === null) {
             return $this->responseFactory->problem(Status::NOT_FOUND, 'Construction site not found.');
         }
@@ -36,6 +38,7 @@ final readonly class Action
         return $this->responseFactory->data([
             'site' => [
                 'id' => $access->site->id,
+                'code' => $access->site->code,
                 'name' => $access->site->name,
                 'requiredAccessLevel' => [
                     'id' => $access->site->requiredAccessLevelId,

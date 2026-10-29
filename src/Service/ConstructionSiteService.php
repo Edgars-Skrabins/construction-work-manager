@@ -56,7 +56,7 @@ final readonly class ConstructionSiteService
         $this->accessChecker->ensure($actorId, Permission::SiteCreate);
         $this->validate($data, null);
 
-        return $this->guardName(fn(): int => $this->sites->create($data));
+        return $this->guardUnique(fn(): int => $this->sites->create($data));
     }
 
     public function update(int $actorId, int $id, ConstructionSiteData $data): void
@@ -64,7 +64,7 @@ final readonly class ConstructionSiteService
         $this->accessChecker->ensure($actorId, Permission::SiteUpdate);
         $this->validate($data, $id);
 
-        $this->guardName(fn() => $this->sites->update($id, $data));
+        $this->guardUnique(fn() => $this->sites->update($id, $data));
     }
 
     public function delete(int $actorId, int $id): void
@@ -77,6 +77,9 @@ final readonly class ConstructionSiteService
     private function validate(ConstructionSiteData $data, ?int $exceptId): void
     {
         $errors = [];
+        if ($this->sites->codeExists($data->code, $exceptId)) {
+            $errors['code'] = $this->codeTaken();
+        }
         if ($this->sites->nameExists($data->name, $exceptId)) {
             $errors['name'] = $this->nameTaken();
         }
@@ -94,13 +97,23 @@ final readonly class ConstructionSiteService
      * @param Closure(): T $write
      * @return T
      */
-    private function guardName(Closure $write): mixed
+    private function guardUnique(Closure $write): mixed
     {
-        return ValidationException::guardUnique($write, 'UQ_CONSTRUCTION_SITE_NAME', 'name', $this->nameTaken());
+        return ValidationException::guardUnique(
+            fn(): mixed => ValidationException::guardUnique($write, 'UQ_CONSTRUCTION_SITE_NAME', 'name', $this->nameTaken()),
+            'UQ_CONSTRUCTION_SITE_CODE',
+            'code',
+            $this->codeTaken(),
+        );
     }
 
     private function nameTaken(): string
     {
         return $this->translator->translate('A construction site with this name already exists.');
+    }
+
+    private function codeTaken(): string
+    {
+        return $this->translator->translate('A construction site with this code already exists.');
     }
 }

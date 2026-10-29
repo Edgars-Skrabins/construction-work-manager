@@ -219,8 +219,8 @@ final class ApiPipelineTest extends IntegrationTestCase
     {
         yield 'exactly /api' => ['/api'];
         yield 'trailing slash' => ['/api/'];
-        yield 'versioned path' => ['/api/v1/construction-sites/1/employees'];
-        yield 'percent-encoded a' => ['/%61pi/v1/construction-sites/1/employees'];
+        yield 'versioned path' => ['/api/v1/construction-sites/RIX-AGK-01/employees'];
+        yield 'percent-encoded a' => ['/%61pi/v1/construction-sites/RIX-AGK-01/employees'];
         yield 'percent-encoded slash' => ['/api%2Fv1'];
     }
 
@@ -242,7 +242,7 @@ final class ApiPipelineTest extends IntegrationTestCase
     {
         yield 'apix' => ['/apix'];
         yield 'api-docs' => ['/api-docs'];
-        yield 'uppercase' => ['/API/v1/construction-sites/1/employees'];
+        yield 'uppercase' => ['/API/v1/construction-sites/RIX-AGK-01/employees'];
         yield 'double-encoded' => ['/%2561pi/v1'];
         yield 'nested' => ['/x/api/v1'];
     }

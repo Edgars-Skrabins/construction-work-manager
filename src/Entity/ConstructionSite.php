@@ -8,6 +8,7 @@ final readonly class ConstructionSite
 {
     public function __construct(
         public int $id,
+        public string $code,
         public string $name,
         public string $street,
         public string $city,

@@ -17,13 +17,13 @@ final readonly class SiteAccessService
         private ClockInterface $clock,
     ) {}
 
-    public function forSite(int $siteId): ?SiteAccess
+    public function forSite(string $code): ?SiteAccess
     {
-        $site = $this->sites->find($siteId);
+        $site = $this->sites->findByCode($code);
         if ($site === null) {
             return null;
         }
 
-        return new SiteAccess($site, $this->assignments->findEmployeesNeedingAccess($siteId, $this->clock->now()));
+        return new SiteAccess($site, $this->assignments->findEmployeesNeedingAccess($site->id, $this->clock->now()));
     }
 }
