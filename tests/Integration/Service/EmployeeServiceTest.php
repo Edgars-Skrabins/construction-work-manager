@@ -4,15 +4,20 @@ declare(strict_types=1);
 
 namespace App\Tests\Integration\Service;
 
+use App\Access\AccessChecker;
 use App\Access\ForbiddenException;
 use App\Access\Role;
 use App\Entity\Employee;
+use App\Repository\AccessLevelRepositoryInterface;
 use App\Repository\AccountRepositoryInterface;
+use App\Repository\EmployeeRepositoryInterface;
+use App\Repository\TransactionRunnerInterface;
 use App\Service\EmployeeInput;
 use App\Service\EmployeeService;
 use App\Service\InUseException;
 use App\Service\SetupCodeGenerator;
 use App\Service\ValidationException;
+use App\Tests\FixedClock;
 use App\Tests\Integration\IntegrationTestCase;
 use Closure;
 use DateTimeImmutable;
@@ -20,7 +25,6 @@ use DateTimeZone;
 use PHPUnit\Framework\Attributes\DataProvider;
 use Yiisoft\Security\PasswordHasher;
 
-use function PHPUnit\Framework\assertEqualsWithDelta;
 use function PHPUnit\Framework\assertFalse;
 use function PHPUnit\Framework\assertNotNull;
 use function PHPUnit\Framework\assertNull;
@@ -50,7 +54,8 @@ final class EmployeeServiceTest extends IntegrationTestCase
 
     public function testCreateWithEmailIssuesASetupCode(): void
     {
-        $saved = $this->employees()->create(1, self::input(email: ' New.Person@Mail.TEST '));
+        $now = new DateTimeImmutable('2026-11-10 00:30:00', new DateTimeZone('Europe/Riga'));
+        $saved = $this->employeesAt($now)->create(1, self::input(email: ' New.Person@Mail.TEST '));
 
         $account = $this->accounts()->findByEmployeeId($saved->id);
         assertNotNull($account);
@@ -60,8 +65,7 @@ final class EmployeeServiceTest extends IntegrationTestCase
         assertTrue($account->isActive);
         assertTrue($this->codeMatches($saved->setupCode, $account->setupCodeHash));
         assertNotNull($account->setupCodeExpiresAt);
-        $expected = (new DateTimeImmutable('now', new DateTimeZone('UTC')))->modify('+72 hours');
-        assertEqualsWithDelta($expected->getTimestamp(), $account->setupCodeExpiresAt->getTimestamp(), 60);
+        assertSame('2026-11-12 22:30:00', $account->setupCodeExpiresAt->setTimezone(new DateTimeZone('UTC'))->format('Y-m-d H:i:s'));
     }
 
     /**
@@ -183,6 +187,7 @@ final class EmployeeServiceTest extends IntegrationTestCase
 
     public function testDeleteRemovesTheLoginWithTheEmployee(): void
     {
+        $this->db()->createCommand('DELETE FROM ASSIGNMENT WHERE EMPLOYEE_ID = 4')->execute();
         $this->employees()->delete(1, 4);
 
         assertNull($this->employees()->find(1, 4));
@@ -306,6 +311,20 @@ final class EmployeeServiceTest extends IntegrationTestCase
     private function employees(): EmployeeService
     {
         return $this->service(EmployeeService::class);
+    }
+
+    private function employeesAt(DateTimeImmutable $now): EmployeeService
+    {
+        return new EmployeeService(
+            $this->service(EmployeeRepositoryInterface::class),
+            $this->service(AccountRepositoryInterface::class),
+            $this->service(AccessLevelRepositoryInterface::class),
+            $this->service(TransactionRunnerInterface::class),
+            $this->service(AccessChecker::class),
+            $this->service(PasswordHasher::class),
+            $this->service(SetupCodeGenerator::class),
+            new FixedClock($now),
+        );
     }
 
     private function accounts(): AccountRepositoryInterface

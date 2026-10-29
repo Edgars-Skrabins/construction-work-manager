@@ -17,8 +17,8 @@ use App\Repository\EmployeeRepositoryInterface;
 use App\Repository\TransactionRunnerInterface;
 use Closure;
 use DateTimeImmutable;
-use DateTimeZone;
 use InvalidArgumentException;
+use Psr\Clock\ClockInterface;
 use Yiisoft\Data\Paginator\OffsetPaginator;
 use Yiisoft\Security\PasswordHasher;
 
@@ -35,6 +35,7 @@ final readonly class EmployeeService
         private AccessChecker $accessChecker,
         private PasswordHasher $passwordHasher,
         private SetupCodeGenerator $setupCodes,
+        private ClockInterface $clock,
     ) {}
 
     /**
@@ -228,7 +229,7 @@ final readonly class EmployeeService
     private function issueSetupCode(): array
     {
         $code = $this->setupCodes->generate();
-        $expiresAt = (new DateTimeImmutable('now', new DateTimeZone('UTC')))->modify(self::SETUP_CODE_LIFETIME);
+        $expiresAt = $this->clock->now()->modify(self::SETUP_CODE_LIFETIME);
 
         return [$this->setupCodes->format($code), $this->passwordHasher->hash($code), $expiresAt];
     }

@@ -150,7 +150,7 @@ final class LoginServiceTest extends TestCase
                 throw new LogicException('Not used by LoginService.');
             }
 
-            public function completeSetup(int $employeeId, string $setupCodeHash, string $passwordHash): bool
+            public function completeSetup(int $employeeId, string $setupCodeHash, string $passwordHash, DateTimeImmutable $now): bool
             {
                 throw new LogicException('Not used by LoginService.');
             }

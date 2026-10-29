@@ -35,7 +35,7 @@ final class AccountRepositoryTest extends IntegrationTestCase
 
     public function testCompleteSetupSetsThePasswordAndClearsTheCode(): void
     {
-        assertTrue($this->accounts()->completeSetup(8, self::CODE_HASH, 'password-hash'));
+        assertTrue($this->accounts()->completeSetup(8, self::CODE_HASH, 'password-hash', new DateTimeImmutable()));
 
         $account = $this->accounts()->findByEmployeeId(8);
         assertNotNull($account);
@@ -44,12 +44,18 @@ final class AccountRepositoryTest extends IntegrationTestCase
         assertNull($account->setupCodeHash);
     }
 
+    public function testCompleteSetupRefusesACodeThatHasExpiredByTheGivenTime(): void
+    {
+        assertFalse($this->accounts()->completeSetup(8, self::CODE_HASH, 'password-hash', new DateTimeImmutable('+2 hours')));
+        assertNull($this->accounts()->findByEmployeeId(8)?->passwordHash);
+    }
+
     #[DataProvider('changesBeforeTheUpdate')]
     public function testCompleteSetupChangesNothingWhenTheAccountChangedSinceItWasRead(string $sql, string $codeHash): void
     {
         $this->db()->createCommand($sql)->execute();
 
-        assertFalse($this->accounts()->completeSetup(8, $codeHash, 'password-hash'));
+        assertFalse($this->accounts()->completeSetup(8, $codeHash, 'password-hash', new DateTimeImmutable()));
         assertNull($this->accounts()->findByEmployeeId(8)?->passwordHash);
     }
 

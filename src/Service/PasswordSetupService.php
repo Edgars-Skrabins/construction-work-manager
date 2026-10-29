@@ -5,8 +5,7 @@ declare(strict_types=1);
 namespace App\Service;
 
 use App\Repository\AccountRepositoryInterface;
-use DateTimeImmutable;
-use DateTimeZone;
+use Psr\Clock\ClockInterface;
 use Yiisoft\Security\PasswordHasher;
 
 final readonly class PasswordSetupService
@@ -16,6 +15,7 @@ final readonly class PasswordSetupService
         private PasswordHasher $passwordHasher,
         private SetupCodeGenerator $setupCodes,
         private LoginService $loginService,
+        private ClockInterface $clock,
     ) {}
 
     public function setPassword(string $email, string $code, string $password): bool
@@ -28,7 +28,7 @@ final readonly class PasswordSetupService
             return false;
         }
 
-        $now = new DateTimeImmutable('now', new DateTimeZone('UTC'));
+        $now = $this->clock->now();
         if (
             !$this->passwordHasher->validate($code, $account->setupCodeHash)
             || !$account->isActive
@@ -39,7 +39,7 @@ final readonly class PasswordSetupService
             return false;
         }
 
-        if (!$this->accounts->completeSetup($account->employeeId, $account->setupCodeHash, $this->passwordHasher->hash($password))) {
+        if (!$this->accounts->completeSetup($account->employeeId, $account->setupCodeHash, $this->passwordHasher->hash($password), $now)) {
             return false;
         }
 

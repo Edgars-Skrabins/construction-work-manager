@@ -23,7 +23,7 @@ interface AccountRepositoryInterface
 
     public function replaceSetupCode(int $employeeId, string $setupCodeHash, DateTimeImmutable $expiresAt): void;
 
-    public function completeSetup(int $employeeId, string $setupCodeHash, string $passwordHash): bool;
+    public function completeSetup(int $employeeId, string $setupCodeHash, string $passwordHash, DateTimeImmutable $now): bool;
 
     public function delete(int $employeeId): void;
 }
