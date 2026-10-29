@@ -210,8 +210,8 @@ final class AdminPagesTest extends IntegrationTestCase
      */
     public static function searches(): iterable
     {
-        yield 'employees' => ['/employees', 'kalniņa', 'Kalniņa, Ilze', 'Vītols, Kristaps'];
-        yield 'employees by email' => ['/employees', 'employee3@', 'Vītols, Kristaps', 'Kalniņa, Ilze'];
+        yield 'employees' => ['/employees', 'kalniņa', 'Kalniņa, Ilze', 'Ābele, Dace'];
+        yield 'employees by email' => ['/employees', 'employee3@', 'Vītols, Kristaps', 'Bērziņš, Jānis'];
         yield 'sites' => ['/sites', 'Daugavpils', 'Daugavpils School Renovation', 'Ādaži Defence Facility'];
         yield 'work items' => ['/work-items', 'pipework', 'Welding', 'Roofing'];
     }

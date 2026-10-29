@@ -46,9 +46,9 @@ final class MyAssignmentsPageTest extends IntegrationTestCase
         assertStringNotContainsString(self::OTHER_EMPLOYEES_WORK, $body);
         assertStringNotContainsString(self::EMPTY_STATE, $body);
         foreach (['Jelgava Library Reconstruction', 'Vilnius Office Campus'] as $site) {
-            assertStringContainsString('<div class="card-header fw-semibold">' . $site . '</div>', $body);
+            assertStringContainsString('<h2 class="h6 text-secondary text-uppercase mb-1">' . $site . '</h2>', $body);
         }
-        foreach (['text-bg-info">Planned', 'text-bg-primary">In progress', 'text-bg-warning">Overdue', 'text-bg-success">Done', 'text-bg-secondary">Cancelled'] as $badge) {
+        foreach (['text-bg-info">Planned', 'text-bg-primary">In progress', 'text-bg-danger">Overdue', 'text-bg-success">Done', 'text-bg-secondary">Cancelled'] as $badge) {
             assertStringContainsString('<span class="badge ' . $badge . '</span>', $body);
         }
         assertStringContainsString('<summary>History (3)</summary>', $body);

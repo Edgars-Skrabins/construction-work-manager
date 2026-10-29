@@ -107,8 +107,8 @@ final class ListingTest extends IntegrationTestCase
     public static function searches(): iterable
     {
         yield 'employees by first name' => ['employees', 'Laura', [5]];
-        yield 'employees by last name' => ['employees', 'Kalniņa', [2]];
-        yield 'employees by part of a name' => ['employees', 'iņš', [1, 3, 4]];
+        yield 'employees by last name' => ['employees', 'Kalniņa', [2, 76]];
+        yield 'employees by part of a name' => ['employees', 'iņš', [1, 3, 4, 16, 18, 32, 40, 54, 75, 77]];
         yield 'employees by first and last name' => ['employees', 'Jānis Bērziņš', [1]];
         yield 'employees by last and first name' => ['employees', 'Bērziņš, Jānis', [1]];
         yield 'employees ignoring case' => ['employees', 'ANNA zariņa', [7]];
@@ -118,11 +118,11 @@ final class ListingTest extends IntegrationTestCase
         yield 'sites by name' => ['sites', 'school', [2]];
         yield 'sites by street' => ['sites', 'Viskaļu', [3]];
         yield 'sites by city' => ['sites', 'Rīga', [1, 3]];
-        yield 'sites by country' => ['sites', 'latvia', [1, 2, 3, 4]];
-        yield 'sites without a match' => ['sites', 'Liepāja', []];
-        yield 'work items by name' => ['workItems', 'roof', [5]];
-        yield 'work items by description' => ['workItems', 'pipework', [3]];
-        yield 'work items without a match' => ['workItems', 'Plumbing', []];
+        yield 'sites by country' => ['sites', 'latvia', [1, 2, 3, 4, 5, 6, 7, 8]];
+        yield 'sites without a match' => ['sites', 'Tartu', []];
+        yield 'work items by name' => ['workItems', 'roof', [5, 13, 19, 20]];
+        yield 'work items by description' => ['workItems', 'pipework', [3, 14, 16]];
+        yield 'work items without a match' => ['workItems', 'Asbestos', []];
     }
 
     /**
@@ -174,7 +174,7 @@ final class ListingTest extends IntegrationTestCase
         $ascending = $this->ids($this->paginator('employees', 'name', 'iņš'));
         $descending = $this->ids($this->paginator('employees', '-name', 'iņš'));
 
-        assertSame([1, 4, 3], $ascending);
+        assertSame([54, 75, 1, 32, 16, 4, 3, 18, 77, 40], $ascending);
         assertSame(array_reverse($ascending), $descending);
     }
 
