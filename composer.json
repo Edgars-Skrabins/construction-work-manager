@@ -66,6 +66,7 @@
         "yiisoft/router-fastroute": "^4.0.3",
         "yiisoft/session": "^3.0.3",
         "yiisoft/user": "^2.3",
+        "yiisoft/validator": "^2.6",
         "yiisoft/view": "^12.2.4",
         "yiisoft/view-twig": "^3.0",
         "yiisoft/yii-console": "^2.4.2",

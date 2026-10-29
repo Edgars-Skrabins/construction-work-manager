@@ -76,5 +76,8 @@ final class AccountSchemaTest extends IntegrationTestCase
         yield 'missing employee' => [sprintf($account, 9999, "N'ghost@mail.test'"), 'FK_ACCOUNT_EMPLOYEE_ID'];
         yield 'second account for an employee' => [sprintf($account, 1, "N'other@mail.test'"), 'PK_ACCOUNT'];
         yield 'employee with an account deleted' => ['DELETE FROM EMPLOYEE WHERE ID = 8', 'FK_ACCOUNT_EMPLOYEE_ID'];
+        yield 'setup code without expiry' => ['UPDATE ACCOUNT SET PASSWORD_HASH = NULL, SETUP_CODE_HASH = N\'hash\' WHERE EMPLOYEE_ID = 4', 'CK_ACCOUNT_SETUP_CODE'];
+        yield 'expiry without setup code' => ['UPDATE ACCOUNT SET PASSWORD_HASH = NULL, SETUP_CODE_EXPIRES_AT = SYSUTCDATETIME() WHERE EMPLOYEE_ID = 4', 'CK_ACCOUNT_SETUP_CODE'];
+        yield 'setup code on an account with a password' => ['UPDATE ACCOUNT SET SETUP_CODE_HASH = N\'hash\', SETUP_CODE_EXPIRES_AT = SYSUTCDATETIME() WHERE EMPLOYEE_ID = 4', 'CK_ACCOUNT_SETUP_CODE'];
     }
 }

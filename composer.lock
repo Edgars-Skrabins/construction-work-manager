@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "18a82abc527a828817644fc5bf96b2d5",
+    "content-hash": "b3291f7e3231c95ab88eac3ffee5e0a7",
     "packages": [
         {
             "name": "alexkart/curl-builder",
@@ -5158,7 +5158,8 @@
                     "type": "opencollective"
                 }
             ],
-            "time": "2026-09-22T16:35:06+00:00"
+            "time": "2026-09-22T16:35:06+00:00",
+            "published-time": "2026-09-22T16:35:51+00:00"
         },
         {
             "name": "yiisoft/var-dumper",

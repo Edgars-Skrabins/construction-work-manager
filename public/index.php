@@ -14,20 +14,16 @@ $root = dirname(__DIR__);
 
 require_once $root . '/src/bootstrap.php';
 
-// PHP built-in server routing.
 if (PHP_SAPI === 'cli-server') {
-    // Serve static files as is.
     /** @var string $path */
     $path = parse_url(is_string($_SERVER['REQUEST_URI'] ?? null) ? $_SERVER['REQUEST_URI'] : '/', PHP_URL_PATH);
     if (is_file(__DIR__ . $path)) {
         return false;
     }
 
-    // Explicitly set for URLs with dot.
     $_SERVER['SCRIPT_NAME'] = '/index.php';
 }
 
-// Run HTTP application runner
 $runner = new HttpApplicationRunner(
     rootPath: $root,
     debug: Environment::appDebug(),

@@ -5,10 +5,7 @@ declare(strict_types=1);
 namespace App\Tests\Integration\Web;
 
 use App\Tests\Integration\IntegrationTestCase;
-use Psr\Http\Message\ResponseInterface;
-use Psr\Http\Message\ServerRequestFactoryInterface;
 use Yiisoft\Session\SessionInterface;
-use Yiisoft\Yii\Http\Application;
 
 use function PHPUnit\Framework\assertGreaterThanOrEqual;
 use function PHPUnit\Framework\assertMatchesRegularExpression;
@@ -18,8 +15,7 @@ use function PHPUnit\Framework\assertStringNotContainsString;
 
 final class AuthenticationTest extends IntegrationTestCase
 {
-    /** @var array<string, string> */
-    private array $cookies = [];
+    use WebClient;
 
     public function testGuestIsRedirectedToLogin(): void
     {
@@ -137,44 +133,5 @@ final class AuthenticationTest extends IntegrationTestCase
     private function setActive(int $employeeId, bool $active): void
     {
         $this->db()->createCommand()->update('ACCOUNT', ['IS_ACTIVE' => $active ? 1 : 0], ['EMPLOYEE_ID' => $employeeId])->execute();
-    }
-
-    private function logIn(string $email, string $password): ResponseInterface
-    {
-        $token = $this->csrfToken((string) $this->request('GET', '/login')->getBody());
-
-        return $this->request('POST', '/login', ['_csrf' => $token, 'email' => $email, 'password' => $password]);
-    }
-
-    private function csrfToken(string $html): string
-    {
-        preg_match('/name="_csrf" value="([^"]+)"/', $html, $matches);
-
-        return $matches[1] ?? '';
-    }
-
-    /**
-     * @param array<string, string> $body
-     */
-    private function request(string $method, string $path, array $body = []): ResponseInterface
-    {
-        $this->resetServices();
-
-        $request = $this->service(ServerRequestFactoryInterface::class)
-            ->createServerRequest($method, 'http://localhost' . $path)
-            ->withCookieParams($this->cookies);
-        if ($method === 'POST') {
-            $request = $request->withParsedBody($body);
-        }
-
-        $response = $this->service(Application::class)->handle($request);
-
-        foreach ($response->getHeader('Set-Cookie') as $cookie) {
-            [$pair] = explode(';', $cookie, 2);
-            [$name, $value] = explode('=', $pair, 2);
-            $this->cookies[$name] = urldecode($value);
-        }
-
-        return $response;
     }
 }
