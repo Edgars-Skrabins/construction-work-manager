@@ -155,10 +155,10 @@ final class ManagerTeamPagesTest extends IntegrationTestCase
 
         assertStringContainsString('<h2 class="h5 mb-0 text-nowrap">' . $today->format('F Y') . '</h2>', $body);
         assertMatchesRegularExpression(
-            '#<td class="table-primary" aria-current="date">\s*<div class="fw-semibold mb-1">' . $today->format('j') . '<span class="visually-hidden"> Today</span></div>#',
+            '#<td class="calendar-today" aria-current="date">\s*<div class="fw-semibold mb-1">' . $today->format('j') . '<span class="visually-hidden"> Today</span></div>#',
             $body,
         );
-        assertSame(1, substr_count($body, '<td class="table-primary" aria-current="date">'));
+        assertSame(1, substr_count($body, '<td class="calendar-today" aria-current="date">'));
         assertStringContainsString('<span class="fw-semibold">Mārtiņš Liepiņš</span>', $body);
     }
 

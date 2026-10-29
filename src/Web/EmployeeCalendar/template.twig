@@ -48,7 +48,7 @@
             {% for week in weeks %}
                 <tr>
                     {% for day in week %}
-                        <td class="{% if day.isToday %}table-primary{% elseif not day.inMonth %}bg-body text-secondary{% endif %}"{% if day.isToday %} aria-current="date"{% endif %}>
+                        <td class="{% if day.isToday %}calendar-today{% elseif not day.inMonth %}bg-body text-secondary{% endif %}"{% if day.isToday %} aria-current="date"{% endif %}>
                             <div class="fw-semibold mb-1">{{ day.date|date('j') }}{% if day.isToday %}<span class="visually-hidden"> Today</span>{% endif %}</div>
                             {% if day.entries is not empty %}
                                 <ul class="list-unstyled mb-0">
