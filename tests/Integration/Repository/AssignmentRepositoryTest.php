@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Tests\Integration\Repository;
 
 use App\Access\Scope;
+use App\Entity\AssignedWork;
 use App\Entity\AssignmentListItem;
 use App\Entity\AssignmentStatus;
 use App\Entity\EmployeeNeedingAccess;
@@ -290,6 +291,31 @@ final class AssignmentRepositoryTest extends IntegrationTestCase
             ],
             $employees,
         );
+    }
+
+    public function testAssignedWorkIsOnlyTheEmployeesOwnInSiteThenWorkItemOrder(): void
+    {
+        $welding = $this->insert(6, 3, 3, '2026-11-01', '2026-11-05');
+        $laterConcrete = $this->insert(6, 1, 1, '2026-12-01', '2026-12-05');
+        $electrical = $this->insert(6, 2, 1, '2026-11-01', '2026-11-05');
+        $concrete = $this->insert(6, 1, 1, '2026-11-01', '2026-11-05');
+        $done = $this->insert(6, 4, 3, '2026-10-01', '2026-10-05');
+        $this->repository()->updatePeriodAndStatus($done, new DateTimeImmutable('2026-10-01'), new DateTimeImmutable('2026-10-05'), AssignmentStatus::Done);
+        $this->insert(7, 5, 2, '2026-11-01', '2026-11-05');
+
+        $work = $this->repository()->findAssignedWork(6);
+
+        assertSame(
+            [$concrete, $laterConcrete, $electrical, $done, $welding],
+            array_map(static fn(AssignedWork $row): int => $row->item->assignment->id, $work),
+        );
+        $first = $work[0];
+        assertSame('Āgenskalns Residential Block', $first->item->constructionSiteName);
+        assertSame('Mazā Nometņu iela 12, Rīga, Latvia', $first->address());
+        assertSame('General', $first->requiredAccessLevelName);
+        assertSame('Concrete works', $first->item->workItemName);
+        assertSame('Formwork, reinforcement and pouring of foundations, slabs and walls.', $first->workItemDescription);
+        assertSame([], $this->repository()->findAssignedWork(5));
     }
 
     private function repository(): AssignmentRepositoryInterface

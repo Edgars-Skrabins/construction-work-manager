@@ -54,16 +54,16 @@ Names marked *(from work-assignments)* or *(from admin-management)* come from th
 
 `src/Entity/AssignedWork.php` (new): a `final readonly` class, one row per assignment of the user:
 - `AssignmentListItem $item` *(from work-assignments: `App\Entity\AssignmentListItem`, holding the `Assignment` with `startDate`, `endDate`, `status` and `displayStatus()`, plus the work item name, the site name and the site's required access level)*. It is composed, not copied, so no field list exists twice.
-- Only the extra fields: `string $street`, `string $city`, `string $country`, `?string $workItemDescription`. If the site ID isn't on the `Assignment`, add `int $siteId` too.
+- Only the extra fields: `string $street`, `string $city`, `string $country`, `string $requiredAccessLevelName` (`AssignmentListItem` only has the level ID), `?string $workItemDescription`. The site ID is `item.assignment.constructionSiteId`.
 - `address(): string` returns `street, city, country`.
 
-`src/Entity/AssignedSite.php` (new): a `final readonly` class for one card, holding only `/** @var non-empty-list<AssignedWork> */ array $work` (all at the same site). The card's site name, address and required access level are read from its first `AssignedWork`, so the site fields aren't declared a second time.
+`src/Entity/AssignedSite.php` (new): a `final readonly` class for one card, holding only `/** @var non-empty-list<AssignedWork> */ array $work` (all at the same site), with `first(): AssignedWork` returning the first row. The card's site name, address and required access level are read from it, so the site fields aren't declared a second time.
 
 Repository: a new method on `App\Repository\AssignmentRepositoryInterface` and `App\Repository\AssignmentRepository` *(from work-assignments)*:
 
 - `findAssignedWork(int $employeeId): list<AssignedWork>`
-- First, as a separate refactor commit, extract one private base-query builder in `AssignmentRepository`: the from, the joins, the scope condition (`All`, `Subordinates`, `Own`) and the shared select. `listPaginator` uses it and keeps its paging and order, and work-assignments' tests stay green without changes.
-- `findAssignedWork()` uses the same builder with the `Own` scope for `$employeeId`, adds the extra columns (`CONSTRUCTION_SITE.STREET`, `CITY`, `COUNTRY`, `WORK_ITEM.DESCRIPTION`), all statuses and no paging, ordered by `CONSTRUCTION_SITE.NAME`, `WORK_ITEM.NAME`, `START_DATE`, then `ASSIGNMENT.ID`.
+- The shared base query already exists on `main`: the private `listQuery($viewerId, $scope)` (from, joins, scope condition and shared select), used by `findListItem` and `listPaginator`. No extraction is needed (2026-10-29).
+- `findAssignedWork()` uses `listQuery($employeeId, Scope::Own)`, adds the extra columns (`CONSTRUCTION_SITE.STREET`, `CITY`, `COUNTRY`, `WORK_ITEM.DESCRIPTION`, and `ACCESS_LEVEL.NAME` joined on the site's required level), all statuses and no paging, ordered by `CONSTRUCTION_SITE.NAME`, `WORK_ITEM.NAME`, `START_DATE`, then `ASSIGNMENT.ID`.
 - Each row's `AssignmentListItem` is built with the existing `listItemFromRow` / `assignmentFromRow` mapping. Only the extra columns are mapped here.
 - Rejected: calling `listPaginator` and reading every page (N queries for one view, and it lacks the extra columns). Rejected: a second hand-written query (duplicates the joins and the scope).
 
@@ -145,17 +145,17 @@ Read Part 1 and Part 2 before starting. Work through the tasks in order and tick
 
 Before block A: `admin-management` and `work-assignments` are merged into `main`, `origin/main` is merged into this branch with `git merge origin/main` (never rebase, never force-push), and every *(from …)* name in 2.2, the date format and the route syntax are checked against the merged code.
 
-Baseline before starting: <unit and integration test counts after merging `origin/main`>.
+Baseline before starting: unit 101 tests, integration 397 tests, all passing (after merging `origin/main` at 55599e9).
 
 Docker for this worktree: `COMPOSE_PROJECT_NAME=cwm-my-assignments` and `APP_PORT=8084`, set outside the repository.
 
 No duplicated code: reuse what the merged specs already provide (the `Assignment` row mapping, `displayStatus()`, the date format helper or filter of the assignments list, the test login and request helpers) instead of copying it. If a helper is private, extract it to one shared place rather than writing a second copy.
 
 ### A. Data
-- [ ] A0. Run `make up` and `make test`, and record the baseline test counts above.
-- [ ] A1. Add `src/Entity/AssignedWork.php` and `src/Entity/AssignedSite.php`.
-- [ ] A2. Refactor commit: extract the private base-query builder (from, joins, scope, shared select) in `AssignmentRepository` and use it in `listPaginator`. Run `make test`: work-assignments' tests pass unchanged.
-- [ ] A3. Add `findAssignedWork(int $employeeId)` to `AssignmentRepositoryInterface` and `AssignmentRepository` on top of that builder, with the extra columns and the ordering from 2.2, reusing `listItemFromRow` / `assignmentFromRow`.
+- [x] A0. Run `make up` and `make test`, and record the baseline test counts above.
+- [x] A1. Add `src/Entity/AssignedWork.php` and `src/Entity/AssignedSite.php`.
+- [x] ~~A2. Refactor commit: extract the private base-query builder~~ (not needed: `main` already has the shared private `listQuery()`).
+- [x] A3. Add `findAssignedWork(int $employeeId)` to `AssignmentRepositoryInterface` and `AssignmentRepository` on top of `listQuery()`, with the extra columns and the ordering from 2.2, reusing `listItemFromRow` / `assignmentFromRow`, with a test in `AssignmentRepositoryTest`.
 
 ### B. Service
 - [ ] B1. Add `src/Service/MyAssignments.php` and `src/Service/MyAssignmentsService.php` with `forEmployee()`: permission check, the split into current and history, grouping by site, and the history order.
