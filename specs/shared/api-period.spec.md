@@ -1,7 +1,7 @@
 # API period — Spec
 
 **Type:** feature
-**Status:** ready for implementation
+**Status:** done
 **Last updated:** 2026-10-30
 
 # Part 1 — Business logic and usage
@@ -69,15 +69,15 @@ Read Part 1 and Part 2 before starting. Work through the tasks in order and tick
 Baseline before starting: `make check` on `main` at `7225c2e` passes with 257 unit and 744 integration tests.
 
 ### A. Period and query
-- [ ] A1. Add `src/Service/AccessPeriod.php` as in 2.2, with `tests/Unit/Service/AccessPeriodTest.php`: no dates → today; only `from` or only `to` → one day; malformed and non-existent dates; `from` before today; `to` before `from`; exactly 12 months (to = from + 1 year − 1 day) passes and one day more fails; each with its exact message.
-- [ ] A2. Change `findEmployeesNeedingAccess()` to the from/to signature in the interface and `AssignmentRepository`, and update every caller and test double (`AssignmentRepositoryTest`, `AssignmentLockingTest`). Add repository cases: an assignment ending on `from` and one starting on `to` are included; one ending the day before `from` and one starting the day after `to` are excluded; an employee with two overlapping assignments appears once; the level check still filters.
+- [x] A1. Add `src/Service/AccessPeriod.php` as in 2.2, with `tests/Unit/Service/AccessPeriodTest.php`: no dates → today; only `from` or only `to` → one day; malformed and non-existent dates; `from` before today; `to` before `from`; exactly 12 months (to = from + 1 year − 1 day) passes and one day more fails; each with its exact message.
+- [x] A2. Change `findEmployeesNeedingAccess()` to the from/to signature in the interface and `AssignmentRepository`, and update every caller and test double (`AssignmentRepositoryTest`, `AssignmentLockingTest`). Add repository cases: an assignment ending on `from` and one starting on `to` are included; one ending the day before `from` and one starting the day after `to` are excluded; an employee with two overlapping assignments appears once; the level check still filters.
 
 ### B. Service and endpoint
-- [ ] B1. `SiteAccessService` and `SiteAccess` as in 2.2.
-- [ ] B2. `Action.php` as in 2.2, with `period` in the body.
-- [ ] B3. `tests/Integration/Api/SiteEmployeesTest.php`: the existing tests now expect `period` with today's date; add a 7-day period request, one-date requests, every 422 message, the code check before the period check, and the default to today through `tests/FixedClock` on the service.
+- [x] B1. `SiteAccessService` and `SiteAccess` as in 2.2.
+- [x] B2. `Action.php` as in 2.2, with `period` in the body.
+- [x] B3. `tests/Integration/Api/SiteEmployeesTest.php`: the existing tests now expect `period` with today's date; add a 7-day period request, one-date requests, every 422 message, the code check before the period check, and the default to today through `tests/FixedClock` on the service.
 
 ### Z. Wrap-up
-- [ ] Z1. README step 8 and CLAUDE.md as in 2.2.
-- [ ] Z2. `make check` passes.
-- [ ] Z3. Manual check: create a key, call the endpoint without dates, with a week, with only `from`, and with each invalid case.
+- [x] Z1. README step 8 and CLAUDE.md as in 2.2.
+- [x] Z2. `make check` passes.
+- [x] Z3. Manual check: create a key, call the endpoint without dates, with a week, with only `from`, and with each invalid case.
