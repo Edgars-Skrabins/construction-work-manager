@@ -155,12 +155,12 @@ This spec writes no query of its own for this. `work-assignments` provides:
 
 This spec adds:
 
-- `src/Entity/SiteAccess.php`: final readonly class with `int $siteId`, `string $siteName`, `int $requiredAccessLevelId`, `string $requiredAccessLevelName` and `list<EmployeeNeedingAccess> $employees`.
+- `src/Entity/SiteAccess.php`: final readonly class with `ConstructionSite $site` (admin-management's entity, which already has the name and the required access level ID and name) and `list<EmployeeNeedingAccess> $employees`.
 - `src/Service/SiteAccessService.php`: `forSite(int $siteId): ?SiteAccess`. It loads the site with `ConstructionSiteRepositoryInterface::find(int $id): ?ConstructionSite` from `admin-management` (its `ConstructionSite` has `requiredAccessLevelId` and `requiredAccessLevelName`), and returns null when the site doesn't exist. It calls the repository directly, not `ConstructionSiteService::find()`, which requires the `site.update` permission. Then it calls `findEmployeesNeedingAccess($siteId, $clock->now())`, so D is the Riga date. It doesn't use `AccessChecker`: API clients are not employees and the RBAC permissions don't cover them.
 
 ### Configuration
 
-- `config/common/di/api.php` (new): `ApiKeyRepositoryInterface` → `ApiKeyRepository`. Common, because both the console and the web need them. Run `composer yii-config-rebuild` after adding it.
+- `config/common/di/api.php` (new): `ApiKeyRepositoryInterface` → `ApiKeyRepository`. Common, because both the console and the web need them. Run `composer yii-config-rebuild` after adding it. 2026-10-29, block E: merged into main's `config/common/di/repositories.php`, which holds every repository binding, and `api.php` is removed.
 - `config/console/commands.php`: the three commands.
 
 ### Tests
@@ -189,12 +189,12 @@ This spec adds:
   - A successful authentication sets `LAST_USED_AT`, and `/login` still gets its session cookie.
   - The configured web middleware list is `ApiPipelineMiddleware` followed by the unchanged web list.
   - `WebSmokeTest` still passes, so web requests are untouched.
-- `tests/Integration/Api/SiteEmployeesTest.php` (block E), with assignments inserted in a rolled-back transaction and the shared clock fixed to a known Riga date:
+- `tests/Integration/Api/SiteEmployeesTest.php` (block E), with all assignments deleted and test assignments inserted in a rolled-back transaction, dated relative to today from the app's `ClockInterface`. A separate case builds `SiteAccessService` with `tests/FixedClock` at a 2030 date to prove the date comes from the clock:
   - `200` with the exact body shape and only the documented fields (no `birthDate`, `role` or account fields), Unicode intact, ordered by last name, first name and ID, each employee once.
   - `done` and `cancelled` assignments, and active ones that start after or ended before the Riga date, are not listed. One that starts or ends on that date is listed.
   - Inside the rolled-back transaction, lowering a listed employee's `ACCESS_LEVEL_ID` below the site's required level makes them drop out of the response.
   - A site with no active assignments returns `"employees": []`.
-  - `404` for an unknown site, `422` for `abc`, `0`, `-1`, `01` and `2147483648`, `405` with `Allow: GET` for `POST`, `401` without a key.
+  - `404` for an unknown site and for `2147483647`, `422` for `abc`, `0`, `-1`, `01`, `1.5` and `2147483648`, `405` with `Allow: GET` for `POST`, `401` without a key.
   - A successful call sets the key's `LAST_USED_AT`.
 
 ### Documentation
@@ -233,7 +233,7 @@ This spec adds:
 27. **Shared clock (2026-10-29):** all time comes from the shared PSR-20 `ClockInterface`, for testability and one source of time. Key expiry, `LAST_USED_AT` and `REVOKED_AT` are stored in UTC, and the access date is the Riga date. Until merging `origin/main` in block E brings the clock to this branch, `ApiKeyService::now()` creates the UTC time itself, and E1 switches it to the clock. Rejected: adding `psr/clock` and a clock class on this branch too, which would collide with work-assignments' copy.
 28. **Seed data in examples (2026-10-29):** the example response uses seed site 1 and seed employee 4.
 29. **API path decoded like the router (2026-10-29, block C):** `ApiPipelineMiddleware` decides on `urldecode()` of the path, the same decoding the FastRoute matcher uses, so a percent-encoded `/%61pi/...` can never reach an API route through the web stack without key authentication. Case and double encoding don't match API routes in either stack, so they go to the web 404.
-30. **No duplicated code (2026-10-29, after block D):** helpers that blocks C and D copied from code on `main` live in one place: `IntegrationTestCase::handleRequest()` (also used by `WebSmokeTest`) and `IntegrationTestCase::webMiddlewares()` (also used by `ForbiddenMiddlewareTest`), and `tests/Support/CallableRequestHandler` and `tests/Support/RecordingLogger`, shared by unit and integration tests. `api-key:list` gets each key's status from `ApiKeyService::status()`, which returns the `ApiKeyStatus` enum, instead of creating its own current time.
+30. **No duplicated code (2026-10-29, after block D):** helpers that blocks C and D copied from code on `main` live in one place: `IntegrationTestCase::handleRequest()` (also used by `WebSmokeTest`) and `IntegrationTestCase::webMiddlewares()` (also used by `ForbiddenMiddlewareTest`), and `tests/CallableRequestHandler` and `tests/RecordingLogger`, shared by unit and integration tests (moved from `tests/Support/` to `tests/` next to main's `FixedClock` in block E, so shared helpers have one home). In block E, `IntegrationTestCase::createRequest()` and `handleRequest()` also replaced the request building in admin-management's `WebClient`, `ForbiddenMiddlewareTest` and `RequirePermissionTest`, so there is one way to build and send a test request. `api-key:list` gets each key's status from `ApiKeyService::status()`, which returns the `ApiKeyStatus` enum, instead of creating its own current time.
 
 # Part 3 — Implementation TODO
 
@@ -263,13 +263,13 @@ Baseline before starting: unit 52 tests, integration 143 tests, all passing.
 - [x] D1. Update `README.md` (Project structure, Running the app, Commands) and `CLAUDE.md` (Layout, Architecture) as described in 2.2, without the site-employees `curl` example until block E.
 
 ### E. Site employees endpoint (after work-assignments merges)
-- [ ] E0. Merge `origin/main` into this branch with `git merge origin/main` (never rebase), check that migrations 010 to 014 and this spec's 015 apply in order, and check that `ClockInterface`, `AssignmentRepositoryInterface::findEmployeesNeedingAccess()` (returning `list<EmployeeNeedingAccess>`) and `ConstructionSiteRepositoryInterface::find()` exist as described in 2.2. Admin-management adds a `WebClient` test trait in `tests/Integration/Web/WebClient.php` that also sends requests through `Application`: keep a single request helper by building one on the other (`IntegrationTestCase::handleRequest()` or `WebClient`), whichever leaves less code. `ForbiddenMiddlewareTest.php` is changed on both branches, so keep both changes when resolving the conflict.
-- [ ] E1. Inject `ClockInterface` into `ApiKeyService`, replace the private `now()` with `$clock->now()->setTimezone(UTC)` so the clock is the only source of time, and switch `ApiKeyServiceTest` to a fixed clock. `Clock` returns `Europe/Riga` time: comparisons with the UTC expiry stay correct because `DateTimeImmutable` compares instants, and every time shown or stored is converted to UTC explicitly.
-- [ ] E2. Add `SiteAccess` and `SiteAccessService`.
-- [ ] E3. Add `src/Api/V1/SiteEmployees/Action.php` and the `/api/v1` route group in `config/common/routes.php`.
-- [ ] E4. Add `SiteEmployeesTest`. Run `make test`.
-- [ ] E5. Add the `curl` example to `README.md` Running the app.
+- [x] E0. Merge `origin/main` into this branch with `git merge origin/main` (never rebase), check that migrations 010 to 014 and this spec's 015 apply in order, and check that `ClockInterface`, `AssignmentRepositoryInterface::findEmployeesNeedingAccess()` (returning `list<EmployeeNeedingAccess>`) and `ConstructionSiteRepositoryInterface::find()` exist as described in 2.2. Admin-management adds a `WebClient` test trait in `tests/Integration/Web/WebClient.php` that also sends requests through `Application`: keep a single request helper by building one on the other (`IntegrationTestCase::handleRequest()` or `WebClient`), whichever leaves less code. `ForbiddenMiddlewareTest.php` is changed on both branches, so keep both changes when resolving the conflict.
+- [x] E1. Inject `ClockInterface` into `ApiKeyService`, replace the private `now()` with `$clock->now()->setTimezone(UTC)` so the clock is the only source of time, and switch `ApiKeyServiceTest` to a fixed clock. `Clock` returns `Europe/Riga` time: comparisons with the UTC expiry stay correct because `DateTimeImmutable` compares instants, and every time shown or stored is converted to UTC explicitly.
+- [x] E2. Add `SiteAccess` and `SiteAccessService`.
+- [x] E3. Add `src/Api/V1/SiteEmployees/Action.php` and the `/api/v1` route group in `config/common/routes.php`.
+- [x] E4. Add `SiteEmployeesTest`. Run `make test`.
+- [x] E5. Add the `curl` example to `README.md` Running the app.
 
 ### Z. Wrap-up
 - [ ] Z1. Run `make check`: code style, PHPStan at level max and all tests pass. CI is green on the pull request.
-- [ ] Z2. Manual check: create a key with `./yii api-key:create demo`, call `GET /api/v1/construction-sites/1/employees` with `curl` and get `200` with the expected employees and no `Set-Cookie`, call it without a key and get `401`, revoke the key with `./yii api-key:revoke <key ID>` and get `401` again, and check `api-key:list` shows it as revoked with a last-used time.
+- [x] Z2. Manual check: create a key with `./yii api-key:create demo`, call `GET /api/v1/construction-sites/1/employees` with `curl` and get `200` with the expected employees and no `Set-Cookie`, call it without a key and get `401`, revoke the key with `./yii api-key:revoke <key ID>` and get `401` again, and check `api-key:list` shows it as revoked with a last-used time.
