@@ -116,6 +116,7 @@ Already in the stack: `yiisoft/db` query builder, `yiisoft/security` `PasswordHa
 ### PHP: shared listing
 
 - Each list repository method takes the raw sort string (`name`, `-name` or anything else) and returns an `OffsetPaginator` with page size 20 over a `QueryDataReader`. The reader's `Sort::only()` config maps each sort key to its columns, each with `ID` added last in the same direction, so ties are stable. An empty or unknown sort string falls back to the page's default (`name`). Rows are mapped to the entity classes.
+- `src/Repository/ListSort.php`: `create(array $config, string $order, string $default): Sort` builds a `Sort::only()` without default sorting, keeps only the first requested key when it is in the config and otherwise uses `$default`. `columns(list<string> $columns, string $idColumn)` builds one key's asc and desc criteria with the ID column added last.
 - `src/Web/Shared/Listing/ListParams.php`: final readonly class with `string $sort` and `int $page`. `fromRequest(ServerRequestInterface $request): self` reads the `sort` and `page` query parameters, and a page that isn't a positive integer becomes 1. `applyTo(OffsetPaginator $paginator): OffsetPaginator` sets the current page, clamped to the last page (at least 1), so a page past the end shows the last page.
 - `src/Web/Shared/Listing/sort-link.twig`: included with `label`, `key`, `route` and `paginator`. It reads the active order from the paginator's sort, renders a header link that toggles the direction, drops the page (back to page 1) and shows ▲ or ▼ when that key is active.
 - `src/Web/Shared/Listing/pagination.twig`: included with `paginator` and `route`. It renders Bootstrap pagination with previous, numbered and next links, keeps the current sort, and renders nothing when there is only one page.
@@ -184,6 +185,7 @@ Actions get the acting ID with `(int) $currentUser->getId()`, render through `We
 - `WorkItemList/`, `WorkItemForm/` (with `WorkItemForm.php`), `WorkItemDelete/`.
 - `SetPassword/` (with `SetPasswordForm.php`).
 - `src/Web/Login/template.twig` gets the "First login? Set your password" link.
+- Flash messages: the list actions, which are the redirect targets after saving and deleting, read `FlashInterface::get('success')` during the request and pass it to their template as `messages`. The template includes `src/Web/Shared/Flash/messages.twig`, which renders each message as an `alert-success`. Actions add messages with `FlashInterface::add('success', ...)`.
 - `src/Web/Shared/Form/field-errors.twig`: included with a list of messages, renders Bootstrap `invalid-feedback`. Fields with errors get `is-invalid`.
 
 ### Routes (`config/common/routes.php`)
@@ -210,10 +212,9 @@ Inside the authenticated group, each with `RequirePermission::for(...)`:
 
 ### Layout and view parameters
 
-- `config/common/params.php` view parameters gain `'access' => Reference::to(ViewAccess::class)` and `'flash' => Reference::to(FlashInterface::class)`.
+- `config/common/params.php` view parameters gain `'access' => Reference::to(ViewAccess::class)`.
 - `layout.twig`:
   - The navbar gets a `navbar-nav` list after the brand with the three links, each wrapped in `{% if access.can('<entity>.update') %}`, and marked `active` when `currentRoute.getName()` starts with the route prefix. Later specs add their links to this list, each with its own `access.can()` check.
-  - Above `content`, each message in `flash.get('success')` renders a dismissible-looking `alert-success` (no JavaScript).
   - The role shows as `currentUser.getIdentity().role.value`.
 
 ### Tests
@@ -280,20 +281,21 @@ Inside the authenticated group, each with `RequirePermission::for(...)`:
 24. **Script 012:** `012_add_account_setup_code`, agreed with the coordinating session. `work-assignments` owns 010 and 011, and this spec owns 012 to 014, using only 012.
 25. **Setup code hash and expiry (2026-10-29, after the coordinating session's security review):** the code stays a `PasswordHasher` (bcrypt) hash, because it is typed by hand and has about 50 bits, so a slow hash is what protects a leaked database; `password_verify` already compares in constant time. Rejected: SHA-256 with `hash_equals`, which only fits codes of 128 bits or more (about 26 characters). The expiry is shortened from 7 days to 72 hours, which still covers a weekend handover. Rejected: 7 days and 24 hours.
 26. **Shared read methods for `work-assignments` (2026-10-29):** `EmployeeRepositoryInterface::withRole()`, `ConstructionSiteRepositoryInterface::all()`, `WorkItemRepositoryInterface::all()` and `AccessLevelRepositoryInterface::all()` serve its pickers, so it needs no lookups of its own. Assignable employees are `withRole(Role::Employee, managerId: $managerId)`, each `Employee` carrying `accessLevelId`. Rejected: a separate `employeesWithRoleEmployee()` method, which `withRole()` already covers. "Work items" is the catalog's UI label throughout (Decision Log #148).
+27. **Flash messages read by actions (2026-10-29, found while implementing A4):** `WebViewRenderer` renders lazily, after `SessionMiddleware` has closed the session, so a layout that reads `FlashInterface` reopens the session after it was committed. In tests that dropped the session cookie and broke CSRF. The redirect-target actions read the flash during the request and pass it to a shared partial. Rejected: a middleware that preloads flash messages on every request, and reading them in the layout (the first version of this spec).
 
 # Part 3 — Implementation TODO
 
 Read Part 1 and Part 2 before starting. Work through the tasks in order and tick each one when it is done.
 
-Baseline before starting: <record in A0>.
+Baseline before starting: unit 52 tests, integration 143 tests, all passing.
 
 ### A. Schema and shared access
-- [ ] A0. Start the stack under `COMPOSE_PROJECT_NAME=cwm-admin-management` with its own `APP_PORT`, run `make test`, and record the baseline test counts on the line above.
-- [ ] A1. Add `SQL/012_add_account_setup_code.sql`, its down script and `M261029000012AddAccountSetupCode`. Extend `AccountSchemaTest`, run `make migrate` and `composer test:integration` (including `MigrationRoundTripTest`).
-- [ ] A2. Run `make composer require yiisoft/validator:^2.6 yiisoft/data:^2.0 yiisoft/data-db:^1.0`, and check that `composer.json` and `composer.lock` changed.
-- [ ] A3. Switch `UserIdentity::$role` to `Role`, update `UserIdentityRepository`, the layout and `LoginServiceTest`.
-- [ ] A4. Add `RequirePermission` and `ViewAccess`, the `access` and `flash` view parameters, the navbar list and the flash alerts in `layout.twig`. Add `RequirePermissionTest`.
-- [ ] A5. Add `TransactionRunnerInterface`, `DbTransactionRunner`, `ListParams` with `ListParamsTest`, `sort-link.twig`, `pagination.twig` and `field-errors.twig`. Add `config/common/di/repositories.php` and run `composer yii-config-rebuild`.
+- [x] A0. Start the stack under `COMPOSE_PROJECT_NAME=cwm-admin-management` with its own `APP_PORT`, run `make test`, and record the baseline test counts on the line above.
+- [x] A1. Add `SQL/012_add_account_setup_code.sql`, its down script and `M261029000012AddAccountSetupCode`. Extend `AccountSchemaTest`, run `make migrate` and `composer test:integration` (including `MigrationRoundTripTest`).
+- [x] A2. Run `make composer require yiisoft/validator:^2.6 yiisoft/data:^2.0 yiisoft/data-db:^1.0`, and check that `composer.json` and `composer.lock` changed.
+- [x] A3. Switch `UserIdentity::$role` to `Role`, update `UserIdentityRepository`, the layout and `LoginServiceTest`.
+- [x] A4. Add `RequirePermission` and `ViewAccess`, the `access` view parameter and the navbar list in `layout.twig` (each page block adds its link once its route exists). Add `RequirePermissionTest`, which also covers `ViewAccess`.
+- [x] A5. Add `TransactionRunnerInterface`, `DbTransactionRunner`, `ListParams` with `ListParamsTest`, `sort-link.twig`, `pagination.twig`, `field-errors.twig` and `src/Web/Shared/Flash/messages.twig`. Add `config/common/di/repositories.php` and run `composer yii-config-rebuild`.
 
 ### B. Work items and construction sites
 - [ ] B1. Add `WorkItem`, `WorkItemData`, `WorkItemRepositoryInterface`, `WorkItemRepository`, `ValidationException`, `InUseException` and `WorkItemService`, with `WorkItemServiceTest`.
