@@ -70,6 +70,15 @@ final class SchemaTest extends IntegrationTestCase
         assertSame(0, $invalid);
     }
 
+    public function testSeededSitesHaveTheirCodes(): void
+    {
+        $codes = $this->db()->createCommand('SELECT CODE FROM CONSTRUCTION_SITE WHERE ID <= 4 ORDER BY ID')->queryColumn();
+        $fallbacks = (int) $this->db()->createCommand("SELECT COUNT(*) FROM CONSTRUCTION_SITE WHERE CODE LIKE N'SITE-%'")->queryScalar();
+
+        assertSame(['RIX-AGK-01', 'DGP-SCH-01', 'RIX-TEC-01', 'ADZ-DEF-01'], $codes);
+        assertSame(0, $fallbacks);
+    }
+
     public function testRoleAssignedAtIsBackfilledFromCreatedAt(): void
     {
         $mismatched = (int) $this->db()->createCommand(

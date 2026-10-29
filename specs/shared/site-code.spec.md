@@ -155,12 +155,12 @@ The column is added in its own batch, because SQL Server compiles a batch before
 
 Read Part 1 and Part 2 before starting. Work through the tasks in order and tick each one when it is done.
 
-Baseline before starting: run `make check` on the branch and record the counts here.
+Baseline before starting: 150 unit tests and 530 integration tests on `main` (ef45e13).
 
 ### A. Schema
-- [ ] A0. Start the stack with an uncommitted `compose.override.yaml` (own project name, ports, subnet, `MSSQL_MEMORY_LIMIT_MB=1024`), run `make check`, record the counts above.
-- [ ] A1. Add `SQL/019_add_construction_site_code.sql`, `SQL/down/019_add_construction_site_code.sql` and `src/Migration/M261029000019AddConstructionSiteCode.php` as in 2.2.
-- [ ] A2. Add a code to every `CONSTRUCTION_SITE` insert in the tests (`ConstraintsTest`), add the code constraint cases to `ConstraintsTest` and the seeded-code check to `SchemaTest`. `make check`.
+- [x] A0. Start the stack with an uncommitted `compose.override.yaml` (own project name, ports, subnet, `MSSQL_MEMORY_LIMIT_MB=1024`), run `make check`, record the counts above.
+- [x] A1. Add `SQL/019_add_construction_site_code.sql`, `SQL/down/019_add_construction_site_code.sql` and `src/Migration/M261029000019AddConstructionSiteCode.php` as in 2.2.
+- [x] A2. Add a code to every `CONSTRUCTION_SITE` insert in the tests (`ConstraintsTest`), add the code constraint cases to `ConstraintsTest` and the seeded-code check to `SchemaTest`. `make check`.
 
 ### B. Admin pages
 - [ ] B1. Add `src/Entity/SiteCode.php` and `tests/Unit/Entity/SiteCodeTest.php`.
