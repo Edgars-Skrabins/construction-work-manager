@@ -163,10 +163,10 @@ Baseline before starting: 150 unit tests and 530 integration tests on `main` (ef
 - [x] A2. Add a code to every `CONSTRUCTION_SITE` insert in the tests (`ConstraintsTest`), add the code constraint cases to `ConstraintsTest` and the seeded-code check to `SchemaTest`. `make check`.
 
 ### B. Admin pages
-- [ ] B1. Add `src/Entity/SiteCode.php` and `tests/Unit/Entity/SiteCodeTest.php`.
-- [ ] B2. Add `code` to `ConstructionSite`, `ConstructionSiteData` and `ConstructionSiteRepository` (select, map, write, `code` sort key, `findByCode()`, `codeExists()`), and to the interface.
-- [ ] B3. Add the code pre-check and the nested unique guard to `ConstructionSiteService`, with the tests in `ConstructionSiteServiceTest`.
-- [ ] B4. Add the field to `SiteForm` and its template, and the `Code` column to the sites list, with the `AdminPagesTest` cases. `make check`.
+- [x] B1. Add `src/Entity/SiteCode.php` and `tests/Unit/Entity/SiteCodeTest.php`.
+- [x] B2. Add `code` to `ConstructionSite`, `ConstructionSiteData` and `ConstructionSiteRepository` (select, map, write, `code` sort key, `findByCode()`, `codeExists()`), and to the interface.
+- [x] B3. Add the code pre-check and the nested unique guard to `ConstructionSiteService`, with the tests in `ConstructionSiteServiceTest`.
+- [x] B4. Add the field to `SiteForm` and its template, and the `Code` column to the sites list, with the `AdminPagesTest` cases. `make check`.
 
 ### C. API by code
 - [ ] C1. Change `SiteAccessService::forSite()`, the API action and the route to the code, as in 2.2.

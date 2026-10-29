@@ -11,6 +11,11 @@
         <h1 class="h3 mb-4">{{ title }}</h1>
         <form method="post" action="{{ site ? urlGenerator.generate('site.edit', {id: site.id}) : urlGenerator.generate('site.create') }}" novalidate>
             {{ csrf.hiddenInput()|raw }}
+            <div class="mb-3">
+                <label for="code" class="form-label">Site code</label>
+                <input type="text" class="form-control{% if errors.code is defined %} is-invalid{% endif %}" id="code" name="code" value="{{ form.code }}" maxlength="30" autocapitalize="characters" spellcheck="false" required>
+                {% include 'Web/Shared/Form/field-errors.twig' with {errors: errors.code ?? []} %}
+            </div>
             {% for field in fields %}
                 <div class="mb-3">
                     <label for="{{ field.name }}" class="form-label">{{ field.label }}</label>

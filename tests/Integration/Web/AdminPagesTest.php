@@ -125,12 +125,13 @@ final class AdminPagesTest extends IntegrationTestCase
     public function testSiteIsCreatedEditedAndDeleted(): void
     {
         $this->asAdmin();
-        $fields = ['name' => self::SITE, 'street' => 'Lāčplēša iela 1', 'city' => 'Rīga', 'country' => 'Latvia', 'area' => '150.5', 'requiredAccessLevelId' => '2'];
+        $fields = ['code' => ' rix-tst-01 ', 'name' => self::SITE, 'street' => 'Lāčplēša iela 1', 'city' => 'Rīga', 'country' => 'Latvia', 'area' => '150.5', 'requiredAccessLevelId' => '2'];
 
         $this->assertRedirectsTo('/sites', $this->submit('/sites/create', $fields));
         $list = (string) $this->request('GET', '/sites')->getBody();
         assertStringContainsString('Construction site saved.', $list);
         assertStringContainsString('<td class="text-end">150.50</td>', $list);
+        assertStringContainsString('<td class="text-nowrap">RIX-TST-01</td>', $list);
         $id = $this->idOf(self::SITE, 'CONSTRUCTION_SITE');
 
         $this->assertRedirectsTo('/sites', $this->submit("/sites/$id/edit", [...$fields, 'name' => self::SITE . ' renamed']));
@@ -209,14 +210,49 @@ final class AdminPagesTest extends IntegrationTestCase
     {
         $this->asAdmin();
 
-        $response = $this->submit('/sites/create', ['name' => '', 'street' => 'x', 'city' => 'y', 'country' => 'z', 'area' => '0', 'requiredAccessLevelId' => '1']);
+        $response = $this->submit('/sites/create', ['code' => '', 'name' => '', 'street' => 'x', 'city' => 'y', 'country' => 'z', 'area' => '0', 'requiredAccessLevelId' => '1']);
         $body = (string) $response->getBody();
 
         assertSame(200, $response->getStatusCode());
         assertMatchesRegularExpression('/id="name"[^>]*is-invalid|is-invalid[^>]*id="name"/', $body);
         assertStringContainsString('Name cannot be blank.', $body);
+        assertMatchesRegularExpression('/is-invalid"[^>]*id="code"/', $body);
+        assertStringContainsString('Site code cannot be blank.', $body);
         assertStringContainsString('Enter an area greater than 0, at most 99999999.99, with at most two decimals.', $body);
         assertStringContainsString('value="x"', $body);
+    }
+
+    #[DataProvider('invalidSiteCodes')]
+    public function testInvalidSiteCodeIsShownUnderTheField(string $code, string $message): void
+    {
+        $this->asAdmin();
+
+        $response = $this->submit('/sites/create', [
+            'code' => $code, 'name' => self::SITE, 'street' => 'x', 'city' => 'y', 'country' => 'z', 'area' => '10', 'requiredAccessLevelId' => '1',
+        ]);
+        $body = (string) $response->getBody();
+
+        assertSame(200, $response->getStatusCode());
+        assertMatchesRegularExpression('/is-invalid"[^>]*id="code"[^>]*>\s*<div class="invalid-feedback">' . preg_quote($message, '/') . '</', $body);
+    }
+
+    /**
+     * @return iterable<string, array{string, string}>
+     */
+    public static function invalidSiteCodes(): iterable
+    {
+        yield 'malformed' => ['RIX_01', 'Enter 3 to 30 letters, digits or hyphens, starting with a letter or digit.'];
+        yield 'too short' => ['AB', 'Enter 3 to 30 letters, digits or hyphens, starting with a letter or digit.'];
+        yield 'taken' => ['dgp-sch-01', 'A construction site with this code already exists.'];
+    }
+
+    public function testSitesCanBeSortedByCode(): void
+    {
+        $this->asAdmin();
+
+        preg_match_all('#<td class="text-nowrap">([A-Z0-9-]+)</td>#', (string) $this->request('GET', '/sites?sort=code')->getBody(), $codes);
+
+        assertSame(['ADZ-DEF-01', 'DGP-SCH-01', 'RIX-AGK-01', 'RIX-TEC-01'], array_slice($codes[1], 0, 4));
     }
 
     public function testRoleChangeOfAnEmployeeWithActiveAssignmentsIsShownUnderTheRoleField(): void

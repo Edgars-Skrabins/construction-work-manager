@@ -17,6 +17,7 @@ use Yiisoft\Data\Paginator\OffsetPaginator;
 final readonly class ConstructionSiteService
 {
     private const string NAME_TAKEN = 'A construction site with this name already exists.';
+    private const string CODE_TAKEN = 'A construction site with this code already exists.';
 
     public function __construct(
         private ConstructionSiteRepositoryInterface $sites,
@@ -56,7 +57,7 @@ final readonly class ConstructionSiteService
         $this->accessChecker->ensure($actorId, Permission::SiteCreate);
         $this->validate($data, null);
 
-        return $this->guardName(fn(): int => $this->sites->create($data));
+        return $this->guardUnique(fn(): int => $this->sites->create($data));
     }
 
     public function update(int $actorId, int $id, ConstructionSiteData $data): void
@@ -64,7 +65,7 @@ final readonly class ConstructionSiteService
         $this->accessChecker->ensure($actorId, Permission::SiteUpdate);
         $this->validate($data, $id);
 
-        $this->guardName(fn() => $this->sites->update($id, $data));
+        $this->guardUnique(fn() => $this->sites->update($id, $data));
     }
 
     public function delete(int $actorId, int $id): void
@@ -77,6 +78,9 @@ final readonly class ConstructionSiteService
     private function validate(ConstructionSiteData $data, ?int $exceptId): void
     {
         $errors = [];
+        if ($this->sites->codeExists($data->code, $exceptId)) {
+            $errors['code'] = self::CODE_TAKEN;
+        }
         if ($this->sites->nameExists($data->name, $exceptId)) {
             $errors['name'] = self::NAME_TAKEN;
         }
@@ -94,8 +98,13 @@ final readonly class ConstructionSiteService
      * @param Closure(): T $write
      * @return T
      */
-    private function guardName(Closure $write): mixed
+    private function guardUnique(Closure $write): mixed
     {
-        return ValidationException::guardUnique($write, 'UQ_CONSTRUCTION_SITE_NAME', 'name', self::NAME_TAKEN);
+        return ValidationException::guardUnique(
+            fn(): mixed => ValidationException::guardUnique($write, 'UQ_CONSTRUCTION_SITE_NAME', 'name', self::NAME_TAKEN),
+            'UQ_CONSTRUCTION_SITE_CODE',
+            'code',
+            self::CODE_TAKEN,
+        );
     }
 }

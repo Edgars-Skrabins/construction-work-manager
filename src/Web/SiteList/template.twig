@@ -12,6 +12,7 @@
         <table class="table table-striped align-middle">
             <thead>
                 <tr>
+                    <th scope="col">{% include 'Web/Shared/Listing/sort-link.twig' with {label: 'Code', key: 'code', route: 'site.list'} %}</th>
                     <th scope="col">{% include 'Web/Shared/Listing/sort-link.twig' with {label: 'Name', key: 'name', route: 'site.list'} %}</th>
                     <th scope="col">{% include 'Web/Shared/Listing/sort-link.twig' with {label: 'City', key: 'city', route: 'site.list'} %}</th>
                     <th scope="col">{% include 'Web/Shared/Listing/sort-link.twig' with {label: 'Country', key: 'country', route: 'site.list'} %}</th>
@@ -23,6 +24,7 @@
             <tbody>
                 {% for site in paginator.read() %}
                     <tr>
+                        <td class="text-nowrap">{{ site.code }}</td>
                         <td>{{ site.name }}</td>
                         <td>{{ site.city }}</td>
                         <td>{{ site.country }}</td>

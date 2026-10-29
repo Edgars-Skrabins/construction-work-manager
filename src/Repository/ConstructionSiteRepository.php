@@ -20,6 +20,7 @@ final readonly class ConstructionSiteRepository implements ConstructionSiteRepos
     public function listPaginator(string $sort): OffsetPaginator
     {
         $config = [
+            'code' => ListSort::columns(['s.CODE'], 's.ID'),
             'name' => ListSort::columns(['s.NAME'], 's.ID'),
             'city' => ListSort::columns(['s.CITY'], 's.ID'),
             'country' => ListSort::columns(['s.COUNTRY'], 's.ID'),
@@ -45,9 +46,25 @@ final readonly class ConstructionSiteRepository implements ConstructionSiteRepos
         return $this->query()->orderBy(['s.NAME' => SORT_ASC, 's.ID' => SORT_ASC])->all();
     }
 
+    public function findByCode(string $code): ?ConstructionSite
+    {
+        /** @var ConstructionSite|null */
+        return $this->query()->where(['s.CODE' => $code])->one();
+    }
+
     public function nameExists(string $name, ?int $exceptId): bool
     {
         $query = (new Query($this->db))->from('CONSTRUCTION_SITE')->where(['NAME' => $name]);
+        if ($exceptId !== null) {
+            $query->andWhere(['<>', 'ID', $exceptId]);
+        }
+
+        return $query->exists();
+    }
+
+    public function codeExists(string $code, ?int $exceptId): bool
+    {
+        $query = (new Query($this->db))->from('CONSTRUCTION_SITE')->where(['CODE' => $code]);
         if ($exceptId !== null) {
             $query->andWhere(['<>', 'ID', $exceptId]);
         }
@@ -81,6 +98,7 @@ final readonly class ConstructionSiteRepository implements ConstructionSiteRepos
     private function columns(ConstructionSiteData $data): array
     {
         return [
+            'CODE' => $data->code,
             'NAME' => $data->name,
             'STREET' => $data->street,
             'CITY' => $data->city,
@@ -93,7 +111,7 @@ final readonly class ConstructionSiteRepository implements ConstructionSiteRepos
     private function query(): Query
     {
         return (new Query($this->db))
-            ->select(['s.ID', 's.NAME', 's.STREET', 's.CITY', 's.COUNTRY', 's.AREA_M2', 's.REQUIRED_ACCESS_LEVEL_ID', 'LEVEL_NAME' => 'l.NAME'])
+            ->select(['s.ID', 's.CODE', 's.NAME', 's.STREET', 's.CITY', 's.COUNTRY', 's.AREA_M2', 's.REQUIRED_ACCESS_LEVEL_ID', 'LEVEL_NAME' => 'l.NAME'])
             ->from(['s' => 'CONSTRUCTION_SITE'])
             ->innerJoin(['l' => 'ACCESS_LEVEL'], 'l.ID = s.REQUIRED_ACCESS_LEVEL_ID')
             ->resultCallback(static fn(array $rows): array => array_map(self::fromRow(...), $rows));
@@ -104,9 +122,10 @@ final readonly class ConstructionSiteRepository implements ConstructionSiteRepos
      */
     private static function fromRow(array $row): ConstructionSite
     {
-        /** @var array{ID: int|string, NAME: string, STREET: string, CITY: string, COUNTRY: string, AREA_M2: string|float, REQUIRED_ACCESS_LEVEL_ID: int|string, LEVEL_NAME: string} $row */
+        /** @var array{ID: int|string, CODE: string, NAME: string, STREET: string, CITY: string, COUNTRY: string, AREA_M2: string|float, REQUIRED_ACCESS_LEVEL_ID: int|string, LEVEL_NAME: string} $row */
         return new ConstructionSite(
             id: (int) $row['ID'],
+            code: $row['CODE'],
             name: $row['NAME'],
             street: $row['STREET'],
             city: $row['CITY'],
