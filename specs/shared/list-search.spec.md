@@ -1,7 +1,7 @@
 # List search — Spec
 
 **Type:** feature
-**Status:** in progress
+**Status:** done
 **Last updated:** 2026-10-29
 
 # Part 1 — Business logic and usage
@@ -164,12 +164,12 @@ Baseline before starting: 139 unit tests on `main` at `6de8a4d`.
 - [x] B4. Check the query plans of the four searches in the dev database and note the result here. Result: each search is one clustered index scan of the list's base table (`EMPLOYEE`, `ASSIGNMENT`; `WORK_ITEM` and `CONSTRUCTION_SITE` scan their name index in sort order) with the `LIKE` filter applied there or right after the joins, and the joins stay the primary key seeks the unfiltered list already uses. No extra joins or sorts; no index added.
 
 ### C. Web
-- [ ] C1. Add `src/Web/Shared/Listing/search-form.twig` and the `.list-search-input` rule in `assets/main/site.css`.
-- [ ] C2. Add `q` to the links in `sort-link.twig` and `pagination.twig`.
-- [ ] C3. The four list actions pass `$params->q` to the service and the view; the four templates include the search form with their placeholder and show the no-results state.
-- [ ] C4. Web tests from 2.2: form present, filtered rows, Clear link, `q` in sort and pagination links, hidden sort field, no-results message, XSS escaping, manager scope on `/assignments`.
+- [x] C1. Add `src/Web/Shared/Listing/search-form.twig` and the `.list-search-input` rule in `assets/main/site.css`.
+- [x] C2. Add `q` to the links in `sort-link.twig` and `pagination.twig`.
+- [x] C3. The four list actions pass `$params->q` to the service and the view; the four templates include the search form with their placeholder and show the no-results state.
+- [x] C4. Web tests from 2.2: form present, filtered rows, Clear link, `q` in sort and pagination links, hidden sort field, no-results message, XSS escaping, manager scope on `/assignments`.
 
 ### Z. Wrap-up
-- [ ] Z1. `make check` green.
-- [ ] Z2. Manual check in the running app: as the admin, search Employees for part of a name and for an email, sort the result, page through a search with more than 20 rows, clear it; search Work items for `%`; as a manager, search Assignments for another manager's employee and get "No results for".
-- [ ] Z3. Update `CLAUDE.md` (the `src/Web/Shared/Listing/` folder description and the Lists architecture line) to mention `q`, `ListSearch` and the search form.
+- [x] Z1. `make check` green.
+- [x] Z2. Manual check in the running app: as the admin, search Employees for part of a name and for an email, sort the result, page through a search with more than 20 rows, clear it; search Work items for `%`; as a manager, search Assignments for another manager's employee and get "No results for".
+- [x] Z3. Update `CLAUDE.md` (the `src/Web/Shared/Listing/` folder description and the Lists architecture line) to mention `q`, `ListSearch` and the search form.
