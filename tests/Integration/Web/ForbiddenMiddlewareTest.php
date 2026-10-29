@@ -17,6 +17,7 @@ use Yiisoft\Csrf\CsrfTokenMiddleware;
 use Yiisoft\Definitions\ArrayDefinition;
 use Yiisoft\Definitions\DynamicReference;
 use Yiisoft\Router\Middleware\Router;
+use Yiisoft\Session\SessionInterface;
 use Yiisoft\Session\SessionMiddleware;
 use Yiisoft\Yii\Http\Application;
 
@@ -30,6 +31,14 @@ use function PHPUnit\Framework\assertTrue;
 
 final class ForbiddenMiddlewareTest extends IntegrationTestCase
 {
+    protected function tearDown(): void
+    {
+        $session = $this->service(SessionInterface::class);
+        if ($session->isActive()) {
+            $session->close();
+        }
+    }
+
     public function testForbiddenExceptionRendersTheForbiddenPage(): void
     {
         $response = $this->forbiddenMiddleware()->process($this->request(), self::handler(self::deny(...)));
