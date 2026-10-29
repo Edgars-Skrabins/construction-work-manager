@@ -16,6 +16,9 @@ return [
             Route::methods([Method::GET, Method::POST], '/login')
                 ->action(Web\Login\Action::class)
                 ->name('login'),
+            Route::methods([Method::GET, Method::POST], '/set-password')
+                ->action(Web\SetPassword\Action::class)
+                ->name('setPassword'),
             Route::post('/logout')
                 ->action(Web\Logout\Action::class)
                 ->name('logout'),

@@ -1,0 +1,33 @@
+{% do this.setTitle('Set password') %}
+<div class="row justify-content-center">
+    <div class="col-sm-10 col-md-6 col-lg-4">
+        <h1 class="h3 mb-4">Set password</h1>
+        {% if error %}
+            <div class="alert alert-danger" role="alert">{{ error }}</div>
+        {% endif %}
+        <form method="post" action="{{ urlGenerator.generate('setPassword') }}" novalidate>
+            {{ csrf.hiddenInput()|raw }}
+            <div class="mb-3">
+                <label for="email" class="form-label">Email</label>
+                <input type="email" class="form-control{% if errors.email is defined %} is-invalid{% endif %}" id="email" name="email" value="{{ email }}" autocomplete="username" required autofocus>
+                {% include 'Web/Shared/Form/field-errors.twig' with {errors: errors.email ?? []} %}
+            </div>
+            <div class="mb-3">
+                <label for="setupCode" class="form-label">Setup code</label>
+                <input type="text" class="form-control font-monospace{% if errors.setupCode is defined %} is-invalid{% endif %}" id="setupCode" name="setupCode" autocomplete="one-time-code" required>
+                {% include 'Web/Shared/Form/field-errors.twig' with {errors: errors.setupCode ?? []} %}
+            </div>
+            <div class="mb-3">
+                <label for="password" class="form-label">New password</label>
+                <input type="password" class="form-control{% if errors.password is defined %} is-invalid{% endif %}" id="password" name="password" autocomplete="new-password" minlength="8" required>
+                {% include 'Web/Shared/Form/field-errors.twig' with {errors: errors.password ?? []} %}
+            </div>
+            <div class="mb-3">
+                <label for="passwordRepeat" class="form-label">Repeat password</label>
+                <input type="password" class="form-control{% if errors.passwordRepeat is defined %} is-invalid{% endif %}" id="passwordRepeat" name="passwordRepeat" autocomplete="new-password" required>
+                {% include 'Web/Shared/Form/field-errors.twig' with {errors: errors.passwordRepeat ?? []} %}
+            </div>
+            <button type="submit" class="btn btn-primary w-100">Set password and log in</button>
+        </form>
+    </div>
+</div>
