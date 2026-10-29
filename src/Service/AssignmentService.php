@@ -81,7 +81,7 @@ final readonly class AssignmentService
         $this->accessChecker->ensure($actorId, Permission::AssignmentCreate);
 
         $employee = $this->employees->find($employeeId);
-        if ($employee === null || !$this->isAssignable($employee, $actorId)) {
+        if ($employee === null || !$this->isAssignable($employee, $actorId, $this->scope($actorId))) {
             throw new ForbiddenException(sprintf('Employee %d may not assign employee %d.', $actorId, $employeeId));
         }
 
@@ -151,12 +151,10 @@ final readonly class AssignmentService
 
     private function scope(int $actorId): Scope
     {
-        $actor = $this->employees->find($actorId);
-        if ($actor === null) {
-            throw new ForbiddenException(sprintf('Employee %d does not exist.', $actorId));
-        }
+        $role = $this->employees->roleOf($actorId)
+            ?? throw new ForbiddenException(sprintf('Employee %d does not exist.', $actorId));
 
-        return $this->accessScope->forRole($actor->role, Entity::Assignment);
+        return $this->accessScope->forRole($role, Entity::Assignment);
     }
 
     private function scopedOrFail(int $actorId, int $id): Assignment
@@ -165,13 +163,13 @@ final readonly class AssignmentService
             ?? throw new NotFoundException(sprintf('Assignment %d is not reachable for employee %d.', $id, $actorId));
     }
 
-    private function isAssignable(Employee $employee, int $actorId): bool
+    private function isAssignable(Employee $employee, int $actorId, Scope $scope): bool
     {
         if ($employee->role !== Role::Employee) {
             return false;
         }
 
-        return match ($this->scope($actorId)) {
+        return match ($scope) {
             Scope::All => true,
             Scope::Subordinates => $employee->managerId === $actorId,
             Scope::Own => $employee->id === $actorId,
