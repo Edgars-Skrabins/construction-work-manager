@@ -92,8 +92,8 @@ final class ListingTest extends IntegrationTestCase
      */
     public static function employeeScopes(): iterable
     {
-        yield 'admin sees everyone' => [1, Scope::All, [1, 8, 2, 5, 4, 3, 6, 7]];
-        yield 'manager sees their subordinates' => [2, Scope::Subordinates, [5, 4, 6]];
+        yield 'admin sees everyone' => [1, Scope::All, [9, 23, 45, 54, 27, 75, 37, 1, 48, 31, 61, 69, 32, 34, 14, 46, 35, 22, 67, 70]];
+        yield 'manager sees their subordinates' => [2, Scope::Subordinates, [61, 69, 67, 70, 64, 5, 4, 68, 65, 60, 66, 63, 62, 6, 59]];
         yield 'other manager sees their subordinates' => [3, Scope::Subordinates, [8, 7]];
         yield 'own scope sees only the viewer' => [4, Scope::Own, [4]];
     }

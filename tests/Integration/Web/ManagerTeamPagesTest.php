@@ -22,7 +22,7 @@ final class ManagerTeamPagesTest extends IntegrationTestCase
 
     private const array FIRST_TEAM = ['Liepiņš, Mārtiņš', 'Krūmiņa, Laura', 'Vītols, Kristaps'];
     private const array SECOND_TEAM = ['Zariņa, Anna', 'Kalējs, Roberts'];
-    private const int LAST_SEED_ID = 6;
+    private const int LAST_SEED_ID = 177;
 
     protected function tearDown(): void
     {

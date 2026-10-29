@@ -297,8 +297,8 @@ final class AssignmentServiceTest extends IntegrationTestCase
         assertSame([5, 4, 6], self::employeeIds($this->assignments()->calendar(2, $from, $to, null)));
         assertSame([8, 5, 4, 6, 7], self::employeeIds($this->assignments()->calendar(1, $from, $to, null)));
         assertSame([4], self::employeeIds($this->assignments()->calendar(2, $from, $to, 4)));
-        assertSame([4, 5, 6], self::sortedIds($this->assignments()->teamEmployees(2)));
-        assertSame([4, 5, 6, 7, 8], self::sortedIds($this->assignments()->teamEmployees(1)));
+        assertSame([4, 5, 6, ...range(59, 70)], self::sortedIds($this->assignments()->teamEmployees(2)));
+        assertSame([...range(4, 8), ...range(16, 80)], self::sortedIds($this->assignments()->teamEmployees(1)));
     }
 
     /**

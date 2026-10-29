@@ -289,8 +289,8 @@ final class EmployeeServiceTest extends IntegrationTestCase
      */
     public static function listers(): iterable
     {
-        yield 'admin' => [1, [1, 8, 2, 5, 4, 3, 6, 7]];
-        yield 'manager' => [2, [5, 4, 6]];
+        yield 'admin' => [1, [9, 23, 45, 54, 27, 75, 37, 1, 48, 31, 61, 69, 32, 34, 14, 46, 35, 22, 67, 70]];
+        yield 'manager' => [2, [61, 69, 67, 70, 64, 5, 4, 68, 65, 60, 66, 63, 62, 6, 59]];
         yield 'employee' => [4, null];
         yield 'missing employee' => [999999, null];
     }
