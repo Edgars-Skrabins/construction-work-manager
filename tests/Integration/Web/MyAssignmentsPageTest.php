@@ -36,12 +36,12 @@ final class MyAssignmentsPageTest extends IntegrationTestCase
 
         assertSame(200, $response->getStatusCode());
         assertStringContainsString('<title>My assignments</title>', $body);
-        assertStringContainsString('<div class="card-header fw-semibold">' . self::SITE . '</div>', $body);
+        assertStringContainsString('<h2 class="h6 text-secondary text-uppercase mb-1">' . self::SITE . '</h2>', $body);
         assertStringContainsString('Mazā Nometņu iela 12, Rīga, Latvia', $body);
         assertStringContainsString('Required access level: General', $body);
         assertStringContainsString('Concrete works', $body);
         assertStringContainsString('Formwork, reinforcement and pouring of foundations, slabs and walls.', $body);
-        assertMatchesRegularExpression('#<span class="text-nowrap">\d{4}-\d{2}-\d{2} – \d{4}-\d{2}-\d{2}</span>\s*<span class="badge text-bg-primary">In progress</span>#u', $body);
+        assertMatchesRegularExpression('#<div class="assignment-block status-in-progress">\s*<div [^>]*>\s*<span class="fw-semibold">Concrete works</span>\s*<span [^>]*>\s*<span class="text-nowrap">\d{4}-\d{2}-\d{2} – \d{4}-\d{2}-\d{2}</span>\s*<span class="badge text-bg-primary">In progress</span>#u', $body);
         assertStringNotContainsString(self::OTHER_EMPLOYEES_SITE, $body);
         assertStringNotContainsString(self::OTHER_EMPLOYEES_WORK, $body);
         assertStringNotContainsString(self::EMPTY_STATE, $body);
@@ -78,9 +78,11 @@ final class MyAssignmentsPageTest extends IntegrationTestCase
         $body = (string) $this->request('GET', '/my-assignments')->getBody();
 
         assertStringContainsString(self::EMPTY_STATE, $body);
-        assertStringNotContainsString('class="card ', $body);
+        assertStringNotContainsString('<section', $body);
         assertStringContainsString('<summary>History (2)</summary>', $body);
         assertStringContainsString('<span class="badge text-bg-success">Done</span>', $body);
+        assertStringContainsString('<div class="assignment-block status-done ', $body);
+        assertStringContainsString('<div class="assignment-block status-cancelled ', $body);
         assertStringContainsString('<span class="badge text-bg-secondary">Cancelled</span>', $body);
     }
 

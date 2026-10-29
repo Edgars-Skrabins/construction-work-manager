@@ -192,8 +192,8 @@ final class AssignmentPagesTest extends IntegrationTestCase
 
         $body = (string) $this->request('GET', '/assignments?sort=-startDate')->getBody();
 
-        assertMatchesRegularExpression(sprintf('#/assignments/%d/edit.*#s', $id), $body);
-        assertStringContainsString('Access level too low', $body);
+        assertStringContainsString('<table class="table align-middle assignment-table">', $body);
+        assertMatchesRegularExpression(sprintf('#<tr class="status-planned">(?:(?!</tr>).)*<span class="badge border border-danger text-danger">Access level too low</span>(?:(?!</tr>).)*/assignments/%d/edit#s', $id), $body);
     }
 
     private function deleteAssignment(int $id): ResponseInterface
