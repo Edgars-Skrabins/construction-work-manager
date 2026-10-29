@@ -1,0 +1,4 @@
+<span class="text-nowrap">
+    {{ work.item.assignment.startDate|date('Y-m-d') }} – {{ work.item.assignment.endDate|date('Y-m-d') }}
+    <span class="badge {{ status.badgeClass() }}">{{ status.label() }}</span>
+</span>

@@ -34,11 +34,11 @@ final class SetPasswordTest extends IntegrationTestCase
 
         assertSame(302, $response->getStatusCode());
         assertSame('/', $response->getHeaderLine('Location'));
-        assertStringContainsString('Iveta Paroļa (employee)', (string) $this->request('GET', '/')->getBody());
+        assertStringContainsString('Iveta Paroļa (employee)', (string) $this->request('GET', '/my-assignments')->getBody());
 
         $this->cookies = [];
         $this->logIn(self::EMAIL, 'new password');
-        assertStringContainsString('Iveta Paroļa (employee)', (string) $this->request('GET', '/')->getBody());
+        assertStringContainsString('Iveta Paroļa (employee)', (string) $this->request('GET', '/my-assignments')->getBody());
     }
 
     public function testWrongCodeShowsTheGenericErrorAndKeepsOnlyTheEmail(): void

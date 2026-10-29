@@ -78,7 +78,7 @@ final class AuthenticationTest extends IntegrationTestCase
     public function testAccountDeactivatedWhileLoggedInIsLoggedOutOnTheNextRequest(): void
     {
         $this->logIn('employee@mail.test', '123123123');
-        assertSame(200, $this->request('GET', '/')->getStatusCode());
+        assertSame(200, $this->request('GET', '/my-assignments')->getStatusCode());
 
         $this->setActive(4, false);
         try {

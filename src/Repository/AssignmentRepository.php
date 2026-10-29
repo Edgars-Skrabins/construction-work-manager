@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Repository;
 
 use App\Access\Scope;
+use App\Entity\AssignedWork;
 use App\Entity\Assignment;
 use App\Entity\AssignmentListItem;
 use App\Entity\AssignmentStatus;
@@ -68,6 +69,23 @@ final readonly class AssignmentRepository implements AssignmentRepositoryInterfa
         $reader = new QueryDataReader($this->listQuery($viewerId, $scope), ListSort::create($config, $sort, '-startDate'));
 
         return (new OffsetPaginator($reader))->withPageSize(20);
+    }
+
+    public function findAssignedWork(int $employeeId): array
+    {
+        /** @var list<AssignedWork> */
+        return $this->listQuery($employeeId, Scope::Own)
+            ->addSelect([
+                'SITE_STREET' => 's.STREET',
+                'SITE_CITY' => 's.CITY',
+                'SITE_COUNTRY' => 's.COUNTRY',
+                'SITE_REQUIRED_ACCESS_LEVEL_NAME' => 'l.NAME',
+                'WORK_ITEM_DESCRIPTION' => 'w.DESCRIPTION',
+            ])
+            ->innerJoin(['l' => 'ACCESS_LEVEL'], 'l.ID = s.REQUIRED_ACCESS_LEVEL_ID')
+            ->orderBy(['s.NAME' => SORT_ASC, 'w.NAME' => SORT_ASC, 'a.START_DATE' => SORT_ASC, 'a.ID' => SORT_ASC])
+            ->resultCallback(static fn(array $rows): array => array_map(self::assignedWorkFromRow(...), $rows))
+            ->all();
     }
 
     public function findOverlappingActive(
@@ -236,6 +254,22 @@ final readonly class AssignmentRepository implements AssignmentRepositoryInterfa
             workItemName: $row['WORK_ITEM_NAME'],
             constructionSiteName: $row['SITE_NAME'],
             siteRequiredAccessLevel: (int) $row['SITE_REQUIRED_ACCESS_LEVEL_ID'],
+        );
+    }
+
+    /**
+     * @param array<string, mixed> $row
+     */
+    private static function assignedWorkFromRow(array $row): AssignedWork
+    {
+        /** @var array{SITE_STREET: string, SITE_CITY: string, SITE_COUNTRY: string, SITE_REQUIRED_ACCESS_LEVEL_NAME: string, WORK_ITEM_DESCRIPTION: string|null} $row */
+        return new AssignedWork(
+            item: self::listItemFromRow($row),
+            street: $row['SITE_STREET'],
+            city: $row['SITE_CITY'],
+            country: $row['SITE_COUNTRY'],
+            requiredAccessLevelName: $row['SITE_REQUIRED_ACCESS_LEVEL_NAME'],
+            workItemDescription: $row['WORK_ITEM_DESCRIPTION'],
         );
     }
 }

@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Repository;
 
 use App\Access\Scope;
+use App\Entity\AssignedWork;
 use App\Entity\Assignment;
 use App\Entity\AssignmentListItem;
 use App\Entity\AssignmentStatus;
@@ -22,6 +23,11 @@ interface AssignmentRepositoryInterface
      * @return OffsetPaginator<int, AssignmentListItem>
      */
     public function listPaginator(int $viewerId, Scope $scope, string $sort): OffsetPaginator;
+
+    /**
+     * @return list<AssignedWork>
+     */
+    public function findAssignedWork(int $employeeId): array;
 
     public function findOverlappingActive(
         int $employeeId,
