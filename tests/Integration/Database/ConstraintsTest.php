@@ -38,8 +38,24 @@ final class ConstraintsTest extends IntegrationTestCase
     public function testManagerWithEmployeesCannotBeDeleted(): void
     {
         $this->db()->createCommand('DELETE FROM ACCOUNT WHERE EMPLOYEE_ID = 2')->execute();
+        $this->db()->createCommand('DELETE FROM ASSIGNMENT WHERE CREATED_BY_ID = 2')->execute();
 
         $this->assertRejected('DELETE FROM EMPLOYEE WHERE ID = 2', 'FK_EMPLOYEE_MANAGER_ID');
+    }
+
+    public function testEmployeeWithAssignmentsCannotBeDeleted(): void
+    {
+        $this->db()->createCommand('DELETE FROM ACCOUNT WHERE EMPLOYEE_ID = 4')->execute();
+
+        $this->assertRejected('DELETE FROM EMPLOYEE WHERE ID = 4', 'FK_ASSIGNMENT_EMPLOYEE_ID');
+    }
+
+    public function testCreatorOfAssignmentsCannotBeDeleted(): void
+    {
+        $this->db()->createCommand('DELETE FROM ACCOUNT WHERE EMPLOYEE_ID = 1')->execute();
+        $this->db()->createCommand('INSERT INTO ASSIGNMENT (EMPLOYEE_ID, WORK_ITEM_ID, CONSTRUCTION_SITE_ID, START_DATE, END_DATE, CREATED_BY_ID) VALUES (7, 1, 1, \'2026-11-01\', \'2026-11-09\', 1)')->execute();
+
+        $this->assertRejected('DELETE FROM EMPLOYEE WHERE ID = 1', 'FK_ASSIGNMENT_CREATED_BY_ID');
     }
 
     /**
@@ -64,6 +80,16 @@ final class ConstraintsTest extends IntegrationTestCase
         yield 'duplicate work item name' => ["INSERT INTO WORK_ITEM (NAME) VALUES (N'Welding')", 'UQ_WORK_ITEM_NAME'];
         yield 'referenced access level deleted' => ['DELETE FROM ACCESS_LEVEL WHERE ID = 1', 'FK_EMPLOYEE_ACCESS_LEVEL_ID'];
         yield 'role item type other than role' => ["UPDATE EMPLOYEE SET ROLE_ITEM_TYPE = N'permission' WHERE ID = 4", 'CK_EMPLOYEE_ROLE_ITEM_TYPE'];
+        $assignment = "INSERT INTO ASSIGNMENT (EMPLOYEE_ID, WORK_ITEM_ID, CONSTRUCTION_SITE_ID, START_DATE, END_DATE, STATUS, CREATED_BY_ID) VALUES (%s, %s, %s, %s, %s, %s, %s)";
+
+        yield 'assignment ends before it starts' => [sprintf($assignment, '4', '1', '1', "'2026-11-10'", "'2026-11-09'", "N'active'", '2'), 'CK_ASSIGNMENT_PERIOD'];
+        yield 'unknown assignment status' => [sprintf($assignment, '4', '1', '1', "'2026-11-01'", "'2026-11-09'", "N'planned'", '2'), 'CK_ASSIGNMENT_STATUS'];
+        yield 'assignment for a missing employee' => [sprintf($assignment, '9999', '1', '1', "'2026-11-01'", "'2026-11-09'", "N'active'", '2'), 'FK_ASSIGNMENT_EMPLOYEE_ID'];
+        yield 'assignment of a missing work item' => [sprintf($assignment, '4', '9999', '1', "'2026-11-01'", "'2026-11-09'", "N'active'", '2'), 'FK_ASSIGNMENT_WORK_ITEM_ID'];
+        yield 'assignment at a missing site' => [sprintf($assignment, '4', '1', '9999', "'2026-11-01'", "'2026-11-09'", "N'active'", '2'), 'FK_ASSIGNMENT_CONSTRUCTION_SITE_ID'];
+        yield 'assignment created by a missing employee' => [sprintf($assignment, '4', '1', '1', "'2026-11-01'", "'2026-11-09'", "N'active'", '9999'), 'FK_ASSIGNMENT_CREATED_BY_ID'];
+        yield 'referenced work item deleted' => ['DELETE FROM WORK_ITEM WHERE ID = 1', 'FK_ASSIGNMENT_WORK_ITEM_ID'];
+        yield 'referenced site deleted' => ['DELETE FROM CONSTRUCTION_SITE WHERE ID = 4', 'FK_ASSIGNMENT_CONSTRUCTION_SITE_ID'];
         yield 'unknown item type' => [
             "INSERT INTO RBAC_ITEM (name, type, created_at, updated_at) VALUES (N'test.item', N'group', 0, 0)",
             'CK_RBAC_ITEM_TYPE',

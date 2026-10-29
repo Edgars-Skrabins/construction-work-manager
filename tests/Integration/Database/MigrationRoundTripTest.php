@@ -12,7 +12,7 @@ use function PHPUnit\Framework\assertSame;
 
 final class MigrationRoundTripTest extends IntegrationTestCase
 {
-    private const array TABLES = ['ACCOUNT', 'WORK_ITEM', 'CONSTRUCTION_SITE', 'EMPLOYEE', 'ACCESS_LEVEL', 'RBAC_ITEM_CHILD', 'RBAC_ITEM'];
+    private const array TABLES = ['ASSIGNMENT', 'ACCOUNT', 'WORK_ITEM', 'CONSTRUCTION_SITE', 'EMPLOYEE', 'ACCESS_LEVEL', 'RBAC_ITEM_CHILD', 'RBAC_ITEM'];
 
     public function testAllMigrationsRevertAndReapply(): void
     {
@@ -28,6 +28,7 @@ final class MigrationRoundTripTest extends IntegrationTestCase
             assertNotNull($this->db()->getTableSchema($table, true), "$table should be recreated.");
         }
         assertSame('8', (string) $this->db()->createCommand('SELECT COUNT(*) FROM EMPLOYEE')->queryScalar());
+        assertSame('6', (string) $this->db()->createCommand('SELECT COUNT(*) FROM ASSIGNMENT')->queryScalar());
     }
 
     private function console(string $command): void
