@@ -39,6 +39,10 @@ return [
                         ->middleware(RequirePermission::for(Permission::EmployeeRead))
                         ->action(Web\EmployeeList\Action::class)
                         ->name('employee.list'),
+                    Route::get('/employees/calendar')
+                        ->middleware(RequirePermission::for(Permission::EmployeeRead))
+                        ->action(Web\EmployeeCalendar\Action::class)
+                        ->name('employee.calendar'),
                     Route::methods([Method::GET, Method::POST], '/employees/create')
                         ->middleware(RequirePermission::for(Permission::EmployeeCreate))
                         ->action(Web\EmployeeForm\Action::class)
