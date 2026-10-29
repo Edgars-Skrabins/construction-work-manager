@@ -10,6 +10,8 @@ use App\Entity\UserIdentity;
 use App\Repository\AccountRepositoryInterface;
 use App\Service\LoginService;
 use ArrayObject;
+use DateTimeImmutable;
+use LogicException;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 use Psr\EventDispatcher\EventDispatcherInterface;
@@ -115,6 +117,41 @@ final class LoginServiceTest extends TestCase
             public function updatePasswordHash(int $employeeId, string $passwordHash): void
             {
                 $this->savedHashes[$employeeId] = $passwordHash;
+            }
+
+            public function findByEmployeeId(int $employeeId): ?Account
+            {
+                throw new LogicException('Not used by LoginService.');
+            }
+
+            public function create(int $employeeId, string $email, bool $isActive, string $setupCodeHash, DateTimeImmutable $expiresAt): void
+            {
+                throw new LogicException('Not used by LoginService.');
+            }
+
+            public function updateEmail(int $employeeId, string $email): void
+            {
+                throw new LogicException('Not used by LoginService.');
+            }
+
+            public function setActive(int $employeeId, bool $isActive): void
+            {
+                throw new LogicException('Not used by LoginService.');
+            }
+
+            public function replaceSetupCode(int $employeeId, string $setupCodeHash, DateTimeImmutable $expiresAt): void
+            {
+                throw new LogicException('Not used by LoginService.');
+            }
+
+            public function completeSetup(int $employeeId, string $passwordHash): void
+            {
+                throw new LogicException('Not used by LoginService.');
+            }
+
+            public function delete(int $employeeId): void
+            {
+                throw new LogicException('Not used by LoginService.');
             }
         };
 
