@@ -52,11 +52,11 @@ final readonly class AssignmentService
         return $this->assignments->listPaginator($actorId, $this->scope($actorId), $sort);
     }
 
-    public function find(int $actorId, int $id): ?Assignment
+    public function find(int $actorId, int $id): ?AssignmentListItem
     {
         $this->accessChecker->ensure($actorId, Permission::AssignmentRead);
 
-        return $this->assignments->find($id, $actorId, $this->scope($actorId));
+        return $this->assignments->findListItem($id, $actorId, $this->scope($actorId));
     }
 
     public function formOptions(int $actorId): AssignmentFormOptions

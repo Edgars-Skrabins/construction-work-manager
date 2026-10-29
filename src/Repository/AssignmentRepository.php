@@ -49,22 +49,14 @@ final readonly class AssignmentRepository implements AssignmentRepositoryInterfa
         return $query->one();
     }
 
+    public function findListItem(int $id, int $viewerId, Scope $scope): ?AssignmentListItem
+    {
+        /** @var AssignmentListItem|null */
+        return $this->listQuery($viewerId, $scope)->andWhere(['a.ID' => $id])->one();
+    }
+
     public function listPaginator(int $viewerId, Scope $scope, string $sort): OffsetPaginator
     {
-        $query = $this->scoped($viewerId, $scope)
-            ->select([
-                ...self::COLUMNS,
-                'EMPLOYEE_FIRST_NAME' => 'e.FIRST_NAME',
-                'EMPLOYEE_LAST_NAME' => 'e.LAST_NAME',
-                'EMPLOYEE_ACCESS_LEVEL_ID' => 'e.ACCESS_LEVEL_ID',
-                'WORK_ITEM_NAME' => 'w.NAME',
-                'SITE_NAME' => 's.NAME',
-                'SITE_REQUIRED_ACCESS_LEVEL_ID' => 's.REQUIRED_ACCESS_LEVEL_ID',
-            ])
-            ->innerJoin(['w' => 'WORK_ITEM'], 'w.ID = a.WORK_ITEM_ID')
-            ->innerJoin(['s' => 'CONSTRUCTION_SITE'], 's.ID = a.CONSTRUCTION_SITE_ID')
-            ->resultCallback(static fn(array $rows): array => array_map(self::listItemFromRow(...), $rows));
-
         $config = [
             'employee' => ListSort::columns(['e.LAST_NAME', 'e.FIRST_NAME'], 'a.ID'),
             'workItem' => ListSort::columns(['w.NAME'], 'a.ID'),
@@ -74,7 +66,7 @@ final readonly class AssignmentRepository implements AssignmentRepositoryInterfa
         ];
 
         /** @var QueryDataReader<int, AssignmentListItem> $reader */
-        $reader = new QueryDataReader($query, ListSort::create($config, $sort, '-startDate'));
+        $reader = new QueryDataReader($this->listQuery($viewerId, $scope), ListSort::create($config, $sort, '-startDate'));
 
         return (new OffsetPaginator($reader))->withPageSize(20);
     }
@@ -180,6 +172,23 @@ final readonly class AssignmentRepository implements AssignmentRepositoryInterfa
             ),
             $rows,
         );
+    }
+
+    private function listQuery(int $viewerId, Scope $scope): Query
+    {
+        return $this->scoped($viewerId, $scope)
+            ->select([
+                ...self::COLUMNS,
+                'EMPLOYEE_FIRST_NAME' => 'e.FIRST_NAME',
+                'EMPLOYEE_LAST_NAME' => 'e.LAST_NAME',
+                'EMPLOYEE_ACCESS_LEVEL_ID' => 'e.ACCESS_LEVEL_ID',
+                'WORK_ITEM_NAME' => 'w.NAME',
+                'SITE_NAME' => 's.NAME',
+                'SITE_REQUIRED_ACCESS_LEVEL_ID' => 's.REQUIRED_ACCESS_LEVEL_ID',
+            ])
+            ->innerJoin(['w' => 'WORK_ITEM'], 'w.ID = a.WORK_ITEM_ID')
+            ->innerJoin(['s' => 'CONSTRUCTION_SITE'], 's.ID = a.CONSTRUCTION_SITE_ID')
+            ->resultCallback(static fn(array $rows): array => array_map(self::listItemFromRow(...), $rows));
     }
 
     private function scoped(int $viewerId, Scope $scope): Query

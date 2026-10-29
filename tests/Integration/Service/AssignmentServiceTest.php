@@ -47,7 +47,7 @@ final class AssignmentServiceTest extends IntegrationTestCase
     {
         $id = $this->assignments()->create(2, 5, 2, 2, '2026-11-10', '2026-11-20');
 
-        $assignment = $this->assignments()->find(2, $id);
+        $assignment = $this->assignments()->find(2, $id)?->assignment;
         assertNotNull($assignment);
         assertSame([5, 2, 2, 2], [$assignment->employeeId, $assignment->workItemId, $assignment->constructionSiteId, $assignment->createdById]);
         assertSame(AssignmentStatus::Active, $assignment->status);
@@ -78,7 +78,7 @@ final class AssignmentServiceTest extends IntegrationTestCase
     {
         $id = $this->assignments()->create(1, 7, 1, 4, '2026-11-10', '2026-11-20');
 
-        assertSame(1, $this->assignments()->find(1, $id)?->createdById);
+        assertSame(1, $this->assignments()->find(1, $id)?->assignment->createdById);
     }
 
     /**
@@ -165,7 +165,7 @@ final class AssignmentServiceTest extends IntegrationTestCase
 
         $this->assignments()->update(2, $assignment->id, '2026-11-12', '2026-11-25', 'active');
 
-        $updated = $this->assignments()->find(2, $assignment->id);
+        $updated = $this->assignments()->find(2, $assignment->id)?->assignment;
         assertSame(['2026-11-12', '2026-11-25'], [$updated?->startDate->format('Y-m-d'), $updated?->endDate->format('Y-m-d')]);
     }
 
@@ -193,7 +193,7 @@ final class AssignmentServiceTest extends IntegrationTestCase
         $this->assertErrors(fn() => $this->assignments()->update(2, $assignment->id, '2026-11-10', '2026-11-25', 'active'), $levelError);
 
         $this->assignments()->update(2, $assignment->id, '2026-11-10', '2026-11-20', 'done');
-        assertSame(AssignmentStatus::Done, $this->assignments()->find(2, $assignment->id)?->status);
+        assertSame(AssignmentStatus::Done, $this->assignments()->find(2, $assignment->id)?->assignment->status);
 
         $this->assertErrors(fn() => $this->assignments()->update(2, $assignment->id, '2026-11-10', '2026-11-20', 'active'), $levelError);
     }
@@ -231,7 +231,7 @@ final class AssignmentServiceTest extends IntegrationTestCase
             $write($this->assignments(), $assignment->id);
             self::fail('Expected the assignment to be out of reach.');
         } catch (NotFoundException) {
-            assertSame(AssignmentStatus::Active, $this->assignments()->find(1, $assignment->id)?->status);
+            assertSame(AssignmentStatus::Active, $this->assignments()->find(1, $assignment->id)?->assignment->status);
         }
     }
 
@@ -337,7 +337,7 @@ final class AssignmentServiceTest extends IntegrationTestCase
             new DateTimeImmutable($end),
             1,
         );
-        $assignment = $this->assignments()->find(1, $id);
+        $assignment = $this->assignments()->find(1, $id)?->assignment;
         assertNotNull($assignment);
 
         return $assignment;
