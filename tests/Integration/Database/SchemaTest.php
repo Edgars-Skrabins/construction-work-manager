@@ -82,7 +82,7 @@ final class SchemaTest extends IntegrationTestCase
     public function testSeedAssignmentsCoverEveryStoredStatus(): void
     {
         $rows = $this->db()->createCommand(
-            "SELECT CONCAT(ID, N' ', STATUS, N' ', CREATED_BY_ID, N' ', DATEDIFF(DAY, CAST(CREATED_AT AS DATE), START_DATE), N' ', DATEDIFF(DAY, CAST(CREATED_AT AS DATE), END_DATE)) FROM ASSIGNMENT ORDER BY ID",
+            "SELECT CONCAT(ID, N' ', STATUS, N' ', CREATED_BY_ID, N' ', DATEDIFF(DAY, d.SEEDED_ON, START_DATE), N' ', DATEDIFF(DAY, d.SEEDED_ON, END_DATE)) FROM ASSIGNMENT CROSS APPLY (SELECT CAST(CREATED_AT AT TIME ZONE 'UTC' AT TIME ZONE 'FLE Standard Time' AS DATE) AS SEEDED_ON) d ORDER BY ID",
         )->queryColumn();
 
         assertSame(

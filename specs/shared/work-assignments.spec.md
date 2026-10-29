@@ -107,7 +107,7 @@ The down script drops `ASSIGNMENT`.
 
 `SQL/011_seed_assignments.sql` (migration `M261029000011SeedAssignments`)
 
-Six assignments with `SET IDENTITY_INSERT`, IDs 1 to 6, dated relative to `@today = CAST(SYSUTCDATETIME() AS DATE)` with `DATEADD(DAY, n, @today)`, so the list always shows every displayed status:
+Six assignments with `SET IDENTITY_INSERT`, IDs 1 to 6, dated relative to `@today = CAST(SYSDATETIMEOFFSET() AT TIME ZONE 'FLE Standard Time' AS DATE)`, today in Riga like the app's clock, with `DATEADD(DAY, n, @today)`, so the list always shows every displayed status:
 
 1. Employee 4 (level 1), work item 1, site 1 (level 1), days −7 to +14, Active (In progress), created by 2.
 2. Employee 5 (level 2), work item 2, site 2 (level 2), days +7 to +30, Active (Planned), created by 2.
