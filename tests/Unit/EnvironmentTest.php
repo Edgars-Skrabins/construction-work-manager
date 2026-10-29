@@ -90,31 +90,11 @@ final class EnvironmentTest extends TestCase
         }
     }
 
-    public function testIsDev(): void
-    {
-        $this->setEnv('APP_ENV', 'dev');
-
-        assertTrue(Environment::isDev());
-        assertFalse(Environment::isTest());
-        assertFalse(Environment::isProd());
-    }
-
     public function testIsTest(): void
     {
         $this->setEnv('APP_ENV', 'test');
 
         assertTrue(Environment::isTest());
-        assertFalse(Environment::isDev());
-        assertFalse(Environment::isProd());
-    }
-
-    public function testIsProd(): void
-    {
-        $this->setEnv('APP_ENV', 'prod');
-
-        assertTrue(Environment::isProd());
-        assertFalse(Environment::isDev());
-        assertFalse(Environment::isTest());
     }
 
     public function testAppDebugDefaultsToFalse(): void

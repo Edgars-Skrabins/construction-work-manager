@@ -49,19 +49,9 @@ final class Environment
         return self::$values['APP_ENV'];
     }
 
-    public static function isDev(): bool
-    {
-        return self::appEnv() === self::DEV;
-    }
-
     public static function isTest(): bool
     {
         return self::appEnv() === self::TEST;
-    }
-
-    public static function isProd(): bool
-    {
-        return self::appEnv() === self::PROD;
     }
 
     /**
