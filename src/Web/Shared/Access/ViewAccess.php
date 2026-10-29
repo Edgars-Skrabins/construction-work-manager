@@ -8,14 +8,11 @@ use App\Access\AccessChecker;
 use App\Access\Permission;
 use Yiisoft\User\CurrentUser;
 
-final class ViewAccess
+final readonly class ViewAccess
 {
-    /** @var array<string, bool> */
-    private array $checked = [];
-
     public function __construct(
-        private readonly CurrentUser $currentUser,
-        private readonly AccessChecker $accessChecker,
+        private CurrentUser $currentUser,
+        private AccessChecker $accessChecker,
     ) {}
 
     public function can(string $permission): bool
@@ -26,6 +23,6 @@ final class ViewAccess
             return false;
         }
 
-        return $this->checked[$id . ' ' . $permission->value] ??= $this->accessChecker->can((int) $id, $permission);
+        return $this->accessChecker->can((int) $id, $permission);
     }
 }

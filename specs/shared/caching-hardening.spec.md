@@ -114,9 +114,9 @@ Baseline before starting: `make check` on `main` at `a51744f` passes with 136 un
 - [x] A3. Add `tests/Integration/Web/NoStoreTest.php` as in 2.2. `make check` passes.
 
 ### B. Permission memoization
-- [ ] B1. Memoize `AccessChecker::can()` as in 2.2 and add `tests/Unit/Access/AccessCheckerTest.php`.
-- [ ] B2. Remove the cache from `ViewAccess` and trim `ViewAccessTest` as in 2.2. `make check` passes.
-- [ ] B3. Measure the query counts per page again with the same method as the baseline and record them here next to the baseline.
+- [x] B1. Memoize `AccessChecker::can()` as in 2.2 and add `tests/Unit/Access/AccessCheckerTest.php`.
+- [x] B2. Remove the cache from `ViewAccess` and trim `ViewAccessTest` as in 2.2. `make check` passes.
+- [x] B3. Measure the query counts per page again with the same method as the baseline and record them here next to the baseline. After: `/employees` 24 (was 30), `/sites` 24 (30), `/work-items` 24 (30), `/assignments` 25 (31) for the admin and the manager, `/my-assignments` 17 (23). No permission is asked twice any more: the 6 saved queries are the repeats from `RequirePermission` and the service's `ensure()`, which `ViewAccess`'s own cache didn't cover. The rest is one RBAC lookup of 3 queries (`RBAC_ITEM`, the hierarchy CTE and the `EMPLOYEE` role) per distinct permission on the page, 7 on `/employees`. Going lower means loading the role's permission set at once, which Part 1 leaves out of scope.
 
 ### C. Asset caching
 - [ ] C1. Add the `@assets` header rule to `docker/Caddyfile` as in 2.2. Restart the app container; `curl -sS -D - -o /dev/null` on an asset URL from `/login` shows the header, and a missing `/assets/nope.css` doesn't.
