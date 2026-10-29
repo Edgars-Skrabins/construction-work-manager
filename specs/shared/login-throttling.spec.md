@@ -1,7 +1,7 @@
 # Login throttling — Spec
 
 **Type:** bug fix
-**Status:** ready for implementation
+**Status:** in progress
 **Last updated:** 2026-10-29
 
 # Part 1 — Business logic and usage
@@ -122,9 +122,9 @@ Read Part 1 and Part 2 before starting. Work through the tasks in order and tick
 Baseline before starting: `make check` green on `main`.
 
 ### A. Storage and throttle service
-- [ ] A1. Add `SQL/020_create_auth_throttle.sql`, `SQL/down/020_create_auth_throttle.sql` and `src/Migration/M261029000020CreateAuthThrottle.php`. Update schema tests that list tables or round-trip migrations.
-- [ ] A2. Add `AuthThrottle`, `AuthThrottleRepositoryInterface` and `AuthThrottleRepository` with the MERGE, bind it, and add `AuthThrottleRepositoryTest`.
-- [ ] A3. Add `ThrottleScope`, `ThrottleLimits` (params and DI), `TooManyAttemptsException`, `AttemptThrottle` and `ClientIp`, with `AttemptThrottleTest`.
+- [x] A1. Add `SQL/020_create_auth_throttle.sql`, `SQL/down/020_create_auth_throttle.sql` and `src/Migration/M261029000020CreateAuthThrottle.php`. Update schema tests that list tables or round-trip migrations.
+- [x] A2. Add `AuthThrottle`, `AuthThrottleRepositoryInterface` and `AuthThrottleRepository` with the MERGE, bind it, and add `AuthThrottleRepositoryTest`.
+- [x] A3. Add `ThrottleScope`, `ThrottleLimits` (params and DI), `TooManyAttemptsException`, `AttemptThrottle` and `ClientIp`, with `AttemptThrottleTest`.
 
 ### B. Login and set-password
 - [ ] B1. Throttle `LoginService::login()` and the login action (429, message, `Retry-After`); update its callers and tests, add the throttling tests to `AuthenticationTest`.
