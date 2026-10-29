@@ -59,12 +59,32 @@ final readonly class AssignmentService
         return $this->assignments->findListItem($id, $actorId, $this->scope($actorId));
     }
 
+    /**
+     * @return list<AssignmentListItem>
+     */
+    public function calendar(int $actorId, DateTimeImmutable $from, DateTimeImmutable $to, ?int $employeeId): array
+    {
+        $this->accessChecker->ensure($actorId, Permission::AssignmentRead);
+
+        return $this->assignments->listInPeriod($actorId, $this->teamScope($actorId), $from, $to, $employeeId);
+    }
+
+    /**
+     * @return list<Employee>
+     */
+    public function teamEmployees(int $actorId): array
+    {
+        $this->accessChecker->ensure($actorId, Permission::AssignmentRead);
+
+        return $this->assignableEmployees($actorId, $this->teamScope($actorId));
+    }
+
     public function formOptions(int $actorId): AssignmentFormOptions
     {
         $this->accessChecker->ensure($actorId, Permission::AssignmentCreate);
 
         return new AssignmentFormOptions(
-            employees: $this->employees->withRole(Role::Employee, $this->scope($actorId) === Scope::All ? null : $actorId),
+            employees: $this->assignableEmployees($actorId, $this->scope($actorId)),
             sites: $this->sites->all(),
             workItems: $this->workItems->all(),
         );
@@ -155,6 +175,24 @@ final readonly class AssignmentService
             ?? throw new ForbiddenException(sprintf('Employee %d does not exist.', $actorId));
 
         return $this->accessScope->forRole($role, Entity::Assignment);
+    }
+
+    private function teamScope(int $actorId): Scope
+    {
+        $scope = $this->scope($actorId);
+        if ($scope === Scope::Own) {
+            throw new ForbiddenException(sprintf('Employee %d has no team.', $actorId));
+        }
+
+        return $scope;
+    }
+
+    /**
+     * @return list<Employee>
+     */
+    private function assignableEmployees(int $actorId, Scope $scope): array
+    {
+        return $this->employees->withRole(Role::Employee, $scope === Scope::All ? null : $actorId);
     }
 
     private function scopedOrFail(int $actorId, int $id): Assignment
