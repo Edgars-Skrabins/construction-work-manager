@@ -288,7 +288,7 @@ Baseline before starting: `make check` on `main` at `6de8a4d` passes cs and stan
 - [x] C1. Wrap every literal in every template (layout and partials included) in `t()`, page titles included, with named parameters for dynamic parts.
 - [x] C2. Translate enum and role labels in templates, flashes in `FlashMessages`, action messages (login and others) and service messages, converting `sprintf` messages to named parameters. Exceptions that never reach the user stay as they are.
 - [x] C3. Give every validated form property a `#[Label]`.
-- [ ] C4. Calendar month and weekday names from `IntlDateFormatter` as in 2.2; other calendar text through `t()`. Moved to Y2: the calendar isn't on `main` yet.
+- [x] C4. Calendar month and weekday names from `IntlDateFormatter` as in 2.2; other calendar text through `t()`. Moved to Y2: the calendar isn't on `main` yet. Done in Y2: `TranslatorExtension` adds the Twig functions `month_year()` (`LLLL y`), `weekday_names()` (Monday first, `ccc`) and `weekday_name()` (`ccc`), each with its first letter upper-cased; the mobile day heading is `weekday_name(day.date)` followed by the `Y-m-d` date.
 - [x] C5. Add `MessageCatalogTest` with the code extraction. It fails, listing every ID missing from the (still empty) files; use that list as the inventory.
 
 ### D. Translations
@@ -305,11 +305,11 @@ Baseline before starting: `make check` on `main` at `6de8a4d` passes cs and stan
 - [x] E2. Update existing tests broken by the changes (constructor arguments of services and `FlashMessages`, `ApplicationParams`). `make check` passes.
 
 ### Y. Last-merge catch-up (after the five other branches have merged into `main`)
-- [ ] Y1. Merge `origin/main` into `feature/languages` (never rebase or force-push) and resolve the conflicts. Templates, services and the layout will conflict with C1 and C2: keep the other branches' markup and behaviour, and put their text through `t()`.
-- [ ] Y2. Find every UI string the five branches added or changed (`git diff <previous merge base>..origin/main -- src assets`), including the manager team pages and calendar (C4's ICU month and day names), role labels, list search labels, placeholders and empty states, and the dark-theme navbar classes for the selector. Put each through `t()` or the translator as in 2.2.
-- [ ] Y3. Add every new ID to all six `messages/*/app.php` files, in the same position, following the glossary. Remove IDs whose text the branches changed or dropped. `MessageCatalogTest` passes.
-- [ ] Y4. Extend the untranslated-text sweep's page list with the new pages (team view, calendar, search results and empty search) and run it. `make check` passes.
-- [ ] Y5. Repeat Y1 to Y4 if `main` moves again before this branch merges.
+- [x] Y1. Merge `origin/main` into `feature/languages` (never rebase or force-push) and resolve the conflicts. Templates, services and the layout will conflict with C1 and C2: keep the other branches' markup and behaviour, and put their text through `t()`.
+- [x] Y2. Find every UI string the five branches added or changed (`git diff <previous merge base>..origin/main -- src assets`), including the manager team pages and calendar (C4's ICU month and day names), role labels, list search labels, placeholders and empty states, and the dark-theme navbar classes for the selector. Put each through `t()` or the translator as in 2.2.
+- [x] Y3. Add every new ID to all six `messages/*/app.php` files, in the same position, following the glossary. Remove IDs whose text the branches changed or dropped. `MessageCatalogTest` passes.
+- [x] Y4. Extend the untranslated-text sweep's page list with the new pages (team view, calendar, search results and empty search) and run it. `make check` passes. Done for `main` at `c4ca7a2` (dark theme, list search, role-aware UI, manager team view and calendar): 15 new IDs (search, no results, placeholders, the work calendar), the sweep covers 35 pages, a test checks the calendar's month and weekday names in en, lv, ru and sv, and `make check` gives 229 unit tests (3559 assertions) and 670 integration tests (6023 assertions), all passing apart from the local-only database-name test. Latvian "Previous" and "Next" became the neutral "Atpakaļ" and "Tālāk", because the calendar's month navigation shares them with the pagination.
+- [ ] Y5. Repeat Y1 to Y4 if `main` moves again before this branch merges. Still to land: demo data (README only), site code (label, help text, errors), assignment races (a try-again message) and login throttling ("Too many attempts…").
 
 ### Z. Wrap-up
 - [x] Z1. Update `CLAUDE.md` and `README.md` as in 2.2, merging with the other branches' doc changes. `make check` passes; record the test counts here. Before block Y: 188 unit tests (3183 assertions) and 565 integration tests (4964 assertions), all passing apart from the local-only database-name test from the baseline.
