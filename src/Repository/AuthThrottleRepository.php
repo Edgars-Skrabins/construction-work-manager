@@ -52,6 +52,8 @@ final readonly class AuthThrottleRepository implements AuthThrottleRepositoryInt
             ':now' => $time,
             ':nowInsert' => $time,
         ])->execute();
+
+        $this->db->createCommand('DELETE FROM AUTH_THROTTLE WHERE WINDOW_START <= :cutoff', [':cutoff' => $cutoff])->execute();
     }
 
     public function clear(string $scope, string $keyHash): void

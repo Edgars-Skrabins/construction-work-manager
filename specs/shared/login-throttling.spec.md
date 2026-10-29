@@ -36,8 +36,8 @@ An attacker can guess one account's password or setup code as fast as the server
   - No account enumeration: the throttle message, status and timing are the same whether the email belongs to an account or not. A refused login or setup still runs the dummy hash verification, so it takes as long as a normal wrong attempt.
   - The client IP is the request's `REMOTE_ADDR`. `X-Forwarded-For` and similar headers are ignored, because no trusted proxy is configured (FrankenPHP serves the app directly).
   - Emails and IPs are stored only as SHA-256 hashes.
+  - The table stays bounded: every recorded failure also deletes the rows, of any scope, whose window has ended, so an IP spray can't grow it forever.
 - **Out of scope:**
-  - Pruning old rows. There is at most one row per scope and key, overwritten when a new window starts. A cleanup command can come later if the table grows.
   - Throttling per API key ID. Key IDs are not secret, so locking a key ID would let anyone lock out the pass system that owns it, and a 64 hex secret can't be guessed anyway.
   - Protecting against an attacker deliberately locking out a known email. That trade-off comes with any per-account limit; the window is short and the IP limit stops one address from locking out many accounts.
   - Exact limits under concurrency. The check and the recording are two statements, so parallel requests can get a few attempts over the limit. The recording itself is atomic, so no failure is lost.
@@ -63,6 +63,7 @@ CREATE TABLE AUTH_THROTTLE (
     CONSTRAINT CK_AUTH_THROTTLE_KEY_HASH CHECK (LEN(KEY_HASH) = 64 AND KEY_HASH NOT LIKE N'%[^0-9a-f]%' COLLATE Latin1_General_100_BIN2),
     CONSTRAINT CK_AUTH_THROTTLE_FAILURES CHECK (FAILURES > 0)
 );
+CREATE INDEX IX_AUTH_THROTTLE_WINDOW_START ON AUTH_THROTTLE (WINDOW_START);
 ```
 
 `WINDOW_START` is UTC, written and read through `DbTime`.
@@ -71,7 +72,7 @@ CREATE TABLE AUTH_THROTTLE (
 - `src/Entity/AuthThrottle.php`: `failures` (int) and `windowStart` (`DateTimeImmutable`).
 - `src/Repository/AuthThrottleRepositoryInterface.php` and `AuthThrottleRepository.php`:
   - `find(string $scope, string $keyHash): ?AuthThrottle`
-  - `recordFailure(string $scope, string $keyHash, DateTimeImmutable $now, DateTimeImmutable $windowStartsAfter): void`: one `MERGE AUTH_THROTTLE WITH (HOLDLOCK)` that inserts `FAILURES = 1, WINDOW_START = now`, resets the row to the same when its `WINDOW_START <= windowStartsAfter` (the window has ended), and otherwise adds 1 to `FAILURES`.
+  - `recordFailure(string $scope, string $keyHash, DateTimeImmutable $now, DateTimeImmutable $windowStartsAfter): void`: one `MERGE AUTH_THROTTLE WITH (HOLDLOCK)` that inserts `FAILURES = 1, WINDOW_START = now`, resets the row to the same when its `WINDOW_START <= windowStartsAfter` (the window has ended), and otherwise adds 1 to `FAILURES`. Then, in the same command batch, `DELETE FROM AUTH_THROTTLE WHERE WINDOW_START <= windowStartsAfter` removes every expired row; `IX_AUTH_THROTTLE_WINDOW_START` keeps that delete a range seek.
   - `clear(string $scope, string $keyHash): void`: deletes the row.
   - Bound in `config/common/di/repositories.php`.
 
@@ -96,7 +97,7 @@ CREATE TABLE AUTH_THROTTLE (
 
 ### Tests
 - `tests/Integration/Service/AttemptThrottleTest.php` (in a rolled back transaction, `FixedClock` in `Europe/Riga`): allowed below the limit, blocked at the limit with `retryAfter` counted from the first failure, allowed again when the window ends and the count restarts at 1, `clear()` resets, scopes and keys are independent, the longest wait wins over several keys, keys are stored hashed.
-- `tests/Integration/Repository/AuthThrottleRepositoryTest.php`: `recordFailure()` inserts, increments within the window and resets after it; `clear()` deletes.
+- `tests/Integration/Repository/AuthThrottleRepositoryTest.php`: `recordFailure()` inserts, increments within the window and resets after it, and deletes expired rows of other keys and scopes while keeping open ones; `clear()` deletes.
 - `tests/Integration/Web/AuthenticationTest.php`: after 5 wrong passwords the right one gets 429 with the throttle message and `Retry-After`; an unknown email gets exactly the same response after 5 failures; 4 failures, a successful login, then 4 more failures still don't block; 20 failures over different emails block a sixth email from the same IP.
 - `tests/Integration/Web/SetPasswordTest.php`: after 5 wrong codes the right code gets 429 with the throttle message and the password isn't set.
 - `tests/Integration/Api/ApiPipelineTest.php`: after 20 rejected requests the next one, with a valid key, gets 429 with `Retry-After` and the problem body.
@@ -114,6 +115,7 @@ CREATE TABLE AUTH_THROTTLE (
 8. **Keys are hashed with SHA-256** so the table holds no emails or IP addresses.
 9. **The throttle check lives in the services for the web** (`LoginService`, `PasswordSetupService`), so every caller is covered and the dummy verification stays next to the real one; **for the API it lives in `ApiKeyAuthentication`**, which already decides every `401`, including malformed headers that never reach `ApiKeyService`.
 10. **Migration number 020**, as assigned by the coordinating session; a renumbering pass runs after the parallel branches merge.
+11. **Expired rows are deleted on every recorded failure** (added 2026-10-29 at the coordinating session's request). Every scope shares one window length, so a single `DELETE ... WHERE WINDOW_START <= cutoff` covers all scopes. Rejected: a separate cleanup command or scheduled job, which needs extra operations and lets the table grow between runs.
 
 # Part 3 — Implementation TODO
 
@@ -133,6 +135,8 @@ Baseline before starting: `make check` green on `main`.
 
 ### C. API
 - [x] C1. Throttle `ApiKeyAuthentication` per IP and add the 429 test to `ApiPipelineTest`.
+
+- [x] A4. Delete expired rows on every recorded failure, with the `WINDOW_START` index and a repository test (added 2026-10-29).
 
 ### Z. Wrap-up
 - [x] Z1. `make check` green.
