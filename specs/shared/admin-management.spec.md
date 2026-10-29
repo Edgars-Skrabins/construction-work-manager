@@ -186,7 +186,7 @@ Actions get the acting ID with `(int) $currentUser->getId()`, render through `We
 - `WorkItemList/`, `WorkItemForm/` (with `WorkItemForm.php`), `WorkItemDelete/`.
 - `SetPassword/` (with `SetPasswordForm.php`).
 - `src/Web/Login/template.twig` gets the "First login? Set your password" link.
-- Flash messages: `src/Web/Shared/Flash/FlashMessages.php` wraps `FlashInterface` with `addSuccess(string $message)` and `success(): list<string>`. Actions add messages, and the layout shows them through the `flash` view parameter.
+- Flash messages: `src/Web/Shared/Flash/FlashMessages.php` wraps `FlashInterface` with `addSuccess(string $message)` and `success(): list<string>`, plus `setSetupCode(string $code)` and `setupCode(): ?string` for the one-time code. Actions add messages, and the layout shows them through the `flash` view parameter.
 - `src/Web/Shared/Rendering/RenderBeforeSessionClose.php`: a PSR-15 middleware that reads the response body once, so the lazily rendered `DataResponse` (template and layout) runs while the session is still open. It sits right before `ForbiddenMiddleware` in `config/web/di/application.php`, inside `SessionMiddleware` and `CsrfTokenMiddleware`, so the 403 and 404 pages are covered too.
 - `src/Web/Shared/Form/field-errors.twig`: included with a list of messages, renders Bootstrap `invalid-feedback`. Fields with errors get `is-invalid`.
 
