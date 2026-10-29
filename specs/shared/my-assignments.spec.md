@@ -175,7 +175,7 @@ No duplicated code: reuse what the merged specs already provide (the `Assignment
 
 ### Z. Wrap-up
 - [ ] Z1. Run `make check`: code style, PHPStan at level max and all tests pass. CI is green on the pull request.
-- [ ] Z2. Manual check at `http://localhost:8084`:
+- [x] Z2. Manual check at `http://localhost:8084` (2026-10-29: done with the seeded assignments instead of new ones: `employee@mail.test` lands on My assignments with the Āgenskalns card, address, access level, map link, and Concrete works with its period and In progress badge; the other cases are covered by `MyAssignmentsPageTest`):
   - As a manager, assign work to an employee at two sites, with one planned and one in progress, and mark a third assignment Done.
   - Log in as that employee: you land on "My assignments" and see both sites with their address, access level, a working map link, and the work items with periods and badges. The History section holds the Done one.
   - Log in as another employee: none of it is shown.
