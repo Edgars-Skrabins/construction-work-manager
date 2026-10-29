@@ -34,7 +34,7 @@
                             {% if access.can('employee.update') %}
                                 <a class="btn btn-sm btn-outline-primary" href="{{ urlGenerator.generate('employee.edit', {id: employee.id}) }}">Edit</a>
                             {% endif %}
-                            {% if access.can('employee.delete') %}
+                            {% if access.can('employee.delete') and employee.id ~ '' != currentUser.getId() %}
                                 <a class="btn btn-sm btn-outline-danger" href="{{ urlGenerator.generate('employee.delete', {id: employee.id}) }}">Delete</a>
                             {% endif %}
                         </td>
