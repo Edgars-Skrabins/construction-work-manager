@@ -301,7 +301,6 @@ final class EmployeeServiceTest extends IntegrationTestCase
     #[DataProvider('listers')]
     public function testListIsScopedToTheActorsRole(int $actorId, ?array $expected): void
     {
-        assertSame($expected !== null, $this->employees()->canList($actorId));
         if ($expected === null) {
             $this->expectException(ForbiddenException::class);
         }

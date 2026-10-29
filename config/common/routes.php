@@ -36,11 +36,11 @@ return [
                         ->action(Web\MyAssignments\Action::class)
                         ->name('my-assignments'),
                     Route::get('/employees')
-                        ->middleware(RequirePermission::for(Permission::EmployeeRead))
+                        ->middleware(RequirePermission::for(Permission::EmployeeList))
                         ->action(Web\EmployeeList\Action::class)
                         ->name('employee.list'),
                     Route::get('/employees/calendar')
-                        ->middleware(RequirePermission::for(Permission::EmployeeRead))
+                        ->middleware(RequirePermission::for(Permission::EmployeeList))
                         ->action(Web\EmployeeCalendar\Action::class)
                         ->name('employee.calendar'),
                     Route::methods([Method::GET, Method::POST], '/employees/create')

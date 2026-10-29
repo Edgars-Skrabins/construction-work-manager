@@ -32,7 +32,7 @@
                                 <a class="nav-link{% if routeName == 'my-assignments' %} active{% endif %}" href="{{ urlGenerator.generate('my-assignments') }}">My assignments</a>
                             </li>
                         {% endif %}
-                        {% if access.canListEmployees() %}
+                        {% if access.can('employee.list') %}
                             <li class="nav-item">
                                 <a class="nav-link{% if routeName starts with 'employee.' %} active{% endif %}" href="{{ urlGenerator.generate('employee.list') }}">Employees</a>
                             </li>

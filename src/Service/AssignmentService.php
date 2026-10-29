@@ -64,9 +64,9 @@ final readonly class AssignmentService
      */
     public function calendar(int $actorId, DateTimeImmutable $from, DateTimeImmutable $to, ?int $employeeId): array
     {
-        $this->accessChecker->ensure($actorId, Permission::AssignmentRead);
+        $this->accessChecker->ensure($actorId, Permission::EmployeeList);
 
-        return $this->assignments->listInPeriod($actorId, $this->teamScope($actorId), $from, $to, $employeeId);
+        return $this->assignments->listInPeriod($actorId, $this->scope($actorId), $from, $to, $employeeId);
     }
 
     /**
@@ -74,9 +74,9 @@ final readonly class AssignmentService
      */
     public function teamEmployees(int $actorId): array
     {
-        $this->accessChecker->ensure($actorId, Permission::AssignmentRead);
+        $this->accessChecker->ensure($actorId, Permission::EmployeeList);
 
-        return $this->assignableEmployees($actorId, $this->teamScope($actorId));
+        return $this->assignableEmployees($actorId, $this->scope($actorId));
     }
 
     public function formOptions(int $actorId): AssignmentFormOptions
@@ -175,16 +175,6 @@ final readonly class AssignmentService
             ?? throw new ForbiddenException(sprintf('Employee %d does not exist.', $actorId));
 
         return $this->accessScope->forRole($role, Entity::Assignment);
-    }
-
-    private function teamScope(int $actorId): Scope
-    {
-        $scope = $this->scope($actorId);
-        if ($scope === Scope::Own) {
-            throw new ForbiddenException(sprintf('Employee %d has no team.', $actorId));
-        }
-
-        return $scope;
     }
 
     /**

@@ -7,7 +7,6 @@ namespace App\Tests\Integration\Web\Shared\Access;
 use App\Access\AccessChecker;
 use App\Access\ForbiddenException;
 use App\Access\Permission;
-use App\Service\EmployeeService;
 use App\Tests\CallableRequestHandler;
 use App\Tests\Integration\IntegrationTestCase;
 use App\Tests\Integration\Web\WebClient;
@@ -98,7 +97,7 @@ final class RequirePermissionTest extends IntegrationTestCase
 
     private function viewAccess(?int $employeeId): ViewAccess
     {
-        return new ViewAccess($this->currentUser($employeeId), $this->service(AccessChecker::class), $this->service(EmployeeService::class));
+        return new ViewAccess($this->currentUser($employeeId), $this->service(AccessChecker::class));
     }
 
     private function currentUser(?int $employeeId): CurrentUser

@@ -32,6 +32,7 @@ final class PermissionMatrixTest extends IntegrationTestCase
             'admin' => [self::ADMIN, Permission::cases()],
             'manager' => [self::MANAGER, [
                 Permission::EmployeeRead,
+                Permission::EmployeeList,
                 Permission::SiteRead,
                 Permission::WorkItemRead,
                 Permission::AssignmentCreate,
