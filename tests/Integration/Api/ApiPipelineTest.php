@@ -11,12 +11,12 @@ use App\Api\Shared\ApiPipelineMiddleware;
 use App\Api\Shared\JsonResponseFactory;
 use App\Service\ApiKeyService;
 use App\Tests\Integration\IntegrationTestCase;
-use App\Tests\Support\CallableRequestHandler;
-use App\Tests\Support\RecordingLogger;
+use App\Tests\CallableRequestHandler;
+use App\Tests\RecordingLogger;
 use App\Web\Forbidden\ForbiddenMiddleware;
+use App\Web\Shared\Rendering\RenderBeforeSessionClose;
 use PHPUnit\Framework\Attributes\DataProvider;
 use Psr\Http\Message\ResponseInterface;
-use Psr\Http\Message\ServerRequestFactoryInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Yiisoft\Csrf\CsrfTokenMiddleware;
 use Yiisoft\ErrorHandler\Middleware\ErrorCatcher;
@@ -94,9 +94,7 @@ final class ApiPipelineTest extends IntegrationTestCase
     public function testDuplicateAuthorizationHeaderIsRejected(): void
     {
         $plainKey = $this->service(ApiKeyService::class)->issue('North Gate', null)->plainKey;
-        $request = $this->service(ServerRequestFactoryInterface::class)
-            ->createServerRequest('GET', 'http://localhost/api/v1/anything')
-            ->withHeader('Authorization', 'Bearer ' . $plainKey)
+        $request = $this->createRequest('GET', '/api/v1/anything', ['Authorization' => 'Bearer ' . $plainKey])
             ->withAddedHeader('Authorization', 'Bearer ' . $plainKey);
 
         $this->assertUnauthorized($this->service(Application::class)->handle($request));
@@ -146,9 +144,7 @@ final class ApiPipelineTest extends IntegrationTestCase
         $logger = new RecordingLogger();
         $authentication = $this->service(ApiKeyAuthentication::class);
         $notFound = $this->service(ApiNotFoundHandler::class);
-        $request = $this->service(ServerRequestFactoryInterface::class)
-            ->createServerRequest('GET', 'http://localhost/api/v1/anything')
-            ->withHeader('Authorization', 'Bearer ' . $plainKey);
+        $request = $this->createRequest('GET', '/api/v1/anything', ['Authorization' => 'Bearer ' . $plainKey]);
 
         $response = (new ApiErrorMiddleware($this->service(JsonResponseFactory::class), $logger))->process(
             $request,
@@ -221,6 +217,7 @@ final class ApiPipelineTest extends IntegrationTestCase
             SessionMiddleware::class,
             CsrfTokenMiddleware::class,
             RequestCatcherMiddleware::class,
+            RenderBeforeSessionClose::class,
             ForbiddenMiddleware::class,
             Router::class,
         ], $this->webMiddlewares());

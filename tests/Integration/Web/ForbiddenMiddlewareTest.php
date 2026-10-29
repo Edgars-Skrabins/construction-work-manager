@@ -6,11 +6,11 @@ namespace App\Tests\Integration\Web;
 
 use App\Access\ForbiddenException;
 use App\Tests\Integration\IntegrationTestCase;
-use App\Tests\Support\CallableRequestHandler;
+use App\Tests\CallableRequestHandler;
 use App\Web\Forbidden\ForbiddenMiddleware;
+use App\Web\Shared\Rendering\RenderBeforeSessionClose;
 use Psr\Http\Message\ResponseFactoryInterface;
 use Psr\Http\Message\ResponseInterface;
-use Psr\Http\Message\ServerRequestFactoryInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Yiisoft\Csrf\CsrfTokenMiddleware;
 use Yiisoft\Router\Middleware\Router;
@@ -78,6 +78,16 @@ final class ForbiddenMiddlewareTest extends IntegrationTestCase
         assertGreaterThan(array_search(CsrfTokenMiddleware::class, $middlewares, true), $position);
     }
 
+    public function testPagesRenderRightBeforeTheForbiddenMiddlewareWhileTheSessionIsOpen(): void
+    {
+        $middlewares = $this->webMiddlewares();
+        $position = array_search(RenderBeforeSessionClose::class, $middlewares, true);
+
+        assertSame(array_search(ForbiddenMiddleware::class, $middlewares, true), $position + 1);
+        assertGreaterThan(array_search(SessionMiddleware::class, $middlewares, true), $position);
+        assertGreaterThan(array_search(CsrfTokenMiddleware::class, $middlewares, true), $position);
+    }
+
     private static function deny(): ResponseInterface
     {
         throw new ForbiddenException('Denied.');
@@ -90,6 +100,6 @@ final class ForbiddenMiddlewareTest extends IntegrationTestCase
 
     private function request(): ServerRequestInterface
     {
-        return $this->service(ServerRequestFactoryInterface::class)->createServerRequest('GET', 'http://localhost/');
+        return $this->createRequest('GET', '/');
     }
 }

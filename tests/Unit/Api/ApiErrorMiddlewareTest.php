@@ -6,8 +6,8 @@ namespace App\Tests\Unit\Api;
 
 use App\Api\Shared\ApiErrorMiddleware;
 use App\Api\Shared\JsonResponseFactory;
-use App\Tests\Support\CallableRequestHandler;
-use App\Tests\Support\RecordingLogger;
+use App\Tests\CallableRequestHandler;
+use App\Tests\RecordingLogger;
 use HttpSoft\Message\ResponseFactory;
 use HttpSoft\Message\ServerRequest;
 use HttpSoft\Message\StreamFactory;

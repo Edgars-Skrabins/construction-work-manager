@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace App\Tests\Support;
+namespace App\Tests;
 
 use Closure;
 use Psr\Http\Message\ResponseInterface;

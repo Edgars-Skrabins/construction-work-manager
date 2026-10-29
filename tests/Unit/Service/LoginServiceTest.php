@@ -4,11 +4,14 @@ declare(strict_types=1);
 
 namespace App\Tests\Unit\Service;
 
+use App\Access\Role;
 use App\Entity\Account;
 use App\Entity\UserIdentity;
 use App\Repository\AccountRepositoryInterface;
 use App\Service\LoginService;
 use ArrayObject;
+use DateTimeImmutable;
+use LogicException;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 use Psr\EventDispatcher\EventDispatcherInterface;
@@ -74,6 +77,12 @@ final class LoginServiceTest extends TestCase
         assertFalse($this->savedHashes->offsetExists(1));
     }
 
+    public function testAlreadyVerifiedEmployeeIsLoggedInById(): void
+    {
+        assertTrue($this->service()->loginEmployee(7));
+        assertSame('7', $this->currentUser->getId());
+    }
+
     public function testLogoutMakesTheUserAGuest(): void
     {
         $service = $this->service();
@@ -115,12 +124,47 @@ final class LoginServiceTest extends TestCase
             {
                 $this->savedHashes[$employeeId] = $passwordHash;
             }
+
+            public function findByEmployeeId(int $employeeId): ?Account
+            {
+                throw new LogicException('Not used by LoginService.');
+            }
+
+            public function create(int $employeeId, string $email, bool $isActive, string $setupCodeHash, DateTimeImmutable $expiresAt): void
+            {
+                throw new LogicException('Not used by LoginService.');
+            }
+
+            public function updateEmail(int $employeeId, string $email): void
+            {
+                throw new LogicException('Not used by LoginService.');
+            }
+
+            public function setActive(int $employeeId, bool $isActive): void
+            {
+                throw new LogicException('Not used by LoginService.');
+            }
+
+            public function replaceSetupCode(int $employeeId, string $setupCodeHash, DateTimeImmutable $expiresAt): void
+            {
+                throw new LogicException('Not used by LoginService.');
+            }
+
+            public function completeSetup(int $employeeId, string $setupCodeHash, string $passwordHash, DateTimeImmutable $now): bool
+            {
+                throw new LogicException('Not used by LoginService.');
+            }
+
+            public function delete(int $employeeId): void
+            {
+                throw new LogicException('Not used by LoginService.');
+            }
         };
 
         $identityRepository = new class implements IdentityRepositoryInterface {
             public function findIdentity(string $id): UserIdentity
             {
-                return new UserIdentity((int) $id, 'Test', 'User', 'employee');
+                return new UserIdentity((int) $id, 'Test', 'User', Role::Employee);
             }
         };
 

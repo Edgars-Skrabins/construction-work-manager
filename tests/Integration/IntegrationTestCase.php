@@ -9,6 +9,7 @@ use PHPUnit\Framework\TestCase;
 use Psr\Container\ContainerInterface;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestFactoryInterface;
+use Psr\Http\Message\ServerRequestInterface;
 use ReflectionProperty;
 use Yiisoft\Db\Connection\ConnectionInterface;
 use Yiisoft\Definitions\ArrayDefinition;
@@ -53,15 +54,47 @@ abstract class IntegrationTestCase extends TestCase
 
     /**
      * @param array<string, string> $headers
+     * @param array<string, string> $cookies
+     * @param array<string, string> $body
      */
-    final protected function handleRequest(string $method, string $path, array $headers = []): ResponseInterface
-    {
-        $request = $this->service(ServerRequestFactoryInterface::class)->createServerRequest($method, 'http://localhost' . $path);
+    final protected function createRequest(
+        string $method,
+        string $path,
+        array $headers = [],
+        array $cookies = [],
+        array $body = [],
+    ): ServerRequestInterface {
+        $request = $this->service(ServerRequestFactoryInterface::class)
+            ->createServerRequest($method, 'http://localhost' . $path)
+            ->withCookieParams($cookies);
         foreach ($headers as $name => $value) {
             $request = $request->withHeader($name, $value);
         }
+        if ($method === 'POST') {
+            $request = $request->withParsedBody($body);
+        }
+        $query = parse_url($path, PHP_URL_QUERY);
+        if (is_string($query)) {
+            parse_str($query, $params);
+            $request = $request->withQueryParams($params);
+        }
 
-        return $this->service(Application::class)->handle($request);
+        return $request;
+    }
+
+    /**
+     * @param array<string, string> $headers
+     * @param array<string, string> $cookies
+     * @param array<string, string> $body
+     */
+    final protected function handleRequest(
+        string $method,
+        string $path,
+        array $headers = [],
+        array $cookies = [],
+        array $body = [],
+    ): ResponseInterface {
+        return $this->service(Application::class)->handle($this->createRequest($method, $path, $headers, $cookies, $body));
     }
 
     /**

@@ -1,0 +1,40 @@
+{% set title = site ? 'Edit construction site' : 'Add construction site' %}
+{% do this.setTitle(title) %}
+{% set fields = [
+    {name: 'name', label: 'Name', maxlength: 150},
+    {name: 'street', label: 'Street', maxlength: 200},
+    {name: 'city', label: 'City', maxlength: 100},
+    {name: 'country', label: 'Country', maxlength: 100},
+] %}
+<div class="row justify-content-center">
+    <div class="col-lg-8">
+        <h1 class="h3 mb-4">{{ title }}</h1>
+        <form method="post" action="{{ site ? urlGenerator.generate('site.edit', {id: site.id}) : urlGenerator.generate('site.create') }}" novalidate>
+            {{ csrf.hiddenInput()|raw }}
+            {% for field in fields %}
+                <div class="mb-3">
+                    <label for="{{ field.name }}" class="form-label">{{ field.label }}</label>
+                    <input type="text" class="form-control{% if errors[field.name] is defined %} is-invalid{% endif %}" id="{{ field.name }}" name="{{ field.name }}" value="{{ attribute(form, field.name) }}" maxlength="{{ field.maxlength }}" required>
+                    {% include 'Web/Shared/Form/field-errors.twig' with {errors: errors[field.name] ?? []} %}
+                </div>
+            {% endfor %}
+            <div class="mb-3">
+                <label for="area" class="form-label">Area (m²)</label>
+                <input type="text" inputmode="decimal" class="form-control{% if errors.area is defined %} is-invalid{% endif %}" id="area" name="area" value="{{ form.area }}" required>
+                {% include 'Web/Shared/Form/field-errors.twig' with {errors: errors.area ?? []} %}
+            </div>
+            <div class="mb-3">
+                <label for="requiredAccessLevelId" class="form-label">Required access level</label>
+                <select class="form-select{% if errors.requiredAccessLevelId is defined %} is-invalid{% endif %}" id="requiredAccessLevelId" name="requiredAccessLevelId" required>
+                    <option value="">Choose…</option>
+                    {% for level in accessLevels %}
+                        <option value="{{ level.id }}"{% if form.requiredAccessLevelId == level.id ~ '' %} selected{% endif %}>{{ level.id }} – {{ level.name }}</option>
+                    {% endfor %}
+                </select>
+                {% include 'Web/Shared/Form/field-errors.twig' with {errors: errors.requiredAccessLevelId ?? []} %}
+            </div>
+            <button type="submit" class="btn btn-primary">Save</button>
+            <a class="btn btn-link" href="{{ urlGenerator.generate('site.list') }}">Cancel</a>
+        </form>
+    </div>
+</div>

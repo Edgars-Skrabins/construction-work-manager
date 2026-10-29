@@ -1,0 +1,57 @@
+{% do this.setTitle('Assignments') %}
+{% do assetManager.register('App\\Web\\Shared\\Layout\\Main\\AssignmentAsset') %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1 class="h3 mb-0">Assignments</h1>
+    {% if access.can('assignment.create') %}
+        <a class="btn btn-primary" href="{{ urlGenerator.generate('assignment.create') }}">New assignment</a>
+    {% endif %}
+</div>
+{% if paginator.getTotalItems() == 0 %}
+    <p class="text-secondary">No assignments yet.</p>
+{% else %}
+    <div class="table-responsive">
+        <table class="table table-striped align-middle bg-white">
+            <thead>
+                <tr>
+                    <th scope="col">{% include 'Web/Shared/Listing/sort-link.twig' with {label: 'Employee', key: 'employee', route: 'assignment.list'} %}</th>
+                    <th scope="col">{% include 'Web/Shared/Listing/sort-link.twig' with {label: 'Work item', key: 'workItem', route: 'assignment.list'} %}</th>
+                    <th scope="col">{% include 'Web/Shared/Listing/sort-link.twig' with {label: 'Construction site', key: 'site', route: 'assignment.list'} %}</th>
+                    <th scope="col">{% include 'Web/Shared/Listing/sort-link.twig' with {label: 'Start date', key: 'startDate', route: 'assignment.list'} %}</th>
+                    <th scope="col">{% include 'Web/Shared/Listing/sort-link.twig' with {label: 'End date', key: 'endDate', route: 'assignment.list'} %}</th>
+                    <th scope="col">Status</th>
+                    <th scope="col" class="text-end">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for row in rows %}
+                    {% set item = row.item %}
+                    <tr>
+                        <td>{{ item.employeeName }}</td>
+                        <td>{{ item.workItemName }}</td>
+                        <td>{{ item.constructionSiteName }}</td>
+                        <td>{{ item.assignment.startDate|date('Y-m-d') }}</td>
+                        <td>{{ item.assignment.endDate|date('Y-m-d') }}</td>
+                        <td>
+                            <span class="badge {{ row.status.badgeClass() }}">{{ row.status.label() }}</span>
+                            {% if item.accessLevelTooLow() %}
+                                <span class="badge text-bg-danger">Access level too low</span>
+                            {% endif %}
+                        </td>
+                        <td class="text-end text-nowrap">
+                            {% if access.can('assignment.update') %}
+                                <a class="btn btn-sm btn-outline-primary" href="{{ urlGenerator.generate('assignment.edit', {id: item.assignment.id}) }}">Edit</a>
+                            {% endif %}
+                            {% if access.can('assignment.delete') %}
+                                <form class="d-inline" method="post" action="{{ urlGenerator.generate('assignment.delete', {id: item.assignment.id}) }}" data-confirm="Delete this assignment?">
+                                    {{ csrf.hiddenInput()|raw }}
+                                    <button type="submit" class="btn btn-sm btn-outline-danger">Delete</button>
+                                </form>
+                            {% endif %}
+                        </td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% include 'Web/Shared/Listing/pagination.twig' with {route: 'assignment.list'} %}
+{% endif %}

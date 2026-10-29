@@ -1,0 +1,34 @@
+document.addEventListener('DOMContentLoaded', () => {
+    document.querySelectorAll('form[data-confirm]').forEach((form) => {
+        form.addEventListener('submit', (event) => {
+            if (!window.confirm(form.dataset.confirm)) {
+                event.preventDefault();
+            }
+        });
+    });
+
+    const employee = document.getElementById('employee');
+    const site = document.getElementById('constructionSite');
+    if (employee === null || site === null) {
+        return;
+    }
+
+    const filterSites = () => {
+        const chosen = employee.selectedOptions[0];
+        const level = chosen && chosen.value !== '' ? Number(chosen.dataset.accessLevel) : 0;
+        for (const option of site.options) {
+            if (option.value === '') {
+                continue;
+            }
+            const allowed = Number(option.dataset.requiredLevel) <= level;
+            option.hidden = !allowed;
+            option.disabled = !allowed;
+        }
+        if (site.selectedOptions[0]?.disabled) {
+            site.value = '';
+        }
+    };
+
+    employee.addEventListener('change', filterSites);
+    filterSites();
+});

@@ -1,0 +1,15 @@
+{% do this.setTitle('Delete construction site') %}
+<div class="row justify-content-center">
+    <div class="col-lg-8">
+        <h1 class="h3 mb-4">Delete construction site {{ site.name }}?</h1>
+        {% if error %}
+            <div class="alert alert-danger" role="alert">{{ error }}</div>
+        {% else %}
+            <form method="post" action="{{ urlGenerator.generate('site.delete', {id: site.id}) }}" class="d-inline">
+                {{ csrf.hiddenInput()|raw }}
+                <button type="submit" class="btn btn-danger">Delete</button>
+            </form>
+        {% endif %}
+        <a class="btn btn-link" href="{{ urlGenerator.generate('site.list') }}">Cancel</a>
+    </div>
+</div>

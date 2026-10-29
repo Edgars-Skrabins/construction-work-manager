@@ -5,6 +5,7 @@ declare(strict_types=1);
 use App\Api\Shared\ApiPipelineMiddleware;
 use App\Web\Forbidden\ForbiddenMiddleware;
 use App\Web\NotFound\NotFoundHandler;
+use App\Web\Shared\Rendering\RenderBeforeSessionClose;
 use Yiisoft\Csrf\CsrfTokenMiddleware;
 use Yiisoft\Definitions\DynamicReference;
 use Yiisoft\Definitions\Reference;
@@ -33,6 +34,7 @@ return [
                         SessionMiddleware::class,
                         CsrfTokenMiddleware::class,
                         RequestCatcherMiddleware::class,
+                        RenderBeforeSessionClose::class,
                         ForbiddenMiddleware::class,
                         Router::class,
                     ],

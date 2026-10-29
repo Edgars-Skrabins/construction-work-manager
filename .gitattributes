@@ -1,7 +1,5 @@
-# Autodetect text files
 * text=auto eol=lf
 
-# Definitively text files
 *.php  text
 *.twig text
 *.css  text
@@ -16,7 +14,6 @@
 *.yaml text
 *.neon text
 
-# Binary files
 *.png  binary
 *.jpg  binary
 *.gif  binary
