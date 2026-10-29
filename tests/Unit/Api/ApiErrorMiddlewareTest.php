@@ -6,13 +6,14 @@ namespace App\Tests\Unit\Api;
 
 use App\Api\Shared\ApiErrorMiddleware;
 use App\Api\Shared\JsonResponseFactory;
+use App\Tests\Support\CallableRequestHandler;
+use App\Tests\Support\RecordingLogger;
 use HttpSoft\Message\ResponseFactory;
 use HttpSoft\Message\ServerRequest;
 use HttpSoft\Message\StreamFactory;
 use PHPUnit\Framework\TestCase;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
-use Psr\Http\Server\RequestHandlerInterface;
 use RuntimeException;
 
 use function PHPUnit\Framework\assertCount;
@@ -27,7 +28,7 @@ final class ApiErrorMiddlewareTest extends TestCase
     {
         $logger = new RecordingLogger();
         $middleware = new ApiErrorMiddleware($this->factory(), $logger);
-        $handler = $this->handler(static function (ServerRequestInterface $request): ResponseInterface {
+        $handler = new CallableRequestHandler(static function (ServerRequestInterface $request): ResponseInterface {
             throw new RuntimeException('Database is down.');
         });
 
@@ -49,7 +50,7 @@ final class ApiErrorMiddlewareTest extends TestCase
     public function testEmptyMethodNotAllowedBecomesProblemKeepingAllow(): void
     {
         $middleware = new ApiErrorMiddleware($this->factory(), new RecordingLogger());
-        $handler = $this->handler(static fn(): ResponseInterface => (new ResponseFactory())->createResponse(405)->withHeader('Allow', 'GET'));
+        $handler = new CallableRequestHandler(static fn(): ResponseInterface => (new ResponseFactory())->createResponse(405)->withHeader('Allow', 'GET'));
 
         $response = $middleware->process($this->request(), $handler);
 
@@ -63,25 +64,7 @@ final class ApiErrorMiddlewareTest extends TestCase
         $middleware = new ApiErrorMiddleware($this->factory(), new RecordingLogger());
         $original = $this->factory()->data(['ok' => true]);
 
-        assertSame($original, $middleware->process($this->request(), $this->handler(static fn(): ResponseInterface => $original)));
-    }
-
-    /**
-     * @param callable(ServerRequestInterface): ResponseInterface $handle
-     */
-    private function handler(callable $handle): RequestHandlerInterface
-    {
-        return new readonly class ($handle) implements RequestHandlerInterface {
-            /**
-             * @param callable(ServerRequestInterface): ResponseInterface $handle
-             */
-            public function __construct(private mixed $handle) {}
-
-            public function handle(ServerRequestInterface $request): ResponseInterface
-            {
-                return ($this->handle)($request);
-            }
-        };
+        assertSame($original, $middleware->process($this->request(), new CallableRequestHandler(static fn(): ResponseInterface => $original)));
     }
 
     private function request(): ServerRequestInterface

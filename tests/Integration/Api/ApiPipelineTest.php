@@ -11,17 +11,14 @@ use App\Api\Shared\ApiPipelineMiddleware;
 use App\Api\Shared\JsonResponseFactory;
 use App\Service\ApiKeyService;
 use App\Tests\Integration\IntegrationTestCase;
-use App\Tests\Unit\Api\RecordingLogger;
+use App\Tests\Support\CallableRequestHandler;
+use App\Tests\Support\RecordingLogger;
 use App\Web\Forbidden\ForbiddenMiddleware;
 use PHPUnit\Framework\Attributes\DataProvider;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestFactoryInterface;
 use Psr\Http\Message\ServerRequestInterface;
-use Psr\Http\Server\RequestHandlerInterface;
-use ReflectionProperty;
 use Yiisoft\Csrf\CsrfTokenMiddleware;
-use Yiisoft\Definitions\ArrayDefinition;
-use Yiisoft\Definitions\DynamicReference;
 use Yiisoft\ErrorHandler\Middleware\ErrorCatcher;
 use Yiisoft\RequestProvider\RequestCatcherMiddleware;
 use Yiisoft\Router\Middleware\Router;
@@ -30,8 +27,6 @@ use Yiisoft\Yii\Http\Application;
 
 use function PHPUnit\Framework\assertCount;
 use function PHPUnit\Framework\assertFalse;
-use function PHPUnit\Framework\assertInstanceOf;
-use function PHPUnit\Framework\assertIsArray;
 use function PHPUnit\Framework\assertNotNull;
 use function PHPUnit\Framework\assertSame;
 use function PHPUnit\Framework\assertStringNotContainsString;
@@ -54,7 +49,7 @@ final class ApiPipelineTest extends IntegrationTestCase
 
     public function testMissingKeyGivesGenericUnauthorizedProblem(): void
     {
-        $response = $this->request('GET', '/api/v1/anything');
+        $response = $this->handleRequest('GET', '/api/v1/anything');
 
         $this->assertUnauthorized($response);
         assertSame('no-store', $response->getHeaderLine('Cache-Control'));
@@ -68,7 +63,7 @@ final class ApiPipelineTest extends IntegrationTestCase
     {
         $plainKey = $this->service(ApiKeyService::class)->issue('North Gate', null)->plainKey;
 
-        $this->assertUnauthorized($this->request('GET', '/api/v1/anything', ['Authorization' => $header($plainKey, $this)]));
+        $this->assertUnauthorized($this->handleRequest('GET', '/api/v1/anything', ['Authorization' => $header($plainKey, $this)]));
     }
 
     /**
@@ -112,7 +107,7 @@ final class ApiPipelineTest extends IntegrationTestCase
     {
         $issued = $this->service(ApiKeyService::class)->issue('North Gate', null);
 
-        $response = $this->request('GET', '/api/v1/anything', ['Authorization' => $scheme . ' ' . $issued->plainKey]);
+        $response = $this->handleRequest('GET', '/api/v1/anything', ['Authorization' => $scheme . ' ' . $issued->plainKey]);
 
         assertSame(404, $response->getStatusCode());
         assertSame('application/problem+json; charset=utf-8', $response->getHeaderLine('Content-Type'));
@@ -136,9 +131,9 @@ final class ApiPipelineTest extends IntegrationTestCase
     {
         $plainKey = $this->service(ApiKeyService::class)->issue('North Gate', null)->plainKey;
 
-        $this->assertUnauthorized($this->request('POST', '/api/v1/anything'));
+        $this->assertUnauthorized($this->handleRequest('POST', '/api/v1/anything'));
 
-        $response = $this->request('POST', '/api/v1/anything', ['Authorization' => 'Bearer ' . $plainKey]);
+        $response = $this->handleRequest('POST', '/api/v1/anything', ['Authorization' => 'Bearer ' . $plainKey]);
         assertSame(404, $response->getStatusCode());
         assertFalse($response->hasHeader('Set-Cookie'));
     }
@@ -157,17 +152,7 @@ final class ApiPipelineTest extends IntegrationTestCase
 
         $response = (new ApiErrorMiddleware($this->service(JsonResponseFactory::class), $logger))->process(
             $request,
-            new readonly class ($authentication, $notFound) implements RequestHandlerInterface {
-                public function __construct(
-                    private ApiKeyAuthentication $authentication,
-                    private ApiNotFoundHandler $notFound,
-                ) {}
-
-                public function handle(ServerRequestInterface $request): ResponseInterface
-                {
-                    return $this->authentication->process($request, $this->notFound);
-                }
-            },
+            new CallableRequestHandler(static fn(ServerRequestInterface $request): ResponseInterface => $authentication->process($request, $notFound)),
         );
 
         assertSame(500, $response->getStatusCode());
@@ -182,7 +167,7 @@ final class ApiPipelineTest extends IntegrationTestCase
     public function testApiPathsGoThroughTheApiPipeline(string $path): void
     {
         assertTrue(ApiPipelineMiddleware::isApiPath($path));
-        $this->assertUnauthorized($this->request('GET', $path));
+        $this->assertUnauthorized($this->handleRequest('GET', $path));
     }
 
     /**
@@ -201,7 +186,7 @@ final class ApiPipelineTest extends IntegrationTestCase
     public function testOtherPathsGoThroughTheWebStack(string $path): void
     {
         assertFalse(ApiPipelineMiddleware::isApiPath($path));
-        $response = $this->request('GET', $path);
+        $response = $this->handleRequest('GET', $path);
 
         assertSame(404, $response->getStatusCode());
         assertStringStartsWith('text/html', $response->getHeaderLine('Content-Type'));
@@ -222,7 +207,7 @@ final class ApiPipelineTest extends IntegrationTestCase
 
     public function testWebPagesStillUseTheSession(): void
     {
-        $response = $this->request('GET', '/login');
+        $response = $this->handleRequest('GET', '/login');
 
         assertSame(200, $response->getStatusCode());
         assertTrue($response->hasHeader('Set-Cookie'));
@@ -248,36 +233,5 @@ final class ApiPipelineTest extends IntegrationTestCase
         assertSame('Bearer', $response->getHeaderLine('WWW-Authenticate'));
         assertSame(self::UNAUTHORIZED, (string) $response->getBody());
         assertFalse($response->hasHeader('Set-Cookie'));
-    }
-
-    /**
-     * @param array<string, string> $headers
-     */
-    private function request(string $method, string $path, array $headers = []): ResponseInterface
-    {
-        $request = $this->service(ServerRequestFactoryInterface::class)->createServerRequest($method, 'http://localhost' . $path);
-        foreach ($headers as $name => $value) {
-            $request = $request->withHeader($name, $value);
-        }
-
-        return $this->service(Application::class)->handle($request);
-    }
-
-    /**
-     * @return list<mixed>
-     */
-    private function webMiddlewares(): array
-    {
-        $params = [];
-        /** @var array<string, array{'__construct()': array{dispatcher: DynamicReference}}> $definitions */
-        $definitions = require dirname(__DIR__, 3) . '/config/web/di/application.php';
-        $dispatcher = $definitions[Application::class]['__construct()']['dispatcher'];
-        $definition = (new ReflectionProperty($dispatcher, 'definition'))->getValue($dispatcher);
-        assertInstanceOf(ArrayDefinition::class, $definition);
-        $arguments = $definition->getMethodsAndProperties()['withMiddlewares()'][2] ?? null;
-        assertIsArray($arguments);
-        assertIsArray($arguments[0]);
-
-        return array_values($arguments[0]);
     }
 }

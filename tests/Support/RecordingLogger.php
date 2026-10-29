@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace App\Tests\Unit\Api;
+namespace App\Tests\Support;
 
 use Psr\Log\AbstractLogger;
 use Stringable;
