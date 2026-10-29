@@ -144,7 +144,7 @@ final class AssignmentServiceTest extends IntegrationTestCase
         yield 'several errors at once' => [9999, 4, '2026-11-20', '2026-11-10', [
             'endDate' => "The end date can't be before the start date.",
             'workItem' => 'Choose a work item.',
-            'constructionSite' => 'The site requires access level 4; the employee has level 3.',
+            'constructionSite' => 'The site requires access level 4; the employee has level 2.',
         ]];
     }
 
@@ -279,10 +279,11 @@ final class AssignmentServiceTest extends IntegrationTestCase
         $manager = $this->assignments()->formOptions(2);
         $admin = $this->assignments()->formOptions(1);
 
-        assertSame([4, 5, 6], self::sortedIds($manager->employees));
-        assertSame([4, 5, 6, 7, 8], self::sortedIds($admin->employees));
-        assertCount(4, $manager->sites);
-        assertCount(5, $manager->workItems);
+        assertSame([4, 5, 6, ...range(59, 70)], self::sortedIds($manager->employees));
+        assertSame([...range(4, 8), ...range(16, 80)], self::sortedIds($admin->employees));
+        assertSame([], $this->assignments()->formOptions(15)->employees);
+        assertCount(11, $manager->sites);
+        assertCount(25, $manager->workItems);
     }
 
     public function testCalendarShowsTheTeamOfTheActorsStoredRole(): void
@@ -296,8 +297,8 @@ final class AssignmentServiceTest extends IntegrationTestCase
         assertSame([5, 4, 6], self::employeeIds($this->assignments()->calendar(2, $from, $to, null)));
         assertSame([8, 5, 4, 6, 7], self::employeeIds($this->assignments()->calendar(1, $from, $to, null)));
         assertSame([4], self::employeeIds($this->assignments()->calendar(2, $from, $to, 4)));
-        assertSame([4, 5, 6], self::sortedIds($this->assignments()->teamEmployees(2)));
-        assertSame([4, 5, 6, 7, 8], self::sortedIds($this->assignments()->teamEmployees(1)));
+        assertSame([4, 5, 6, ...range(59, 70)], self::sortedIds($this->assignments()->teamEmployees(2)));
+        assertSame([...range(4, 8), ...range(16, 80)], self::sortedIds($this->assignments()->teamEmployees(1)));
     }
 
     /**
