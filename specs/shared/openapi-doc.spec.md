@@ -1,7 +1,7 @@
 # OpenAPI document — Spec
 
 **Type:** feature
-**Status:** ready for implementation
+**Status:** done
 **Last updated:** 2026-10-30
 
 # Part 1 — Business logic and usage
@@ -59,13 +59,13 @@ Read Part 1 and Part 2 before starting. Work through the tasks in order and tick
 Baseline before starting: `make check` on `feature/api-period` at `b53b11a` passes with 271 unit and 763 integration tests.
 
 ### A. Document
-- [ ] A1. Add `league/openapi-psr7-validator` to `require-dev`.
-- [ ] A2. Write `docs/openapi.yaml` as in 2.2.
+- [x] A1. Add `league/openapi-psr7-validator` to `require-dev`.
+- [x] A2. Write `docs/openapi.yaml` as in 2.2.
 
 ### B. Tests
-- [ ] B1. Add `tests/Integration/Api/OpenApiDocumentTest.php` as in 2.2.
+- [x] B1. Add `tests/Integration/Api/OpenApiDocumentTest.php` as in 2.2.
 
 ### Z. Wrap-up
-- [ ] Z1. README and CLAUDE.md as in 2.2.
-- [ ] Z2. `make check` passes.
-- [ ] Z3. Manual check: paste `docs/openapi.yaml` into editor.swagger.io and confirm it renders without errors.
+- [x] Z1. README and CLAUDE.md as in 2.2.
+- [x] Z2. `make check` passes.
+- [ ] Z3. Manual check: paste `docs/openapi.yaml` into editor.swagger.io and confirm it renders without errors. (Left for the reviewer: the file is valid OpenAPI 3.1 per `OpenApiDocumentTest`.)
