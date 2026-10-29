@@ -15,6 +15,7 @@ use App\Repository\AccountRepositoryInterface;
 use App\Repository\EmployeeData;
 use App\Repository\EmployeeRepositoryInterface;
 use App\Repository\TransactionRunnerInterface;
+use Closure;
 use DateTimeImmutable;
 use DateTimeZone;
 use InvalidArgumentException;
@@ -24,6 +25,7 @@ use Yiisoft\Security\PasswordHasher;
 final readonly class EmployeeService
 {
     private const string SETUP_CODE_LIFETIME = '+72 hours';
+    private const string EMAIL_TAKEN = 'This email is already used by another login.';
 
     public function __construct(
         private EmployeeRepositoryInterface $employees,
@@ -77,12 +79,12 @@ final readonly class EmployeeService
         $this->accessChecker->ensure($actorId, Permission::EmployeeCreate);
         $data = $this->validate($input, null);
 
-        return $this->transaction->run(function () use ($data, $input): SavedEmployee {
+        return $this->guardEmail(fn(): SavedEmployee => $this->transaction->run(function () use ($data, $input): SavedEmployee {
             $id = $this->employees->create($data);
             $setupCode = $input->email === null ? null : $this->createAccount($id, $input->email, $input->loginActive);
 
             return new SavedEmployee($id, $setupCode);
-        });
+        }));
     }
 
     public function update(int $actorId, int $id, EmployeeInput $input): SavedEmployee
@@ -94,11 +96,11 @@ final readonly class EmployeeService
         }
         $data = $this->validate($input, $employee, $actorId);
 
-        return $this->transaction->run(function () use ($employee, $data, $input): SavedEmployee {
+        return $this->guardEmail(fn(): SavedEmployee => $this->transaction->run(function () use ($employee, $data, $input): SavedEmployee {
             $this->employees->update($employee->id, $data, $employee->role !== $data->role);
 
             return new SavedEmployee($employee->id, $this->updateAccount($employee, $input));
-        });
+        }));
     }
 
     public function newSetupCode(int $actorId, int $id): string
@@ -145,7 +147,7 @@ final readonly class EmployeeService
         if ($input->email !== null) {
             $owner = $this->accounts->findByEmail($input->email);
             if ($owner !== null && $owner->employeeId !== $employee?->id) {
-                $errors['email'] = 'This email is already used by another login.';
+                $errors['email'] = self::EMAIL_TAKEN;
             }
         }
 
@@ -180,6 +182,14 @@ final readonly class EmployeeService
             role: $input->role,
             managerId: $managerId,
         );
+    }
+
+    /**
+     * @param Closure(): SavedEmployee $save
+     */
+    private function guardEmail(Closure $save): SavedEmployee
+    {
+        return ValidationException::guardUnique($save, 'UQ_ACCOUNT_EMAIL', 'email', self::EMAIL_TAKEN);
     }
 
     private function updateAccount(Employee $employee, EmployeeInput $input): ?string

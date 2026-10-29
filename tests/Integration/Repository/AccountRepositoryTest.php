@@ -5,12 +5,14 @@ declare(strict_types=1);
 namespace App\Tests\Integration\Repository;
 
 use App\Repository\AccountRepositoryInterface;
+use App\Service\ValidationException;
 use App\Tests\Integration\IntegrationTestCase;
 use DateTimeImmutable;
 use DateTimeZone;
 use PHPUnit\Framework\Attributes\DataProvider;
 
 use function PHPUnit\Framework\assertFalse;
+use function PHPUnit\Framework\assertNotNull;
 use function PHPUnit\Framework\assertNull;
 use function PHPUnit\Framework\assertSame;
 use function PHPUnit\Framework\assertTrue;
@@ -36,9 +38,10 @@ final class AccountRepositoryTest extends IntegrationTestCase
         assertTrue($this->accounts()->completeSetup(8, self::CODE_HASH, 'password-hash'));
 
         $account = $this->accounts()->findByEmployeeId(8);
-        assertSame('pending@mail.test', $account?->email);
-        assertSame('password-hash', $account?->passwordHash);
-        assertNull($account?->setupCodeHash);
+        assertNotNull($account);
+        assertSame('pending@mail.test', $account->email);
+        assertSame('password-hash', $account->passwordHash);
+        assertNull($account->setupCodeHash);
     }
 
     #[DataProvider('changesBeforeTheUpdate')]
@@ -59,6 +62,23 @@ final class AccountRepositoryTest extends IntegrationTestCase
         yield 'expired' => ['UPDATE ACCOUNT SET SETUP_CODE_EXPIRES_AT = DATEADD(SECOND, -1, SYSUTCDATETIME()) WHERE EMPLOYEE_ID = 8', self::CODE_HASH];
         yield 'replaced by a new code' => ["UPDATE ACCOUNT SET SETUP_CODE_HASH = N'new-code-hash' WHERE EMPLOYEE_ID = 8", self::CODE_HASH];
         yield 'already used' => ['UPDATE ACCOUNT SET SETUP_CODE_HASH = NULL, SETUP_CODE_EXPIRES_AT = NULL WHERE EMPLOYEE_ID = 8', self::CODE_HASH];
+    }
+
+    public function testDuplicateEmailFromAConcurrentWriteBecomesAnEmailError(): void
+    {
+        $this->db()->createCommand('DELETE FROM ACCOUNT WHERE EMPLOYEE_ID = 7')->execute();
+
+        try {
+            ValidationException::guardUnique(
+                fn() => $this->accounts()->create(7, 'PENDING@mail.test', true, self::CODE_HASH, new DateTimeImmutable('+1 hour')),
+                'UQ_ACCOUNT_EMAIL',
+                'email',
+                'This email is already used by another login.',
+            );
+            self::fail('Expected the duplicate email to be rejected.');
+        } catch (ValidationException $e) {
+            assertSame(['email' => 'This email is already used by another login.'], $e->errors);
+        }
     }
 
     private function accounts(): AccountRepositoryInterface
