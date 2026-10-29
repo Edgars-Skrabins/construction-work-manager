@@ -1,0 +1,42 @@
+{% do this.setTitle('My assignments') %}
+<h1 class="h3 mb-4">My assignments</h1>
+{% if myAssignments.sites is empty %}
+    <div class="alert alert-info" role="status">You have no assigned work yet. Your manager will assign work to you.</div>
+{% endif %}
+{% for site in myAssignments.sites %}
+    {% set first = site.first() %}
+    <div class="card mb-4">
+        <div class="card-header fw-semibold">{{ first.item.constructionSiteName }}</div>
+        <div class="card-body">
+            <p class="mb-1">{{ first.address() }}</p>
+            <p class="mb-1 text-secondary">Required access level: {{ first.requiredAccessLevelName }}</p>
+            <a href="https://www.google.com/maps/search/?api=1&amp;query={{ first.address()|url_encode }}" target="_blank" rel="noopener noreferrer">Open in Google Maps</a>
+        </div>
+        <ul class="list-group list-group-flush">
+            {% for row in site.rows %}
+                <li class="list-group-item">
+                    <div class="d-flex justify-content-between align-items-center gap-3">
+                        <span class="fw-semibold">{{ row.work.item.workItemName }}</span>
+                        {% include 'Web/MyAssignments/period-status.twig' with {work: row.work, status: row.status} %}
+                    </div>
+                    {% if row.work.workItemDescription is not null %}
+                        <div class="small text-secondary">{{ row.work.workItemDescription }}</div>
+                    {% endif %}
+                </li>
+            {% endfor %}
+        </ul>
+    </div>
+{% endfor %}
+{% if myAssignments.history is not empty %}
+    <details class="mt-4">
+        <summary>History ({{ myAssignments.history|length }})</summary>
+        <ul class="list-group mt-2">
+            {% for row in myAssignments.history %}
+                <li class="list-group-item d-flex justify-content-between align-items-center gap-3">
+                    <span>{{ row.work.item.constructionSiteName }}: {{ row.work.item.workItemName }}</span>
+                    {% include 'Web/MyAssignments/period-status.twig' with {work: row.work, status: row.status} %}
+                </li>
+            {% endfor %}
+        </ul>
+    </details>
+{% endif %}

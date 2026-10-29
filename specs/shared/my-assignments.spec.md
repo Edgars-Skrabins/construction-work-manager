@@ -85,12 +85,13 @@ Repository: a new method on `App\Repository\AssignmentRepositoryInterface` and `
 `src/Web/MyAssignments/Action.php` and `src/Web/MyAssignments/template.twig` (new):
 - The action reads the identity from `CurrentUser` (`UserIdentity`), calls `MyAssignmentsService::forEmployee($identity->employeeId)` and renders the template with `myAssignments`.
 - The template sets the title "My assignments" and shows the heading, then either the empty-state alert (`alert alert-info`) or one card per site as described in Part 1, then the History `<details>` element (`<summary>History (n)</summary>`, closed by default, no JavaScript) when the history isn't empty.
+- The period and badge markup lives once in `src/Web/MyAssignments/period-status.twig`, included by the card lines and the history lines with `{work: row.work, status: row.status}`.
 - Each assignment line shows the period in the work-assignments list's date format, and `<span class="badge {{ status.badgeClass() }}">{{ status.label() }}</span>` with `status` taken from the row's `status`.
 - Map link: `https://www.google.com/maps/search/?api=1&query={{ site.address|url_encode }}` with `target="_blank" rel="noopener noreferrer"`. The visible text is "Open in Google Maps". The address text itself is output with Twig's default escaping.
 
 `config/common/routes.php`: `Route::get('/my-assignments')->action(Web\MyAssignments\Action::class)->name('my-assignments')` inside the authenticated group, with `->middleware(RequirePermission::for(Permission::AssignmentRead))` (`App\Web\Shared\Access\RequirePermission`) *(from admin-management)*.
 
-`src/Web/HomePage/Action.php`: when the logged-in user's role is `employee`, return a 302 redirect to `urlGenerator->generate('my-assignments')`. Otherwise render the home page as now.
+`src/Web/HomePage/Action.php`: when the logged-in user's role, read with `EmployeeRepositoryInterface::roleOf()`, is `employee`, return a 302 redirect to `urlGenerator->generate('my-assignments')`. Otherwise render the home page as now.
 
 Navigation *(from admin-management)*: add one `<li>` with a "My assignments" link to `my-assignments` in the `navbar-nav` list of `src/Web/Shared/Layout/Main/layout.twig`, wrapped in `{% if access.can('assignment.read') %}` like the other links (`access` is admin-management's `App\Web\Shared\Access\ViewAccess`).
 
@@ -162,11 +163,11 @@ No duplicated code: reuse what the merged specs already provide (the `Assignment
 - [x] B2. Add `tests/Integration/Service/MyAssignmentsServiceTest.php` with the cases from 2.2, and run `make test`.
 
 ### C. Page and navigation
-- [ ] C1. Add `src/Web/MyAssignments/Action.php` and `template.twig`: cards with period and status badges, the empty state, the History `<details>` and the map link.
-- [ ] C2. Add the `my-assignments` route with `RequirePermission::for(Permission::AssignmentRead)` in `config/common/routes.php`.
-- [ ] C3. Redirect employees from `/` to `/my-assignments` in `src/Web/HomePage/Action.php`.
-- [ ] C4. Add the "My assignments" nav link in `layout.twig`, wrapped in `access.can('assignment.read')`.
-- [ ] C5. Add `tests/Integration/Web/MyAssignmentsPageTest.php` with the cases from 2.2, and run `make test`.
+- [x] C1. Add `src/Web/MyAssignments/Action.php` and `template.twig`: cards with period and status badges, the empty state, the History `<details>` and the map link.
+- [x] C2. Add the `my-assignments` route with `RequirePermission::for(Permission::AssignmentRead)` in `config/common/routes.php`.
+- [x] C3. Redirect employees from `/` to `/my-assignments` in `src/Web/HomePage/Action.php`.
+- [x] C4. Add the "My assignments" nav link in `layout.twig`, wrapped in `access.can('assignment.read')`.
+- [x] C5. Add `tests/Integration/Web/MyAssignmentsPageTest.php` with the cases from 2.2, and run `make test`. It uses the seeded assignments (employee 4 has an in-progress one at Āgenskalns, employee 7 one at Ādaži, employee 8 only Done and Cancelled) and restores the site name it changes for the escaping case. `AuthenticationTest` and `SetPasswordTest` checked an employee's `GET /` for a 200 page; they now check `/my-assignments`, where employees land.
 
 ### D. Documentation
 - [ ] D1. In `README.md` Running the app, say that employees land on their "My assignments" page after login.

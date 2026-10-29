@@ -23,6 +23,11 @@
             {% if not currentUser.isGuest() %}
                 {% set routeName = currentRoute.getName() ?? '' %}
                 <ul class="navbar-nav flex-row gap-3 me-auto">
+                    {% if access.can('assignment.read') %}
+                        <li class="nav-item">
+                            <a class="nav-link{% if routeName == 'my-assignments' %} active{% endif %}" href="{{ urlGenerator.generate('my-assignments') }}">My assignments</a>
+                        </li>
+                    {% endif %}
                     {% if access.can('employee.update') %}
                         <li class="nav-item">
                             <a class="nav-link{% if routeName starts with 'employee.' %} active{% endif %}" href="{{ urlGenerator.generate('employee.list') }}">Employees</a>

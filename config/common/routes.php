@@ -28,6 +28,10 @@ return [
                     Route::get('/')
                         ->action(Web\HomePage\Action::class)
                         ->name('home'),
+                    Route::get('/my-assignments')
+                        ->middleware(RequirePermission::for(Permission::AssignmentRead))
+                        ->action(Web\MyAssignments\Action::class)
+                        ->name('my-assignments'),
                     Route::get('/employees')
                         ->middleware(RequirePermission::for(Permission::EmployeeUpdate))
                         ->action(Web\EmployeeList\Action::class)
