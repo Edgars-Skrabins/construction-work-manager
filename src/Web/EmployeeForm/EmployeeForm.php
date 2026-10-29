@@ -7,6 +7,7 @@ namespace App\Web\EmployeeForm;
 use App\Access\Role;
 use App\Entity\Employee;
 use App\Service\EmployeeInput;
+use App\Web\Shared\Form\FormBody;
 use DateTimeImmutable;
 use Yiisoft\Validator\Label;
 use Yiisoft\Validator\Result;
@@ -52,14 +53,14 @@ final class EmployeeForm
     public static function fromBody(mixed $body): self
     {
         $form = new self();
-        $form->firstName = self::field($body, 'firstName');
-        $form->lastName = self::field($body, 'lastName');
-        $form->birthDate = self::field($body, 'birthDate');
-        $form->accessLevelId = self::field($body, 'accessLevelId');
-        $form->role = self::field($body, 'role');
-        $form->managerId = self::field($body, 'managerId');
-        $form->email = self::field($body, 'email');
-        $form->loginActive = self::field($body, 'loginActive') === '1';
+        $form->firstName = FormBody::string($body, 'firstName');
+        $form->lastName = FormBody::string($body, 'lastName');
+        $form->birthDate = FormBody::string($body, 'birthDate');
+        $form->accessLevelId = FormBody::string($body, 'accessLevelId');
+        $form->role = FormBody::string($body, 'role');
+        $form->managerId = FormBody::string($body, 'managerId');
+        $form->email = FormBody::string($body, 'email');
+        $form->loginActive = FormBody::string($body, 'loginActive') === '1';
 
         return $form;
     }
@@ -110,10 +111,5 @@ final class EmployeeForm
         }
 
         return $result;
-    }
-
-    private static function field(mixed $body, string $name): string
-    {
-        return is_array($body) && is_string($body[$name] ?? null) ? trim($body[$name]) : '';
     }
 }

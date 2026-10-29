@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Web\AssignmentForm;
 
 use App\Entity\Assignment;
+use App\Web\Shared\Form\FormBody;
 use Yiisoft\Validator\Rule\Required;
 use Yiisoft\Validator\RulesProviderInterface;
 
@@ -25,7 +26,7 @@ final class AssignmentForm implements RulesProviderInterface
     {
         $form = new self($editing);
         foreach (['employee', 'workItem', 'constructionSite', 'startDate', 'endDate', 'status'] as $name) {
-            $form->$name = is_array($body) && is_string($body[$name] ?? null) ? trim($body[$name]) : '';
+            $form->$name = FormBody::string($body, $name);
         }
 
         return $form;

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Web\SetPassword;
 
+use App\Web\Shared\Form\FormBody;
 use Yiisoft\Validator\Label;
 use Yiisoft\Validator\Result;
 use Yiisoft\Validator\Rule\Callback;
@@ -34,10 +35,10 @@ final class SetPasswordForm
     public static function fromBody(mixed $body): self
     {
         $form = new self();
-        $form->email = self::field($body, 'email', true);
-        $form->setupCode = self::field($body, 'setupCode', true);
-        $form->password = self::field($body, 'password', false);
-        $form->passwordRepeat = self::field($body, 'passwordRepeat', false);
+        $form->email = FormBody::string($body, 'email');
+        $form->setupCode = FormBody::string($body, 'setupCode');
+        $form->password = FormBody::string($body, 'password', trim: false);
+        $form->passwordRepeat = FormBody::string($body, 'passwordRepeat', trim: false);
 
         return $form;
     }
@@ -50,12 +51,5 @@ final class SetPasswordForm
         }
 
         return $result;
-    }
-
-    private static function field(mixed $body, string $name, bool $trim): string
-    {
-        $value = is_array($body) && is_string($body[$name] ?? null) ? $body[$name] : '';
-
-        return $trim ? trim($value) : $value;
     }
 }

@@ -6,6 +6,7 @@ namespace App\Web\WorkItemForm;
 
 use App\Entity\WorkItem;
 use App\Repository\WorkItemData;
+use App\Web\Shared\Form\FormBody;
 use Yiisoft\Validator\Rule\Length;
 use Yiisoft\Validator\Rule\Required;
 
@@ -21,8 +22,8 @@ final class WorkItemForm
     public static function fromBody(mixed $body): self
     {
         $form = new self();
-        $form->name = self::field($body, 'name');
-        $form->description = self::field($body, 'description');
+        $form->name = FormBody::string($body, 'name');
+        $form->description = FormBody::string($body, 'description');
 
         return $form;
     }
@@ -39,10 +40,5 @@ final class WorkItemForm
     public function toData(): WorkItemData
     {
         return new WorkItemData($this->name, $this->description === '' ? null : $this->description);
-    }
-
-    private static function field(mixed $body, string $name): string
-    {
-        return is_array($body) && is_string($body[$name] ?? null) ? trim($body[$name]) : '';
     }
 }
