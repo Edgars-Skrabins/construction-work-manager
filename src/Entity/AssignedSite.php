@@ -7,14 +7,14 @@ namespace App\Entity;
 final readonly class AssignedSite
 {
     /**
-     * @param non-empty-list<AssignedWork> $work
+     * @param non-empty-list<array{work: AssignedWork, status: AssignmentDisplayStatus}> $rows
      */
     public function __construct(
-        public array $work,
+        public array $rows,
     ) {}
 
     public function first(): AssignedWork
     {
-        return $this->work[0];
+        return $this->rows[0]['work'];
     }
 }

@@ -57,7 +57,7 @@ Names marked *(from work-assignments)* or *(from admin-management)* come from th
 - Only the extra fields: `string $street`, `string $city`, `string $country`, `string $requiredAccessLevelName` (`AssignmentListItem` only has the level ID), `?string $workItemDescription`. The site ID is `item.assignment.constructionSiteId`.
 - `address(): string` returns `street, city, country`.
 
-`src/Entity/AssignedSite.php` (new): a `final readonly` class for one card, holding only `/** @var non-empty-list<AssignedWork> */ array $work` (all at the same site), with `first(): AssignedWork` returning the first row. The card's site name, address and required access level are read from it, so the site fields aren't declared a second time.
+`src/Entity/AssignedSite.php` (new): a `final readonly` class for one card, holding only `/** @var non-empty-list<array{work: AssignedWork, status: AssignmentDisplayStatus}> */ array $rows` (all at the same site), with `first(): AssignedWork` returning the first row. The card's site name, address and required access level are read from it, so the site fields aren't declared a second time.
 
 Repository: a new method on `App\Repository\AssignmentRepositoryInterface` and `App\Repository\AssignmentRepository` *(from work-assignments)*:
 
@@ -69,23 +69,23 @@ Repository: a new method on `App\Repository\AssignmentRepositoryInterface` and `
 
 ### Service
 
-`src/Service/MyAssignmentsService.php` (new), `final readonly`, depends on `AssignmentRepositoryInterface`, `AccessChecker` and `ClockInterface`:
+`src/Service/MyAssignmentsService.php` (new), `final readonly`, depends on `AssignmentRepositoryInterface`, `AssignmentService` and `AccessChecker`:
 
 - `forEmployee(int $employeeId): MyAssignments`
   1. `AccessChecker::ensure($employeeId, Permission::AssignmentRead)`.
-  2. Load `findAssignedWork($employeeId)` and split it on the stored status:
+  2. Load `findAssignedWork($employeeId)`. Pair each row with its status from `AssignmentService::displayStatus($assignment)`, as `AssignmentList\Action` does, as `array{work: AssignedWork, status: AssignmentDisplayStatus}`, and split on the stored status:
      - Active rows: grouped by site into `AssignedSite`s, in the query's order (site name, work item name, start date).
      - Done and Cancelled rows: the history, ordered by end date descending, then ID descending.
-  3. `today` is `$clock->now()->setTime(0, 0)`, as in work-assignments.
+  3. There is no second clock line and no `today` in the template: `AssignmentService::displayStatus()` stays the one place that computes the status (2026-10-29, coordinator review).
 
-`src/Service/MyAssignments.php` (new), `final readonly`: `/** @var list<AssignedSite> */ array $sites`, `/** @var list<AssignedWork> */ array $history`, `DateTimeImmutable $today`. The template passes `today` to `displayStatus()`.
+`src/Service/MyAssignments.php` (new), `final readonly`: `/** @var list<AssignedSite> */ array $sites` and `/** @var list<array{work: AssignedWork, status: AssignmentDisplayStatus}> */ array $history`.
 
 ### Web
 
 `src/Web/MyAssignments/Action.php` and `src/Web/MyAssignments/template.twig` (new):
 - The action reads the identity from `CurrentUser` (`UserIdentity`), calls `MyAssignmentsService::forEmployee($identity->employeeId)` and renders the template with `myAssignments`.
 - The template sets the title "My assignments" and shows the heading, then either the empty-state alert (`alert alert-info`) or one card per site as described in Part 1, then the History `<details>` element (`<summary>History (n)</summary>`, closed by default, no JavaScript) when the history isn't empty.
-- Each assignment line shows the period in the work-assignments list's date format, and `<span class="badge {{ status.badgeClass() }}">{{ status.label() }}</span>` with `status = work.assignment.displayStatus(myAssignments.today)`.
+- Each assignment line shows the period in the work-assignments list's date format, and `<span class="badge {{ status.badgeClass() }}">{{ status.label() }}</span>` with `status` taken from the row's `status`.
 - Map link: `https://www.google.com/maps/search/?api=1&query={{ site.address|url_encode }}` with `target="_blank" rel="noopener noreferrer"`. The visible text is "Open in Google Maps". The address text itself is output with Twig's default escaping.
 
 `config/common/routes.php`: `Route::get('/my-assignments')->action(Web\MyAssignments\Action::class)->name('my-assignments')` inside the authenticated group, with `->middleware(RequirePermission::for(Permission::AssignmentRead))` (`App\Web\Shared\Access\RequirePermission`) *(from admin-management)*.
@@ -96,7 +96,7 @@ Navigation *(from admin-management)*: add one `<li>` with a "My assignments" lin
 
 ### Tests
 
-Integration, all inside a transaction that is rolled back. Assignments are inserted with work-assignments' repository `create()` and `updatePeriodAndStatus()`, with dates relative to the clock's today. Work-assignments' seed assignments (IDs 1 to 6) are taken into account: tests assert on the rows they insert and on what must not appear, and use a fixed `ClockInterface` where the displayed status matters.
+Integration, all inside a transaction that is rolled back. Assignments are inserted with work-assignments' repository `create()` and `updatePeriodAndStatus()`, with dates relative to the clock's today. Work-assignments' seed assignments (IDs 1 to 6) are taken into account: tests assert on the rows they insert and on what must not appear, and dates are offsets from the container clock's today, so the expected displayed statuses hold on any day.
 
 `tests/Integration/Service/MyAssignmentsServiceTest.php`:
 - Two employees under different managers (4 under manager 2, 7 under manager 3) each get assignments at different sites and work items. `forEmployee(4)` returns only employee 4's sites, work items and history, none of employee 7's.
@@ -158,8 +158,8 @@ No duplicated code: reuse what the merged specs already provide (the `Assignment
 - [x] A3. Add `findAssignedWork(int $employeeId)` to `AssignmentRepositoryInterface` and `AssignmentRepository` on top of `listQuery()`, with the extra columns and the ordering from 2.2, reusing `listItemFromRow` / `assignmentFromRow`, with a test in `AssignmentRepositoryTest`.
 
 ### B. Service
-- [ ] B1. Add `src/Service/MyAssignments.php` and `src/Service/MyAssignmentsService.php` with `forEmployee()`: permission check, the split into current and history, grouping by site, and the history order.
-- [ ] B2. Add `tests/Integration/Service/MyAssignmentsServiceTest.php` with the cases from 2.2, and run `make test`.
+- [x] B1. Add `src/Service/MyAssignments.php` and `src/Service/MyAssignmentsService.php` with `forEmployee()`: permission check, the split into current and history, grouping by site, and the history order.
+- [x] B2. Add `tests/Integration/Service/MyAssignmentsServiceTest.php` with the cases from 2.2, and run `make test`.
 
 ### C. Page and navigation
 - [ ] C1. Add `src/Web/MyAssignments/Action.php` and `template.twig`: cards with period and status badges, the empty state, the History `<details>` and the map link.
