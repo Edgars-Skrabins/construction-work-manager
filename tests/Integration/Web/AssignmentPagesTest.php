@@ -20,7 +20,7 @@ final class AssignmentPagesTest extends IntegrationTestCase
 {
     use WebClient;
 
-    private const int LAST_SEED_ID = 167;
+    private const int LAST_SEED_ID = 174;
 
     protected function tearDown(): void
     {
@@ -32,15 +32,16 @@ final class AssignmentPagesTest extends IntegrationTestCase
     {
         $this->logIn('manager@mail.test', '123123123');
 
-        $body = (string) $this->request('GET', '/assignments')->getBody();
+        $body = implode('', array_map(fn(int $page): string => (string) $this->request('GET', "/assignments?page=$page")->getBody(), [1, 2, 3]));
 
         assertStringContainsString('href="/assignments">Assignments</a>', $body);
-        foreach (['Mārtiņš Liepiņš', 'Laura Krūmiņa', 'Kristaps Vītols'] as $name) {
+        foreach (['Mārtiņš Liepiņš', 'Laura Krūmiņa', 'Kristaps Vītols', 'Aušra Žukauskaitė', 'Rasmus Mägi'] as $name) {
             assertStringContainsString($name, $body);
         }
-        foreach (['Anna Zariņa', 'Roberts Kalējs'] as $name) {
+        foreach (['Anna Zariņa', 'Roberts Kalējs', 'Olga Smirnova', 'Edgars Kļaviņš'] as $name) {
             assertStringNotContainsString($name, $body);
         }
+        assertStringNotContainsString('page=4"', $body);
         assertStringContainsString('data-confirm="Delete this assignment?"', $body);
     }
 
@@ -180,7 +181,7 @@ final class AssignmentPagesTest extends IntegrationTestCase
 
         $body = (string) $this->request('GET', '/assignments')->getBody();
 
-        foreach (['Liis Rebane', 'Olga Smirnova', 'Ieva Vanaga', 'Ivars Dambītis', 'Viesturs Mežulis', 'Daiga Riekstiņa'] as $name) {
+        foreach (['Aušra Žukauskaitė', 'Olga Smirnova', 'Ieva Vanaga', 'Ivars Dambītis', 'Viesturs Mežulis', 'Daiga Riekstiņa'] as $name) {
             assertStringContainsString($name, $body);
         }
         assertStringContainsString('page=9"', $body);

@@ -278,7 +278,7 @@ final class AssignmentServiceTest extends IntegrationTestCase
         $manager = $this->assignments()->formOptions(2);
         $admin = $this->assignments()->formOptions(1);
 
-        assertSame([4, 5, 6, ...range(62, 70)], self::sortedIds($manager->employees));
+        assertSame([4, 5, 6, ...range(59, 70)], self::sortedIds($manager->employees));
         assertSame([...range(4, 8), ...range(16, 80)], self::sortedIds($admin->employees));
         assertSame([], $this->assignments()->formOptions(15)->employees);
         assertCount(11, $manager->sites);

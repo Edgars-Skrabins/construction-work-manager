@@ -45,7 +45,13 @@ final class MyAssignmentsPageTest extends IntegrationTestCase
         assertStringNotContainsString(self::OTHER_EMPLOYEES_SITE, $body);
         assertStringNotContainsString(self::OTHER_EMPLOYEES_WORK, $body);
         assertStringNotContainsString(self::EMPTY_STATE, $body);
-        assertStringNotContainsString('<details', $body);
+        foreach (['Jelgava Library Reconstruction', 'Vilnius Office Campus'] as $site) {
+            assertStringContainsString('<div class="card-header fw-semibold">' . $site . '</div>', $body);
+        }
+        foreach (['text-bg-info">Planned', 'text-bg-primary">In progress', 'text-bg-warning">Overdue', 'text-bg-success">Done', 'text-bg-secondary">Cancelled'] as $badge) {
+            assertStringContainsString('<span class="badge ' . $badge . '</span>', $body);
+        }
+        assertStringContainsString('<summary>History (3)</summary>', $body);
     }
 
     public function testMapLinkSearchesTheEncodedAddressInANewTab(): void
