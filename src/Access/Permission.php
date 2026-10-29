@@ -8,6 +8,7 @@ enum Permission: string
 {
     case EmployeeCreate = 'employee.create';
     case EmployeeRead = 'employee.read';
+    case EmployeeList = 'employee.list';
     case EmployeeUpdate = 'employee.update';
     case EmployeeDelete = 'employee.delete';
     case SiteCreate = 'site.create';

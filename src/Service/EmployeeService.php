@@ -5,6 +5,9 @@ declare(strict_types=1);
 namespace App\Service;
 
 use App\Access\AccessChecker;
+use App\Access\AccessScope;
+use App\Access\Entity;
+use App\Access\ForbiddenException;
 use App\Access\Permission;
 use App\Access\Role;
 use App\Entity\AccessLevel;
@@ -35,6 +38,7 @@ final readonly class EmployeeService
         private AssignmentRepositoryInterface $assignments,
         private TransactionRunnerInterface $transaction,
         private AccessChecker $accessChecker,
+        private AccessScope $accessScope,
         private PasswordHasher $passwordHasher,
         private SetupCodeGenerator $setupCodes,
         private ClockInterface $clock,
@@ -45,9 +49,11 @@ final readonly class EmployeeService
      */
     public function listPaginator(int $actorId, string $sort, string $search): OffsetPaginator
     {
-        $this->accessChecker->ensure($actorId, Permission::EmployeeUpdate);
+        $this->accessChecker->ensure($actorId, Permission::EmployeeList);
+        $role = $this->employees->roleOf($actorId)
+            ?? throw new ForbiddenException(sprintf('Employee %d does not exist.', $actorId));
 
-        return $this->employees->listPaginator($sort, $search);
+        return $this->employees->listPaginator($actorId, $this->accessScope->forRole($role, Entity::Employee), $sort, $search);
     }
 
     public function find(int $actorId, int $id): ?Employee

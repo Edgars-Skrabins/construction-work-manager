@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Tests\Integration\Repository;
 
+use App\Access\Scope;
 use App\Entity\ConstructionSite;
 use App\Entity\EmployeeListItem;
 use App\Entity\WorkItem;
@@ -84,6 +85,37 @@ final class ListingTest extends IntegrationTestCase
             assertSame($this->ids($this->paginator($list, 'name')), $this->ids($this->paginator($list, 'PASSWORD_HASH')));
             assertSame($this->ids($this->paginator($list, 'name')), $this->ids($this->paginator($list, '')));
         }
+    }
+
+    /**
+     * @return iterable<string, array{int, Scope, list<int>}>
+     */
+    public static function employeeScopes(): iterable
+    {
+        yield 'admin sees everyone' => [1, Scope::All, [1, 8, 2, 5, 4, 3, 6, 7]];
+        yield 'manager sees their subordinates' => [2, Scope::Subordinates, [5, 4, 6]];
+        yield 'other manager sees their subordinates' => [3, Scope::Subordinates, [8, 7]];
+        yield 'own scope sees only the viewer' => [4, Scope::Own, [4]];
+    }
+
+    /**
+     * @param list<int> $expected
+     */
+    #[DataProvider('employeeScopes')]
+    public function testEmployeeListIsScoped(int $viewerId, Scope $scope, array $expected): void
+    {
+        $paginator = $this->service(EmployeeRepositoryInterface::class)->listPaginator($viewerId, $scope, 'name', '');
+
+        assertSame($expected, $this->ids($paginator));
+    }
+
+    public function testSearchStaysInsideTheScope(): void
+    {
+        $repository = $this->service(EmployeeRepositoryInterface::class);
+
+        assertSame([5], $this->ids($repository->listPaginator(2, Scope::Subordinates, 'name', 'Laura')));
+        assertSame([], $this->ids($repository->listPaginator(2, Scope::Subordinates, 'name', 'Anna')));
+        assertSame([7], $this->ids($repository->listPaginator(1, Scope::All, 'name', 'Anna')));
     }
 
     public function testPagesHoldTwentyRowsAndAPagePastTheEndShowsTheLastOne(): void
@@ -198,7 +230,7 @@ final class ListingTest extends IntegrationTestCase
     private function paginator(string $list, string $sort, string $search = ''): OffsetPaginator
     {
         return match ($list) {
-            'employees' => $this->service(EmployeeRepositoryInterface::class)->listPaginator($sort, $search),
+            'employees' => $this->service(EmployeeRepositoryInterface::class)->listPaginator(1, Scope::All, $sort, $search),
             'sites' => $this->service(ConstructionSiteRepositoryInterface::class)->listPaginator($sort, $search),
             default => $this->service(WorkItemRepositoryInterface::class)->listPaginator($sort, $search),
         };

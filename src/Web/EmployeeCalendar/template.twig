@@ -1,0 +1,87 @@
+{% do this.setTitle('Work calendar') %}
+{% set month = calendar.month() %}
+<div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-4">
+    <h1 class="h3 mb-0">Work calendar</h1>
+    <a class="btn btn-outline-secondary" href="{{ urlGenerator.generate('employee.list') }}">Employees list</a>
+</div>
+<div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-3">
+    <nav class="d-flex align-items-center gap-2" aria-label="Months">
+        <a class="btn btn-sm btn-outline-primary" href="{{ urlGenerator.generate('employee.calendar', [], {month: calendar.previousMonth(), employee: employeeId}) }}">‹ Previous</a>
+        <h2 class="h5 mb-0 text-nowrap">{{ month|date('F Y') }}</h2>
+        <a class="btn btn-sm btn-outline-primary" href="{{ urlGenerator.generate('employee.calendar', [], {month: calendar.nextMonth(), employee: employeeId}) }}">Next ›</a>
+        <a class="btn btn-sm btn-link" href="{{ urlGenerator.generate('employee.calendar', [], {month: calendar.currentMonth(), employee: employeeId}) }}">Today</a>
+    </nav>
+    <form class="d-flex align-items-center gap-2" method="get" action="{{ urlGenerator.generate('employee.calendar') }}">
+        <input type="hidden" name="month" value="{{ month|date('Y-m') }}">
+        <label class="visually-hidden" for="calendar-employee">Employee</label>
+        <select class="form-select form-select-sm" id="calendar-employee" name="employee">
+            <option value="">All employees</option>
+            {% for employee in team %}
+                <option value="{{ employee.id }}"{% if employee.id == employeeId %} selected{% endif %}>{{ employee.lastName }}, {{ employee.firstName }}</option>
+            {% endfor %}
+        </select>
+        <button type="submit" class="btn btn-sm btn-primary">Show</button>
+    </form>
+</div>
+<ul class="list-inline small mb-3" aria-label="Status legend">
+    {% for status in statuses %}
+        <li class="list-inline-item"><span class="badge rounded-pill {{ status.badgeClass() }}">&nbsp;</span> {{ status.label() }}</li>
+    {% endfor %}
+</ul>
+{% macro entry(entry) %}
+    <li class="mb-1">
+        <span class="badge rounded-pill {{ entry.status.badgeClass() }}" title="{{ entry.status.label() }}">&nbsp;</span><span class="visually-hidden">{{ entry.status.label() }}:</span>
+        <span class="fw-semibold">{{ entry.item.employeeName }}</span>
+        <span class="d-block text-secondary">{{ entry.item.workItemName }} · {{ entry.item.constructionSiteName }}</span>
+    </li>
+{% endmacro %}
+<div class="d-none d-md-block">
+    <table class="table table-bordered small work-calendar">
+        <thead>
+            <tr>
+                {% for weekday in ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'] %}
+                    <th scope="col" class="text-center">{{ weekday }}</th>
+                {% endfor %}
+            </tr>
+        </thead>
+        <tbody>
+            {% for week in weeks %}
+                <tr>
+                    {% for day in week %}
+                        <td class="{% if day.isToday %}calendar-today{% elseif not day.inMonth %}bg-body text-secondary{% endif %}"{% if day.isToday %} aria-current="date"{% endif %}>
+                            <div class="fw-semibold mb-1">{{ day.date|date('j') }}{% if day.isToday %}<span class="visually-hidden"> Today</span>{% endif %}</div>
+                            {% if day.entries is not empty %}
+                                <ul class="list-unstyled mb-0">
+                                    {% for entry in day.entries %}
+                                        {{ _self.entry(entry) }}
+                                    {% endfor %}
+                                </ul>
+                            {% endif %}
+                        </td>
+                    {% endfor %}
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+<div class="d-md-none">
+    {% set shown = 0 %}
+    {% for week in weeks %}
+        {% for day in week %}
+            {% if day.inMonth and day.entries is not empty %}
+                {% set shown = shown + 1 %}
+                <section class="card mb-2{% if day.isToday %} border-primary{% endif %}"{% if day.isToday %} aria-current="date"{% endif %}>
+                    <h3 class="card-header h6{% if day.isToday %} text-bg-primary{% endif %}">{{ day.date|date('D, Y-m-d') }}{% if day.isToday %} · Today{% endif %}</h3>
+                    <ul class="list-unstyled card-body small mb-0">
+                        {% for entry in day.entries %}
+                            {{ _self.entry(entry) }}
+                        {% endfor %}
+                    </ul>
+                </section>
+            {% endif %}
+        {% endfor %}
+    {% endfor %}
+    {% if shown == 0 %}
+        <p class="text-secondary">No assigned work this month.</p>
+    {% endif %}
+</div>
