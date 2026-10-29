@@ -24,6 +24,7 @@ use function PHPUnit\Framework\assertSame;
 final class SiteEmployeesTest extends IntegrationTestCase
 {
     private const int SITE = 2;
+    private const string CODE = 'DGP-SCH-01';
 
     private string $plainKey;
 
@@ -43,14 +44,14 @@ final class SiteEmployeesTest extends IntegrationTestCase
     {
         $this->insertAssignments($this->service(ClockInterface::class)->now());
 
-        $response = $this->get('/api/v1/construction-sites/2/employees');
+        $response = $this->get('/api/v1/construction-sites/DGP-SCH-01/employees');
 
         assertSame(200, $response->getStatusCode());
         assertSame('application/json; charset=utf-8', $response->getHeaderLine('Content-Type'));
         assertSame('no-store', $response->getHeaderLine('Cache-Control'));
         assertFalse($response->hasHeader('Set-Cookie'));
         assertSame(
-            '{"site":{"id":2,"name":"Daugavpils School Renovation","requiredAccessLevel":{"id":2,"name":"Restricted"}},'
+            '{"site":{"id":2,"code":"DGP-SCH-01","name":"Daugavpils School Renovation","requiredAccessLevel":{"id":2,"name":"Restricted"}},'
             . '"employees":['
             . '{"id":8,"firstName":"Roberts","lastName":"Kalējs","accessLevel":{"id":2,"name":"Restricted"}},'
             . '{"id":5,"firstName":"Laura","lastName":"Krūmiņa","accessLevel":{"id":2,"name":"Restricted"}},'
@@ -60,23 +61,33 @@ final class SiteEmployeesTest extends IntegrationTestCase
         );
     }
 
+    public function testLowercaseCodeFindsTheSite(): void
+    {
+        $this->insertAssignments($this->service(ClockInterface::class)->now());
+
+        $response = $this->get('/api/v1/construction-sites/dgp-sch-01/employees');
+
+        assertSame(200, $response->getStatusCode());
+        assertSame([8, 5, 6], $this->employeeIds($response));
+    }
+
     public function testEmployeeWhoseAccessLevelWasLoweredDropsOut(): void
     {
         $this->insertAssignments($this->service(ClockInterface::class)->now());
         $this->db()->createCommand()->update('EMPLOYEE', ['ACCESS_LEVEL_ID' => 1], ['ID' => 6])->execute();
 
-        $body = $this->employeeIds($this->get('/api/v1/construction-sites/2/employees'));
+        $body = $this->employeeIds($this->get('/api/v1/construction-sites/DGP-SCH-01/employees'));
 
         assertSame([8, 5], $body);
     }
 
     public function testSiteWithoutActiveAssignmentsHasNoEmployees(): void
     {
-        $response = $this->get('/api/v1/construction-sites/3/employees');
+        $response = $this->get('/api/v1/construction-sites/RIX-TEC-01/employees');
 
         assertSame(200, $response->getStatusCode());
         assertSame(
-            '{"site":{"id":3,"name":"Rīga Thermal Power Plant Upgrade","requiredAccessLevel":{"id":3,"name":"Critical infrastructure"}},"employees":[]}',
+            '{"site":{"id":3,"code":"RIX-TEC-01","name":"Rīga Thermal Power Plant Upgrade","requiredAccessLevel":{"id":3,"name":"Critical infrastructure"}},"employees":[]}',
             (string) $response->getBody(),
         );
     }
@@ -91,17 +102,18 @@ final class SiteEmployeesTest extends IntegrationTestCase
             new FixedClock($day),
         );
 
-        $access = $service->forSite(self::SITE);
+        $access = $service->forSite(self::CODE);
 
         assertNotNull($access);
         assertSame([8, 5, 6], array_map(static fn($employee): int => $employee->employeeId, $access->employees));
-        assertSame([], $this->employeeIds($this->get('/api/v1/construction-sites/2/employees')));
-        assertNull($service->forSite(999));
+        assertSame([], $this->employeeIds($this->get('/api/v1/construction-sites/DGP-SCH-01/employees')));
+        assertNull($service->forSite('XXX-000-99'));
     }
 
-    public function testUnknownSiteGivesNotFoundProblem(): void
+    #[DataProvider('unknownCodes')]
+    public function testUnknownSiteGivesNotFoundProblem(string $code): void
     {
-        $response = $this->get('/api/v1/construction-sites/999/employees');
+        $response = $this->get('/api/v1/construction-sites/' . $code . '/employees');
 
         assertSame(404, $response->getStatusCode());
         assertSame('application/problem+json; charset=utf-8', $response->getHeaderLine('Content-Type'));
@@ -111,20 +123,24 @@ final class SiteEmployeesTest extends IntegrationTestCase
         );
     }
 
-    public function testLargestValidIdIsNotFoundNotUnprocessable(): void
+    /**
+     * @return iterable<string, array{string}>
+     */
+    public static function unknownCodes(): iterable
     {
-        assertSame(404, $this->get('/api/v1/construction-sites/2147483647/employees')->getStatusCode());
+        yield 'unknown code' => ['XXX-000-99'];
+        yield 'numeric code' => ['123'];
     }
 
-    #[DataProvider('malformedIds')]
-    public function testMalformedSiteIdGivesUnprocessableProblem(string $id): void
+    #[DataProvider('malformedCodes')]
+    public function testMalformedSiteCodeGivesUnprocessableProblem(string $code): void
     {
-        $response = $this->get('/api/v1/construction-sites/' . $id . '/employees');
+        $response = $this->get('/api/v1/construction-sites/' . $code . '/employees');
 
         assertSame(422, $response->getStatusCode());
         assertSame('application/problem+json; charset=utf-8', $response->getHeaderLine('Content-Type'));
         assertSame(
-            '{"type":"about:blank","title":"Unprocessable entity","status":422,"detail":"The site ID must be a positive integer."}',
+            '{"type":"about:blank","title":"Unprocessable entity","status":422,"detail":"The site code must be 3 to 30 letters, digits or hyphens, starting with a letter or digit."}',
             (string) $response->getBody(),
         );
     }
@@ -132,19 +148,21 @@ final class SiteEmployeesTest extends IntegrationTestCase
     /**
      * @return iterable<string, array{string}>
      */
-    public static function malformedIds(): iterable
+    public static function malformedCodes(): iterable
     {
-        yield 'letters' => ['abc'];
-        yield 'zero' => ['0'];
-        yield 'negative' => ['-1'];
-        yield 'leading zero' => ['01'];
-        yield 'decimal' => ['1.5'];
-        yield 'too large' => ['2147483648'];
+        yield 'old site ID' => ['1'];
+        yield 'two digits' => ['12'];
+        yield 'two letters' => ['ab'];
+        yield 'leading hyphen' => ['-AB'];
+        yield 'thirty-one characters' => [str_repeat('A', 31)];
+        yield 'underscore' => ['RIX_AGK'];
+        yield 'encoded space' => ['RIX%20AGK'];
+        yield 'non-ASCII letter' => ['%C4%80B-01'];
     }
 
     public function testWrongMethodGivesMethodNotAllowedProblem(): void
     {
-        $response = $this->handleRequest('POST', '/api/v1/construction-sites/2/employees', ['Authorization' => 'Bearer ' . $this->plainKey]);
+        $response = $this->handleRequest('POST', '/api/v1/construction-sites/DGP-SCH-01/employees', ['Authorization' => 'Bearer ' . $this->plainKey]);
 
         assertSame(405, $response->getStatusCode());
         assertSame('GET', $response->getHeaderLine('Allow'));
@@ -154,7 +172,7 @@ final class SiteEmployeesTest extends IntegrationTestCase
 
     public function testMissingKeyGivesUnauthorizedProblem(): void
     {
-        $response = $this->handleRequest('GET', '/api/v1/construction-sites/2/employees');
+        $response = $this->handleRequest('GET', '/api/v1/construction-sites/DGP-SCH-01/employees');
 
         assertSame(401, $response->getStatusCode());
         assertSame('Bearer', $response->getHeaderLine('WWW-Authenticate'));
@@ -163,7 +181,7 @@ final class SiteEmployeesTest extends IntegrationTestCase
 
     public function testSuccessfulCallRecordsLastUsed(): void
     {
-        $this->get('/api/v1/construction-sites/2/employees');
+        $this->get('/api/v1/construction-sites/DGP-SCH-01/employees');
 
         assertNotNull($this->service(ApiKeyRepositoryInterface::class)->findByKeyId(explode('_', $this->plainKey)[1])?->lastUsedAt);
     }
