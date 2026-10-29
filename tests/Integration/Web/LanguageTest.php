@@ -12,6 +12,7 @@ use Psr\Http\Message\ResponseInterface;
 
 use function PHPUnit\Framework\assertArrayNotHasKey;
 use function PHPUnit\Framework\assertMatchesRegularExpression;
+use function PHPUnit\Framework\assertNotSame;
 use function PHPUnit\Framework\assertSame;
 use function PHPUnit\Framework\assertStringContainsString;
 use function PHPUnit\Framework\assertStringNotContainsString;
@@ -20,12 +21,32 @@ final class LanguageTest extends IntegrationTestCase
 {
     use WebClient;
 
-    private const int LAST_SEED_ASSIGNMENT = 6;
+    private int $lastAssignmentId = 0;
+
+    protected function setUp(): void
+    {
+        $this->lastAssignmentId = (int) $this->db()->createCommand('SELECT MAX(ID) FROM ASSIGNMENT')->queryScalar();
+    }
 
     protected function tearDown(): void
     {
         $this->resetServices();
-        $this->db()->createCommand('DELETE FROM ASSIGNMENT WHERE ID > :id', [':id' => self::LAST_SEED_ASSIGNMENT])->execute();
+        $this->db()->createCommand('DELETE FROM ASSIGNMENT WHERE ID > :id', [':id' => $this->lastAssignmentId])->execute();
+        $this->db()->createCommand('DELETE FROM AUTH_THROTTLE')->execute();
+    }
+
+    public function testThrottledLoginIsTranslated(): void
+    {
+        $this->db()->createCommand('DELETE FROM AUTH_THROTTLE')->execute();
+        $this->switchLanguage('ru', '/login');
+        for ($i = 0; $i < 5; $i++) {
+            $this->logIn('admin@mail.test', 'wrong-password');
+        }
+
+        $response = $this->logIn('admin@mail.test', 'wrong-password');
+
+        assertSame(429, $response->getStatusCode());
+        assertStringContainsString('Слишком много попыток. Повторите попытку через 15 минут.', (string) $response->getBody());
     }
 
     public function testChoosingALanguageSetsTheCookieAndReturnsToThePage(): void
@@ -295,6 +316,7 @@ final class LanguageTest extends IntegrationTestCase
         }
         $this->switchLanguage('fi', '/');
         $response = $method === 'GET' ? $this->request('GET', $path) : $this->submit($path, $fields);
+        assertNotSame(302, $response->getStatusCode());
 
         $patterns = self::untranslatedPatterns('fi');
         $untranslated = array_values(array_filter(

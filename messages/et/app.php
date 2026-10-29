@@ -44,6 +44,7 @@ return [
     'First login? Set your password' => 'Esimene sisselogimine? Määra parool',
     'Enter your email and password.' => 'Sisesta e-posti aadress ja parool.',
     'Invalid email or password.' => 'Vale e-posti aadress või parool.',
+    'Too many attempts. Try again in {minutes, plural, one{# minute} other{# minutes}}.' => 'Liiga palju katseid. Proovi uuesti {minutes, plural, one{# minuti} other{# minuti}} pärast.',
 
     'Set password' => 'Määra parool',
     'Setup code' => 'Aktiveerimiskood',
@@ -177,5 +178,6 @@ return [
     'Enter a valid end date.' => 'Sisesta kehtiv lõppkuupäev.',
     "The end date can't be before the start date." => 'Lõppkuupäev ei saa olla varasem kui alguskuupäev.',
     'The site requires access level {required}; the employee has level {actual}.' => 'Ehitusobjekt nõuab ligipääsutaset {required}, töötaja tase on {actual}.',
+    "The assignment couldn't be saved because of a change made at the same time. Try again." => 'Tööülesannet ei õnnestunud salvestada, sest samal ajal tehti teine muudatus. Proovi uuesti.',
     'The employee already has this work item at this site from {start} to {end}.' => 'Töötajal on see tööliik sellel ehitusobjektil juba ajavahemikus {start} kuni {end}.',
 ];

@@ -44,6 +44,7 @@ return [
     'First login? Set your password' => 'Första inloggningen? Välj ett lösenord',
     'Enter your email and password.' => 'Ange e-post och lösenord.',
     'Invalid email or password.' => 'Fel e-post eller lösenord.',
+    'Too many attempts. Try again in {minutes, plural, one{# minute} other{# minutes}}.' => 'För många försök. Försök igen om {minutes, plural, one{# minut} other{# minuter}}.',
 
     'Set password' => 'Välj lösenord',
     'Setup code' => 'Aktiveringskod',
@@ -177,5 +178,6 @@ return [
     'Enter a valid end date.' => 'Ange ett giltigt slutdatum.',
     "The end date can't be before the start date." => 'Slutdatumet kan inte vara före startdatumet.',
     'The site requires access level {required}; the employee has level {actual}.' => 'Byggarbetsplatsen kräver behörighetsnivå {required}, men medarbetaren har nivå {actual}.',
+    "The assignment couldn't be saved because of a change made at the same time. Try again." => 'Uppdraget kunde inte sparas eftersom en annan ändring gjordes samtidigt. Försök igen.',
     'The employee already has this work item at this site from {start} to {end}.' => 'Medarbetaren har redan det här arbetsmomentet på den här byggarbetsplatsen från {start} till {end}.',
 ];

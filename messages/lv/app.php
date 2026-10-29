@@ -44,6 +44,7 @@ return [
     'First login? Set your password' => 'Pirmā pieteikšanās? Iestatiet paroli',
     'Enter your email and password.' => 'Ievadiet e-pastu un paroli.',
     'Invalid email or password.' => 'Nepareizs e-pasts vai parole.',
+    'Too many attempts. Try again in {minutes, plural, one{# minute} other{# minutes}}.' => 'Pārāk daudz mēģinājumu. Mēģiniet vēlreiz pēc {minutes, plural, zero{# minūtēm} one{# minūtes} other{# minūtēm}}.',
 
     'Set password' => 'Iestatīt paroli',
     'Setup code' => 'Aktivizācijas kods',
@@ -177,5 +178,6 @@ return [
     'Enter a valid end date.' => 'Ievadiet derīgu beigu datumu.',
     "The end date can't be before the start date." => 'Beigu datums nevar būt agrāks par sākuma datumu.',
     'The site requires access level {required}; the employee has level {actual}.' => 'Būvobjektam nepieciešams piekļuves līmenis {required}, bet darbiniekam ir līmenis {actual}.',
+    "The assignment couldn't be saved because of a change made at the same time. Try again." => 'Uzdevumu neizdevās saglabāt, jo tajā pašā laikā tika veiktas citas izmaiņas. Mēģiniet vēlreiz.',
     'The employee already has this work item at this site from {start} to {end}.' => 'Darbiniekam jau ir šis darba veids šajā būvobjektā no {start} līdz {end}.',
 ];

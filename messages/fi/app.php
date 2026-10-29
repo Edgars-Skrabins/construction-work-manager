@@ -44,6 +44,7 @@ return [
     'First login? Set your password' => 'Ensimmäinen kirjautuminen? Aseta salasana',
     'Enter your email and password.' => 'Anna sähköposti ja salasana.',
     'Invalid email or password.' => 'Väärä sähköposti tai salasana.',
+    'Too many attempts. Try again in {minutes, plural, one{# minute} other{# minutes}}.' => 'Liian monta yritystä. Yritä uudelleen {minutes, plural, one{# minuutin} other{# minuutin}} kuluttua.',
 
     'Set password' => 'Aseta salasana',
     'Setup code' => 'Aktivointikoodi',
@@ -177,5 +178,6 @@ return [
     'Enter a valid end date.' => 'Anna kelvollinen päättymispäivä.',
     "The end date can't be before the start date." => 'Päättymispäivä ei voi olla ennen alkamispäivää.',
     'The site requires access level {required}; the employee has level {actual}.' => 'Työmaa vaatii kulkuoikeustason {required}, mutta työntekijän taso on {actual}.',
+    "The assignment couldn't be saved because of a change made at the same time. Try again." => 'Työtehtävää ei voitu tallentaa, koska samaan aikaan tehtiin toinen muutos. Yritä uudelleen.',
     'The employee already has this work item at this site from {start} to {end}.' => 'Työntekijällä on jo tämä työlaji tällä työmaalla ajalla {start}–{end}.',
 ];

@@ -44,6 +44,7 @@ return [
     'First login? Set your password' => 'Первый вход? Задайте пароль',
     'Enter your email and password.' => 'Введите эл. почту и пароль.',
     'Invalid email or password.' => 'Неверная эл. почта или пароль.',
+    'Too many attempts. Try again in {minutes, plural, one{# minute} other{# minutes}}.' => 'Слишком много попыток. Повторите попытку через {minutes, plural, one{# минуту} few{# минуты} many{# минут} other{# минуты}}.',
 
     'Set password' => 'Задать пароль',
     'Setup code' => 'Код активации',
@@ -177,5 +178,6 @@ return [
     'Enter a valid end date.' => 'Введите корректную дату окончания.',
     "The end date can't be before the start date." => 'Дата окончания не может быть раньше даты начала.',
     'The site requires access level {required}; the employee has level {actual}.' => 'Для объекта требуется уровень допуска {required}, а у сотрудника уровень {actual}.',
+    "The assignment couldn't be saved because of a change made at the same time. Try again." => 'Не удалось сохранить задание, так как в это же время были внесены другие изменения. Повторите попытку.',
     'The employee already has this work item at this site from {start} to {end}.' => 'У сотрудника уже есть этот вид работ на этом объекте с {start} по {end}.',
 ];

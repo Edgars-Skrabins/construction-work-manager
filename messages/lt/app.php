@@ -44,6 +44,7 @@ return [
     'First login? Set your password' => 'Jungiatės pirmą kartą? Nustatykite slaptažodį',
     'Enter your email and password.' => 'Įveskite el. paštą ir slaptažodį.',
     'Invalid email or password.' => 'Neteisingas el. paštas arba slaptažodis.',
+    'Too many attempts. Try again in {minutes, plural, one{# minute} other{# minutes}}.' => 'Per daug bandymų. Bandykite dar kartą po {minutes, plural, one{# minutės} few{# minučių} many{# minutės} other{# minučių}}.',
 
     'Set password' => 'Nustatyti slaptažodį',
     'Setup code' => 'Aktyvinimo kodas',
@@ -177,5 +178,6 @@ return [
     'Enter a valid end date.' => 'Įveskite teisingą pabaigos datą.',
     "The end date can't be before the start date." => 'Pabaigos data negali būti ankstesnė nei pradžios data.',
     'The site requires access level {required}; the employee has level {actual}.' => 'Statybos objektui reikalingas {required} prieigos lygis, o darbuotojo lygis yra {actual}.',
+    "The assignment couldn't be saved because of a change made at the same time. Try again." => 'Užduoties nepavyko išsaugoti, nes tuo pačiu metu buvo atliktas kitas pakeitimas. Bandykite dar kartą.',
     'The employee already has this work item at this site from {start} to {end}.' => 'Darbuotojas jau turi šią darbo rūšį šiame statybos objekte nuo {start} iki {end}.',
 ];
