@@ -314,7 +314,7 @@ Baseline before starting: unit 52 tests, integration 143 tests, all passing.
 - [x] C1. Extend `Account` and `AccountRepository` with the setup code and write methods. Add `SetupCodeGenerator` with its unit test.
 - [x] C2. Add `Employee`, `EmployeeListItem`, `LoginStatus`, `EmployeeData`, `EmployeeRepositoryInterface` and `EmployeeRepository`.
 - [x] C3. Add `EmployeeInput`, `SavedEmployee` and `EmployeeService` with `EmployeeServiceTest`.
-- [ ] C4. Add the `EmployeeList`, `EmployeeForm`, `EmployeeDelete` and `EmployeeSetupCode` pages and their routes.
+- [x] C4. Add the `EmployeeList`, `EmployeeForm`, `EmployeeDelete` and `EmployeeSetupCode` pages and their routes.
 - [ ] C5. Add `PasswordSetupService` with its test, the `SetPassword` page and route, and the link on the login page. Add `SetPasswordTest`.
 
 ### D. Lists, page tests and documentation

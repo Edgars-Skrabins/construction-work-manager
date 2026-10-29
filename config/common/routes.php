@@ -25,6 +25,26 @@ return [
                     Route::get('/')
                         ->action(Web\HomePage\Action::class)
                         ->name('home'),
+                    Route::get('/employees')
+                        ->middleware(RequirePermission::for(Permission::EmployeeUpdate))
+                        ->action(Web\EmployeeList\Action::class)
+                        ->name('employee.list'),
+                    Route::methods([Method::GET, Method::POST], '/employees/create')
+                        ->middleware(RequirePermission::for(Permission::EmployeeCreate))
+                        ->action(Web\EmployeeForm\Action::class)
+                        ->name('employee.create'),
+                    Route::methods([Method::GET, Method::POST], '/employees/{id:\d+}/edit')
+                        ->middleware(RequirePermission::for(Permission::EmployeeUpdate))
+                        ->action(Web\EmployeeForm\Action::class)
+                        ->name('employee.edit'),
+                    Route::methods([Method::GET, Method::POST], '/employees/{id:\d+}/delete')
+                        ->middleware(RequirePermission::for(Permission::EmployeeDelete))
+                        ->action(Web\EmployeeDelete\Action::class)
+                        ->name('employee.delete'),
+                    Route::methods([Method::GET, Method::POST], '/employees/{id:\d+}/setup-code')
+                        ->middleware(RequirePermission::for(Permission::EmployeeUpdate))
+                        ->action(Web\EmployeeSetupCode\Action::class)
+                        ->name('employee.setupCode'),
                     Route::get('/sites')
                         ->middleware(RequirePermission::for(Permission::SiteUpdate))
                         ->action(Web\SiteList\Action::class)
