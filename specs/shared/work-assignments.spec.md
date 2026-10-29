@@ -284,8 +284,8 @@ Baseline before starting: unit 52 tests, integration 143 tests, all passing (tak
 - [x] D5. Add `tests/Integration/Web/AssignmentPagesTest.php`, and run `make test`.
 
 ### E. Documentation
-- [ ] E1. `README.md`: mention the seeded assignments in Setup and the new pieces where the project structure is described, keeping exactly the existing sections.
-- [ ] E2. `CLAUDE.md`: describe `ASSIGNMENT`, the stored vs displayed status, the "needs access" definition and `findEmployeesNeedingAccess()`, `ClockInterface` for today in `Europe/Riga`, and the no-inline-JavaScript asset for the assignment pages.
+- [x] E1. `README.md`: mention the seeded assignments in Setup and the new pieces where the project structure is described, keeping exactly the existing sections.
+- [x] E2. `CLAUDE.md`: describe `ASSIGNMENT`, the stored vs displayed status, the "needs access" definition and `findEmployeesNeedingAccess()`, `ClockInterface` for today in `Europe/Riga`, and the no-inline-JavaScript asset for the assignment pages.
 
 ### Z. Wrap-up
 - [ ] Z1. Run `make check`: code style, PHPStan at level max and all tests pass. CI is green on the pull request.
