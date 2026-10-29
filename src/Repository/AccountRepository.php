@@ -6,7 +6,6 @@ namespace App\Repository;
 
 use App\Entity\Account;
 use DateTimeImmutable;
-use DateTimeZone;
 use Yiisoft\Db\Connection\ConnectionInterface;
 use Yiisoft\Db\Expression\Expression;
 use Yiisoft\Db\Query\Query;
@@ -15,7 +14,6 @@ final readonly class AccountRepository implements AccountRepositoryInterface
 {
     public const array COLUMNS = ['EMPLOYEE_ID', 'EMAIL', 'PASSWORD_HASH', 'IS_ACTIVE', 'SETUP_CODE_HASH', 'SETUP_CODE_EXPIRES_AT'];
 
-    private const string DATE_FORMAT = 'Y-m-d H:i:s';
 
     public function __construct(
         private ConnectionInterface $db,
@@ -44,7 +42,7 @@ final readonly class AccountRepository implements AccountRepositoryInterface
                 'EMAIL' => self::normalize($email),
                 'IS_ACTIVE' => $isActive ? 1 : 0,
                 'SETUP_CODE_HASH' => $setupCodeHash,
-                'SETUP_CODE_EXPIRES_AT' => self::utc($expiresAt),
+                'SETUP_CODE_EXPIRES_AT' => DbTime::toUtc($expiresAt),
             ])
             ->execute();
     }
@@ -61,7 +59,7 @@ final readonly class AccountRepository implements AccountRepositoryInterface
 
     public function replaceSetupCode(int $employeeId, string $setupCodeHash, DateTimeImmutable $expiresAt): void
     {
-        $this->update($employeeId, ['SETUP_CODE_HASH' => $setupCodeHash, 'SETUP_CODE_EXPIRES_AT' => self::utc($expiresAt)]);
+        $this->update($employeeId, ['SETUP_CODE_HASH' => $setupCodeHash, 'SETUP_CODE_EXPIRES_AT' => DbTime::toUtc($expiresAt)]);
     }
 
     public function completeSetup(int $employeeId, string $setupCodeHash, string $passwordHash, DateTimeImmutable $now): bool
@@ -78,7 +76,7 @@ final readonly class AccountRepository implements AccountRepositoryInterface
                 [
                     'and',
                     ['EMPLOYEE_ID' => $employeeId, 'SETUP_CODE_HASH' => $setupCodeHash, 'PASSWORD_HASH' => null, 'IS_ACTIVE' => 1],
-                    ['>', 'SETUP_CODE_EXPIRES_AT', self::utc($now)],
+                    ['>', 'SETUP_CODE_EXPIRES_AT', DbTime::toUtc($now)],
                 ],
             )
             ->execute();
@@ -107,9 +105,7 @@ final readonly class AccountRepository implements AccountRepositoryInterface
             passwordHash: $row['PASSWORD_HASH'],
             isActive: (bool) (int) $row['IS_ACTIVE'],
             setupCodeHash: $row['SETUP_CODE_HASH'],
-            setupCodeExpiresAt: $row['SETUP_CODE_EXPIRES_AT'] === null
-                ? null
-                : new DateTimeImmutable($row['SETUP_CODE_EXPIRES_AT'], new DateTimeZone('UTC')),
+            setupCodeExpiresAt: DbTime::fromUtc($row['SETUP_CODE_EXPIRES_AT']),
         );
     }
 
@@ -141,10 +137,5 @@ final readonly class AccountRepository implements AccountRepositoryInterface
     private static function normalize(string $email): string
     {
         return mb_strtolower(trim($email));
-    }
-
-    private static function utc(DateTimeImmutable $time): string
-    {
-        return $time->setTimezone(new DateTimeZone('UTC'))->format(self::DATE_FORMAT);
     }
 }

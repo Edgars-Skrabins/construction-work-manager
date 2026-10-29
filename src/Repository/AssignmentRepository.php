@@ -11,7 +11,6 @@ use App\Entity\AssignmentListItem;
 use App\Entity\AssignmentStatus;
 use App\Entity\EmployeeNeedingAccess;
 use DateTimeImmutable;
-use DateTimeZone;
 use Yiisoft\Data\Db\QueryDataReader;
 use Yiisoft\Data\Paginator\OffsetPaginator;
 use Yiisoft\Db\Connection\ConnectionInterface;
@@ -228,8 +227,6 @@ final readonly class AssignmentRepository implements AssignmentRepositoryInterfa
     private static function assignmentFromRow(array $row): Assignment
     {
         /** @var array{ID: int|string, EMPLOYEE_ID: int|string, WORK_ITEM_ID: int|string, CONSTRUCTION_SITE_ID: int|string, START_DATE: string, END_DATE: string, STATUS: string, CREATED_BY_ID: int|string, CREATED_AT: string, UPDATED_AT: string} $row */
-        $utc = new DateTimeZone('UTC');
-
         return new Assignment(
             id: (int) $row['ID'],
             employeeId: (int) $row['EMPLOYEE_ID'],
@@ -239,8 +236,8 @@ final readonly class AssignmentRepository implements AssignmentRepositoryInterfa
             endDate: new DateTimeImmutable($row['END_DATE']),
             status: AssignmentStatus::from($row['STATUS']),
             createdById: (int) $row['CREATED_BY_ID'],
-            createdAt: new DateTimeImmutable($row['CREATED_AT'], $utc),
-            updatedAt: new DateTimeImmutable($row['UPDATED_AT'], $utc),
+            createdAt: DbTime::fromUtc($row['CREATED_AT']),
+            updatedAt: DbTime::fromUtc($row['UPDATED_AT']),
         );
     }
 

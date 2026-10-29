@@ -7,6 +7,7 @@ namespace App\Tests\Integration\Web\Shared\Access;
 use App\Access\AccessChecker;
 use App\Access\ForbiddenException;
 use App\Access\Permission;
+use App\Tests\CallableRequestHandler;
 use App\Tests\Integration\IntegrationTestCase;
 use App\Tests\Integration\Web\WebClient;
 use App\Web\Shared\Access\RequirePermission;
@@ -14,7 +15,6 @@ use App\Web\Shared\Access\ViewAccess;
 use Psr\EventDispatcher\EventDispatcherInterface;
 use Psr\Http\Message\ResponseFactoryInterface;
 use Psr\Http\Message\ResponseInterface;
-use Psr\Http\Message\ServerRequestFactoryInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Psr\Http\Server\RequestHandlerInterface;
 use ValueError;
@@ -116,20 +116,13 @@ final class RequirePermissionTest extends IntegrationTestCase
 
     private function serverRequest(): ServerRequestInterface
     {
-        return $this->service(ServerRequestFactoryInterface::class)->createServerRequest('GET', 'http://localhost/');
+        return $this->createRequest('GET', '/');
     }
 
     private function handler(): RequestHandlerInterface
     {
         $response = $this->service(ResponseFactoryInterface::class)->createResponse(204);
 
-        return new readonly class ($response) implements RequestHandlerInterface {
-            public function __construct(private ResponseInterface $response) {}
-
-            public function handle(ServerRequestInterface $request): ResponseInterface
-            {
-                return $this->response;
-            }
-        };
+        return new CallableRequestHandler(static fn(): ResponseInterface => $response);
     }
 }
