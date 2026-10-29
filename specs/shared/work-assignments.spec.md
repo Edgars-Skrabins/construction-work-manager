@@ -71,11 +71,11 @@ Everything else is already in the stack: `yiisoft/db-mssql`, the `SQL/` migratio
 
 - **Route guard:** `App\Web\Shared\Access\RequirePermission`, added per route with `->middleware(RequirePermission::for(Permission::AssignmentRead))` and so on. It throws `ForbiddenException`, which `ForbiddenMiddleware` turns into the 403 page.
 - **Link hiding:** the view parameter `access` (`App\Web\Shared\Access\ViewAccess`), used as `{% if access.can('assignment.create') %}`.
-- **Navigation:** one `<li>` in the `navbar-nav` list in `src/Web/Shared/Layout/Main/layout.twig`, wrapped in `{% if access.can('assignment.read') %}` and marked active by the `assignment.` route-name prefix.
+- **Navigation:** one `<li>` in the `navbar-nav` list in `src/Web/Shared/Layout/Main/layout.twig`, wrapped in `{% if access.can('assignment.update') %}` (decision 31) and marked active by the `assignment.` route-name prefix.
 - **Lists:** `App\Web\Shared\Listing\ListParams::fromRequest($request)` and `->applyTo($paginator)`, which reads `sort` and `page` and clamps the page, with the `sort-link.twig` and `pagination.twig` partials.
 - **Validation:** `App\Service\ValidationException` with `array<string, string> $errors` and `forField()`, thrown with several errors at once. No own exception class.
 - **Not found:** actions `return $this->notFoundHandler->handle($request)` when a lookup returns null; there is no not-found exception.
-- **Flash:** there is no `flash` view parameter, because `WebViewRenderer` renders after the session is committed (admin-management decision 27). The list action, as the redirect target, reads `Yiisoft\Session\Flash\FlashInterface::get('success')` during the request and passes `messages` to its template, which includes `Web/Shared/Flash/messages.twig`. Create, edit and delete set the message with `FlashInterface` before redirecting.
+- **Flash:** admin-management renders eagerly (`RenderBeforeSessionClose`, its decision #189), so the layout shows success messages through the `flash` view parameter. Create, edit and delete call `App\Web\Shared\Flash\FlashMessages::addSuccess()` before redirecting with `Redirector::toRoute()`; the list action reads nothing itself.
 - **Transactions:** `App\Repository\TransactionRunnerInterface::run(callable)`, available if a write ever spans several statements. This spec's writes are single statements and don't need it.
 - **Repositories for the pickers and checks:** `EmployeeRepositoryInterface::withRole(Role::Employee, managerId: $id)` (`managerId: null` for the admin), `EmployeeRepositoryInterface` lookups by ID, `ConstructionSiteRepositoryInterface::all()` and its lookup by ID (with the required access level), `WorkItemRepositoryInterface::all()` and its lookup by ID, and `AccessLevelRepositoryInterface::all()` for level names.
 
@@ -164,20 +164,22 @@ The down script deletes IDs 1 to 6. Integration tests never depend on the seed r
 
 ### Web pages
 
-All in the authenticated route group, each route with `RequirePermission::for(…)`, buttons and links hidden with `access.can(…)`. Page folders follow admin-management's folder style, with an action and a `template.twig` each; C0 aligns the exact folder names with the merged code.
+All in the authenticated route group, each route with `RequirePermission::for(…)`, buttons and links hidden with `access.can(…)`, in admin-management's folder style (one form action for create and edit, like `SiteForm`):
 
-- `assignment.list`: GET `/assignments`, `Permission::AssignmentRead`, `src/Web/Assignment/List/`.
-- `assignment.create`: GET and POST `/assignments/create`, `Permission::AssignmentCreate`, `src/Web/Assignment/Create/`.
-- `assignment.edit`: GET and POST `/assignments/{id:\d+}/edit`, `Permission::AssignmentUpdate`, `src/Web/Assignment/Edit/`.
-- `assignment.delete`: POST `/assignments/{id:\d+}/delete`, `Permission::AssignmentDelete`, `src/Web/Assignment/Delete/` (action only).
+- `assignment.list`: GET `/assignments`, `Permission::AssignmentUpdate` (decision 31), `src/Web/AssignmentList/`.
+- `assignment.create`: GET and POST `/assignments/create`, `Permission::AssignmentCreate`, `src/Web/AssignmentForm/`.
+- `assignment.edit`: GET and POST `/assignments/{id:\d+}/edit`, `Permission::AssignmentUpdate`, `src/Web/AssignmentForm/`.
+- `assignment.delete`: POST `/assignments/{id:\d+}/delete`, `Permission::AssignmentDelete`, `src/Web/AssignmentDelete/` (action only).
 
-The actions stay thin: they read the current user's ID and role from `CurrentUser`, call `AssignmentService`, catch `ValidationException` to re-render the form, return `NotFoundHandler::handle()` for a null `find`, and otherwise render or redirect with a flash message set through `FlashInterface`.
+`src/Web/AssignmentForm/AssignmentForm.php` holds the posted fields and implements `RulesProviderInterface`: creating requires employee, work item, site and both dates; editing requires both dates and the status. Business rules stay in the service. For the edit page's read-only names, `AssignmentService::find()` returns the scoped `AssignmentListItem` through `AssignmentRepositoryInterface::findListItem()`, which shares the list's query.
+
+The actions stay thin: they read the current user's ID from `CurrentUser`, call `AssignmentService`, merge a `ValidationException` into the form errors with `mergeInto()`, return `NotFoundHandler::handle()` for a null `find` or a `NotFoundException`, and otherwise render or redirect with a flash message.
 
 ### JavaScript
 
 The hardening branch sets a `Content-Security-Policy` that allows scripts only from `'self'`, so there are no `<script>` blocks and no inline `on*=` attributes anywhere.
 
-- `assets/assignment/assignment.js`, published by `App\Web\Assignment\AssignmentAsset` (an `AssetBundle` like `MainAsset`, `sourcePath` `@assetsSource/assignment`, depending on `MainAsset`), registered only by the assignment list and create templates.
+- `assets/assignment/assignment.js`, published by `App\Web\Shared\Layout\Main\AssignmentAsset` (next to the other asset bundles, `sourcePath` `@assetsSource/assignment`, depending on `MainAsset`), registered only by the assignment list and form templates.
 - It attaches everything with `addEventListener` after `DOMContentLoaded`:
   - **Site filter:** each employee `<option>` carries `data-access-level` and each site `<option>` `data-required-level`. On employee change, and once on load so a re-rendered form stays consistent, site options above the level get `hidden` and `disabled`, and the site value is cleared if its option was hidden. With no employee selected, every site option is disabled.
   - **Delete confirmation:** a `submit` listener on every form with `data-confirm="…"` calls `confirm()` with that text and calls `preventDefault()` when the user declines.
@@ -210,7 +212,7 @@ The hardening branch sets a `Content-Security-Policy` that allows scripts only f
 
 ## 2.3 Decisions
 
-Decisions 4 to 25 were first logged as rows #126 to #147 of the Decision Log; the later changes are logged as new rows.
+Decisions 4 to 25 were first logged as rows #126 to #147 of the Decision Log; the later changes are logged as new rows (#183 to #187, #192 to #196).
 
 1. **Permissions and scope (Decision Log #54, before this spec):** managers have `assignment.create`, `read`, `update` and `delete`, scoped to their subordinates; the admin has them on all rows.
 2. **Subordinate and access level rules (#21, before this spec):** a manager assigns only employees whose `MANAGER_ID` is theirs, to a site whose `REQUIRED_ACCESS_LEVEL_ID` ≤ the employee's `ACCESS_LEVEL_ID`. Both checks live in `AssignmentService` with `AccessChecker::ensure()`, and the pickers only offer valid choices too.
@@ -244,6 +246,8 @@ Decisions 4 to 25 were first logged as rows #126 to #147 of the Decision Log; th
 29. **`Y-m-d` everywhere (2026-10-29):** dates are entered, validated, shown in messages and listed as `Y-m-d`, like the admin employee list's birth dates and the "My assignments" page. Rejected: a local format such as `d.m.Y`.
 30. **Overlap race accepted (2026-10-29):** the overlap check and the insert are not atomic, so two concurrent creates of the same job can both pass. This is an accepted trade-off: contention is low, a duplicate is harmless and visible in the list, and it can be cancelled. No locking. Rejected: a serializable transaction or an application lock around create and update.
 
+31. **List guarded by `assignment.update` (2026-10-29):** employees hold `assignment.read` with the `Own` scope for the "My assignments" page, so guarding `/assignments` and its nav link by `read` would show employees this management list. Like admin-management's lists (#146), the route and the link need `assignment.update`, which only managers and the admin have, and employees get the 403 page. `AssignmentService::list()` still ensures `assignment.read`. Rejected: a role check in the action.
+
 # Part 3 — Implementation TODO
 
 Read Part 1 and Part 2 before starting. Work through the tasks in order and tick each one when it is done.
@@ -273,11 +277,11 @@ Baseline before starting: unit 52 tests, integration 143 tests, all passing (tak
 - [x] C2. Add `tests/Integration/Service/AssignmentServiceTest.php`, and run `make test`.
 
 ### D. Pages
-- [ ] D1. Add the list page with `ListParams`, the sort-link and pagination partials, status badges and the "Access level too low" badge.
-- [ ] D2. Add `assets/assignment/assignment.js` and `AssignmentAsset` with the site filter and the `data-confirm` listener, and the create page with the filtered pickers, registering the asset. No inline script or `on*=` attribute.
-- [ ] D3. Add the edit page and the delete action, with the list's Delete button as a POST form marked `data-confirm="Delete this assignment?"`.
-- [ ] D4. Add the routes to the authenticated group in `config/common/routes.php`, each with `RequirePermission::for(…)`, and the "Assignments" `<li>` to the `navbar-nav` list, wrapped in `access.can('assignment.read')`.
-- [ ] D5. Add `tests/Integration/Web/AssignmentPagesTest.php`, and run `make test`.
+- [x] D1. Add the list page with `ListParams`, the sort-link and pagination partials, status badges and the "Access level too low" badge.
+- [x] D2. Add `assets/assignment/assignment.js` and `AssignmentAsset` with the site filter and the `data-confirm` listener, and the create page with the filtered pickers, registering the asset. No inline script or `on*=` attribute.
+- [x] D3. Add the edit page and the delete action, with the list's Delete button as a POST form marked `data-confirm="Delete this assignment?"`.
+- [x] D4. Add the routes to the authenticated group in `config/common/routes.php`, each with `RequirePermission::for(…)`, and the "Assignments" `<li>` to the `navbar-nav` list, wrapped in `access.can('assignment.update')` (decision 31). Checked in a browser at `http://localhost:8082`: under the CSP the site filter enables no site before an employee is chosen, one for level 1 and three for level 3, the declined `confirm()` keeps the row, and the console shows no errors.
+- [x] D5. Add `tests/Integration/Web/AssignmentPagesTest.php`, and run `make test`.
 
 ### E. Documentation
 - [ ] E1. `README.md`: mention the seeded assignments in Setup and the new pieces where the project structure is described, keeping exactly the existing sections.
