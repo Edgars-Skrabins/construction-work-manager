@@ -36,7 +36,7 @@
     </li>
 {% endmacro %}
 <div class="d-none d-md-block">
-    <table class="table table-bordered bg-white small work-calendar">
+    <table class="table table-bordered small work-calendar">
         <thead>
             <tr>
                 {% for weekday in ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'] %}
@@ -48,7 +48,7 @@
             {% for week in weeks %}
                 <tr>
                     {% for day in week %}
-                        <td class="{% if day.isToday %}table-primary{% elseif not day.inMonth %}bg-light text-secondary{% endif %}"{% if day.isToday %} aria-current="date"{% endif %}>
+                        <td class="{% if day.isToday %}table-primary{% elseif not day.inMonth %}bg-body text-secondary{% endif %}"{% if day.isToday %} aria-current="date"{% endif %}>
                             <div class="fw-semibold mb-1">{{ day.date|date('j') }}{% if day.isToday %}<span class="visually-hidden"> Today</span>{% endif %}</div>
                             {% if day.entries is not empty %}
                                 <ul class="list-unstyled mb-0">

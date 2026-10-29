@@ -10,7 +10,7 @@
     <p class="text-secondary">No assignments yet.</p>
 {% else %}
     <div class="table-responsive">
-        <table class="table table-striped align-middle bg-white">
+        <table class="table align-middle assignment-table">
             <thead>
                 <tr>
                     <th scope="col">{% include 'Web/Shared/Listing/sort-link.twig' with {label: 'Employee', key: 'employee', route: 'assignment.list'} %}</th>
@@ -25,7 +25,7 @@
             <tbody>
                 {% for row in rows %}
                     {% set item = row.item %}
-                    <tr>
+                    <tr class="{{ row.status.stripeClass() }}">
                         <td>{{ item.employeeName }}</td>
                         <td>{{ item.workItemName }}</td>
                         <td>{{ item.constructionSiteName }}</td>
@@ -34,7 +34,7 @@
                         <td>
                             <span class="badge {{ row.status.badgeClass() }}">{{ row.status.label() }}</span>
                             {% if item.accessLevelTooLow() %}
-                                <span class="badge text-bg-danger">Access level too low</span>
+                                <span class="badge border border-danger text-danger">Access level too low</span>
                             {% endif %}
                         </td>
                         <td class="text-end text-nowrap">

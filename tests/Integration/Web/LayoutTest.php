@@ -49,7 +49,7 @@ final class LayoutTest extends IntegrationTestCase
         $body = (string) $response->getBody();
 
         assertSame(200, $response->getStatusCode());
-        assertStringContainsString('<nav class="navbar navbar-expand-lg navbar-dark bg-dark">', $body);
+        assertStringContainsString('<nav class="navbar navbar-expand-lg site-navbar">', $body);
         assertStringContainsString(self::TOGGLER, $body);
         assertMatchesRegularExpression('#<div class="collapse navbar-collapse" id="main-navbar">\s*<ul class="navbar-nav me-auto mb-2 mb-lg-0">.*href="' . preg_quote($landingPage, '#') . '".*</ul>\s*<form [^>]*action="/logout">.*Log out</button>\s*</form>\s*</div>#s', $body);
         assertMatchesRegularExpression('#<script src="/assets/bootstrap/[^"]*bootstrap\.bundle\.min\.js[^"]*"#', $body);
@@ -81,5 +81,26 @@ final class LayoutTest extends IntegrationTestCase
 
         assertDoesNotMatchRegularExpression('#<script(?![^>]*\ssrc=)[^>]*>#', $body);
         assertDoesNotMatchRegularExpression('#\son[a-z]+\s*=#i', $body);
+    }
+
+    #[DataProvider('landingPages')]
+    public function testLandingPagesUseTheDarkTheme(string $email, string $landingPage): void
+    {
+        $this->logIn($email, '123123123');
+
+        $this->assertDarkTheme((string) $this->request('GET', $landingPage)->getBody());
+    }
+
+    public function testLoginPageUsesTheDarkTheme(): void
+    {
+        $this->assertDarkTheme((string) $this->request('GET', '/login')->getBody());
+    }
+
+    private function assertDarkTheme(string $body): void
+    {
+        assertMatchesRegularExpression('#<html lang="[^"]+" data-bs-theme="dark">#', $body);
+        assertStringNotContainsString('bg-light', $body);
+        assertStringNotContainsString('bg-white', $body);
+        assertStringNotContainsString('navbar-dark', $body);
     }
 }

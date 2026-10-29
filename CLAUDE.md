@@ -10,7 +10,7 @@ Construction Work Manager is a work management module for construction sites. Ad
 - Microsoft SQL Server 2022 through `yiisoft/db-mssql` and `pdo_sqlsrv`
 - Migrations with `yiisoft/db-migration`
 - Authorization with `yiisoft/rbac` and `yiisoft/rbac-db`
-- Twig views through `yiisoft/view-twig`, styled with Bootstrap 5
+- Twig views through `yiisoft/view-twig`, styled with Bootstrap 5 in its dark color mode (`data-bs-theme="dark"`), with the app's palette as Bootstrap variable overrides in `assets/main/site.css`
 - PHPUnit, PHPStan and PHP-CS-Fixer
 - Docker Compose for local development, GitHub Actions for CI
 
