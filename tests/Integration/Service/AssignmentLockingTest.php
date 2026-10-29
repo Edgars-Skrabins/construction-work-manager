@@ -144,7 +144,7 @@ final class AssignmentLockingTest extends IntegrationTestCase
         assertTrue($item->employeeAccessLevel < $item->siteRequiredAccessLevel);
         assertNotContains(5, array_map(
             static fn(EmployeeNeedingAccess $e): int => $e->employeeId,
-            $assignments->findEmployeesNeedingAccess(2, new DateTimeImmutable('2030-01-15')),
+            $assignments->findEmployeesNeedingAccess(2, new DateTimeImmutable('2030-01-15'), new DateTimeImmutable('2030-01-15')),
         ));
     }
 
@@ -300,9 +300,9 @@ final class AssignmentLockingTest extends IntegrationTestCase
                 $this->assignments->delete($id);
             }
 
-            public function findEmployeesNeedingAccess(int $constructionSiteId, DateTimeImmutable $date): array
+            public function findEmployeesNeedingAccess(int $constructionSiteId, DateTimeImmutable $from, DateTimeImmutable $to): array
             {
-                return $this->assignments->findEmployeesNeedingAccess($constructionSiteId, $date);
+                return $this->assignments->findEmployeesNeedingAccess($constructionSiteId, $from, $to);
             }
         };
     }
