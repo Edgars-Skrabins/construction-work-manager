@@ -81,7 +81,7 @@ In the `integration` job, after "Create database and logins" and before "Integra
 
 Remove every comment the template brought, keeping the code around it:
 - `docker/Dockerfile`: the "Based on …" line and the two inline `#` lines in the user setup `RUN`, which is rewritten as one `&&` chain, so any failing step fails the build (revised 2026-10-29 after review):
-  - `groupadd --force`: the base image already has GIDs such as 20 (`dialout`, the macOS `staff` GID) and 100 (`users`). With `--force`, an existing GID makes `groupadd` pick a free one for `appuser` instead of failing, and `useradd --gid` then uses the existing group, exactly as the template's `;` chain ended up doing.
+  - `groupadd --force`: the base image already has GIDs such as 20 (`dialout`, the macOS `staff` GID) and 100 (`users`). With `--force`, an existing GID makes `groupadd` pick a free one for `appuser` instead of failing, and `useradd --gid` then uses the existing group, exactly as the template's `;` chain ended up doing. This is intentional: `USER_ID` and `GROUP_ID` come from the host so files in the bind mount keep their owner, and a host GID that already exists in the image must still build. CI's GID 1001 is free in the image, so CI never takes this path.
   - `useradd` names the user `${USER_NAME}` instead of `${GROUP_NAME}`, a template bug hidden by both defaulting to `appuser`.
   - The two `chown -R` calls become one.
 - `docker/Caddyfile`: the three header lines.
@@ -155,6 +155,6 @@ Baseline before starting: CI run 40860644200 on `main` took lint 42 s, unit 56 s
 - [x] D2. Rewrite the Dockerfile apt step as in 2.2. The image builds, and the security baseline check still runs.
 
 ### Z. Wrap-up
-- [ ] Z1. `make check` passes, and `README.md` and `CLAUDE.md` are checked against the changes.
+- [x] Z1. `make check` passes, and `README.md` and `CLAUDE.md` are checked against the changes.
 - [ ] Z2. Push and confirm CI is green: the "Security headers" step passes, and the job and test step times are recorded here next to the baseline.
-- [ ] Z3. Manual check at http://127.0.0.1:8085: log in, browse the pages and an unknown URL, and confirm the headers in the browser's network tab and no CSP violations in the console.
+- [x] Z3. Manual check at http://127.0.0.1:8085: log in, browse the pages and an unknown URL, and confirm the headers in the browser's network tab and no CSP violations in the console.
