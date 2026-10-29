@@ -284,6 +284,7 @@ final class LanguageTest extends IntegrationTestCase
         yield 'setup code' => ['admin@mail.test', 'GET', '/employees/4/setup-code', []];
         yield 'sites' => ['admin@mail.test', 'GET', '/sites', []];
         yield 'site create errors' => ['admin@mail.test', 'POST', '/sites/create', ['name' => '', 'street' => '', 'city' => '', 'country' => '', 'area' => '0', 'requiredAccessLevelId' => '']];
+        yield 'site code format error' => ['admin@mail.test', 'POST', '/sites/create', ['code' => '-x', 'name' => 'Language test site', 'street' => 'Iela 1', 'city' => 'Rīga', 'country' => 'Latvia', 'area' => '10', 'requiredAccessLevelId' => '1']];
         yield 'site edit' => ['admin@mail.test', 'GET', '/sites/1/edit', []];
         yield 'site delete refused' => ['admin@mail.test', 'POST', '/sites/2/delete', []];
         yield 'work items' => ['admin@mail.test', 'GET', '/work-items', []];
