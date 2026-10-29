@@ -17,7 +17,7 @@ Admin management lets an admin view, add, edit and delete employees, constructio
      - Each row has Edit and Delete buttons, shown with the update and delete permissions.
      - With no rows the table is replaced by "No employees yet." (or "No construction sites yet.", "No work items yet.").
      - Columns:
-       - Employees: Name ("Last, First", sortable as `name`: last name, then first name), Birth date (`birthDate`), Access level name (`accessLevel`, by level ID), Role (`role`), Manager's full name or "—" (`manager`, by the manager's last and first name), Login (not sortable): "—" without an account, "Pending setup" without a password, "Active" or "Inactive".
+       - Employees: Name ("Last, First", sortable as `name`: last name, then first name), Birth date (`birthDate`), Access level name (`accessLevel`, by level ID), Role (`role`), Manager's full name or "—" (`manager`, by the manager's last and first name), Login (not sortable): "—" without an account, "Inactive" for a deactivated account (even before setup, since it can't be set up while inactive), "Pending setup" without a password, otherwise "Active".
        - Construction sites: Name (`name`), City (`city`), Country (`country`), Area in m² shown with two decimals (`area`), Required access level name (`accessLevel`, by level ID).
        - Work items: Name (`name`), Description cut to 100 characters with "…" (not sortable).
        - Ties are broken by ID, so paging is stable.
@@ -141,7 +141,7 @@ Each interface has a `yiisoft/db` implementation next to it, bound in a new `con
   - `listPaginator(string $sort): OffsetPaginator` of `EmployeeListItem`, joining `ACCESS_LEVEL`, the manager (`LEFT JOIN EMPLOYEE m`) and `ACCOUNT`. Sort keys: `name` → `LAST_NAME, FIRST_NAME`, `birthDate`, `accessLevel` → `ACCESS_LEVEL_ID`, `role`, `manager` → `m.LAST_NAME, m.FIRST_NAME`.
   - `find(int $id): ?Employee` (with its account).
   - `withRole(Role $role, ?int $managerId = null, ?int $exceptId = null): list<Employee>`: everyone with that role, sorted by last and first name, optionally only those under `$managerId` and without `$exceptId`. The form uses it for the manager select (`Role::Manager`), and `work-assignments` uses it for assignable employees (`Role::Employee`, under a manager).
-  - `isManager(int $id): bool`, `hasSubordinates(int $id): bool`.
+  - `hasSubordinates(int $id): bool`. The manager check uses `find()` and the found employee's role.
   - `create(EmployeeData $data): int` returns the new ID.
   - `update(int $id, EmployeeData $data, bool $roleChanged): void` sets `UPDATED_AT`, and `ROLE_ASSIGNED_AT` when `$roleChanged`.
   - `delete(int $id): void`.
@@ -164,8 +164,9 @@ Every public method takes the acting employee's ID as its first argument and cal
   - `listPaginator(int $actorId, string $sort): OffsetPaginator` needs `EmployeeUpdate`.
   - `find(int $actorId, int $id): ?Employee` needs `EmployeeUpdate`.
   - `managers(int $actorId, ?int $exceptId): list<Employee>` needs `EmployeeUpdate` and calls `withRole(Role::Manager, exceptId: $exceptId)`.
+  - `accessLevels(int $actorId): list<AccessLevel>` needs `EmployeeRead` and feeds the form's select.
   - `create(int $actorId, EmployeeInput $input): SavedEmployee` needs `EmployeeCreate`.
-  - `update(int $actorId, int $id, EmployeeInput $input): SavedEmployee` needs `EmployeeUpdate`.
+  - `update(int $actorId, int $id, EmployeeInput $input): SavedEmployee` needs `EmployeeUpdate`. The action checks that the employee exists first, so a missing ID here is a programming error (`InvalidArgumentException`).
   - `newSetupCode(int $actorId, int $id): string` needs `EmployeeUpdate` and returns the formatted code. It throws `ValidationException` when the account is missing or has a password.
   - `delete(int $actorId, int $id): void` needs `EmployeeDelete` and throws `InUseException`.
   - `EmployeeInput` holds the validated form values (`?string $email`, `bool $loginActive` included). `SavedEmployee` holds `int $id` and `?string $setupCode` (formatted, only when a code was issued).
@@ -310,9 +311,9 @@ Baseline before starting: unit 52 tests, integration 143 tests, all passing.
 - [x] B4. Add the `SiteList`, `SiteForm` and `SiteDelete` pages and their routes.
 
 ### C. Employees and logins
-- [ ] C1. Extend `Account` and `AccountRepository` with the setup code and write methods. Add `SetupCodeGenerator` with its unit test.
-- [ ] C2. Add `Employee`, `EmployeeListItem`, `LoginStatus`, `EmployeeData`, `EmployeeRepositoryInterface` and `EmployeeRepository`.
-- [ ] C3. Add `EmployeeInput`, `SavedEmployee` and `EmployeeService` with `EmployeeServiceTest`.
+- [x] C1. Extend `Account` and `AccountRepository` with the setup code and write methods. Add `SetupCodeGenerator` with its unit test.
+- [x] C2. Add `Employee`, `EmployeeListItem`, `LoginStatus`, `EmployeeData`, `EmployeeRepositoryInterface` and `EmployeeRepository`.
+- [x] C3. Add `EmployeeInput`, `SavedEmployee` and `EmployeeService` with `EmployeeServiceTest`.
 - [ ] C4. Add the `EmployeeList`, `EmployeeForm`, `EmployeeDelete` and `EmployeeSetupCode` pages and their routes.
 - [ ] C5. Add `PasswordSetupService` with its test, the `SetPassword` page and route, and the link on the login page. Add `SetPasswordTest`.
 
