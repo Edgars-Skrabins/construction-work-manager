@@ -12,7 +12,7 @@ interface ConstructionSiteRepositoryInterface
     /**
      * @return OffsetPaginator<int, ConstructionSite>
      */
-    public function listPaginator(string $sort): OffsetPaginator;
+    public function listPaginator(string $sort, string $search): OffsetPaginator;
 
     public function find(int $id): ?ConstructionSite;
 

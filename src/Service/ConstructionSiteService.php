@@ -28,11 +28,11 @@ final readonly class ConstructionSiteService
     /**
      * @return OffsetPaginator<int, ConstructionSite>
      */
-    public function listPaginator(int $actorId, string $sort): OffsetPaginator
+    public function listPaginator(int $actorId, string $sort, string $search): OffsetPaginator
     {
         $this->accessChecker->ensure($actorId, Permission::SiteUpdate);
 
-        return $this->sites->listPaginator($sort);
+        return $this->sites->listPaginator($sort, $search);
     }
 
     public function find(int $actorId, int $id): ?ConstructionSite

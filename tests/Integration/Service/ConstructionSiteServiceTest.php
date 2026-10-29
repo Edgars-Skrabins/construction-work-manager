@@ -191,7 +191,7 @@ final class ConstructionSiteServiceTest extends IntegrationTestCase
     public static function calls(): iterable
     {
         yield 'list' => [static function (ConstructionSiteService $s): void {
-            $s->listPaginator(2, '');
+            $s->listPaginator(2, '', '');
         }];
         yield 'find' => [static function (ConstructionSiteService $s): void {
             $s->find(2, 1);
@@ -224,9 +224,9 @@ final class ConstructionSiteServiceTest extends IntegrationTestCase
                 private ConstructionSiteRepositoryInterface $sites,
             ) {}
 
-            public function listPaginator(string $sort): OffsetPaginator
+            public function listPaginator(string $sort, string $search): OffsetPaginator
             {
-                return $this->sites->listPaginator($sort);
+                return $this->sites->listPaginator($sort, $search);
             }
 
             public function find(int $id): ?ConstructionSite

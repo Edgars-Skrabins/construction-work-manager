@@ -238,11 +238,11 @@ final class AssignmentServiceTest extends IntegrationTestCase
     public function testScopeFollowsTheStoredRole(): void
     {
         $this->existing(7, 1, 1, '2026-11-10', '2026-11-20');
-        assertSame(0, $this->assignments()->list(2, '')->getTotalItems());
+        assertSame(0, $this->assignments()->list(2, '', '')->getTotalItems());
 
         $this->db()->createCommand("UPDATE EMPLOYEE SET ROLE = N'admin' WHERE ID = 2")->execute();
 
-        assertSame(1, $this->assignments()->list(2, '')->getTotalItems());
+        assertSame(1, $this->assignments()->list(2, '', '')->getTotalItems());
     }
 
     public function testListIsScopedToTheManagersEmployees(): void
@@ -250,8 +250,8 @@ final class AssignmentServiceTest extends IntegrationTestCase
         $this->existing(4, 1, 1, '2026-11-10', '2026-11-20');
         $this->existing(7, 1, 1, '2026-11-10', '2026-11-20');
 
-        assertSame(1, $this->assignments()->list(2, '')->getTotalItems());
-        assertSame(2, $this->assignments()->list(1, '')->getTotalItems());
+        assertSame(1, $this->assignments()->list(2, '', '')->getTotalItems());
+        assertSame(2, $this->assignments()->list(1, '', '')->getTotalItems());
     }
 
     public function testEmployeesReadOnlyTheirOwnAssignments(): void
@@ -259,7 +259,7 @@ final class AssignmentServiceTest extends IntegrationTestCase
         $own = $this->existing(4, 1, 1, '2026-11-10', '2026-11-20');
         $other = $this->existing(5, 1, 1, '2026-11-10', '2026-11-20');
 
-        assertSame(1, $this->assignments()->list(4, '')->getTotalItems());
+        assertSame(1, $this->assignments()->list(4, '', '')->getTotalItems());
         assertNotNull($this->assignments()->find(4, $own->id));
         assertNull($this->assignments()->find(4, $other->id));
     }

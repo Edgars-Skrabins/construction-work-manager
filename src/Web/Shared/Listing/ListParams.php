@@ -9,9 +9,12 @@ use Yiisoft\Data\Paginator\OffsetPaginator;
 
 final readonly class ListParams
 {
+    public const int SEARCH_MAX_LENGTH = 100;
+
     public function __construct(
         public string $sort,
         public int $page,
+        public string $q = '',
     ) {}
 
     public static function fromRequest(ServerRequestInterface $request): self
@@ -21,8 +24,9 @@ final readonly class ListParams
         $page = is_string($query['page'] ?? null) && preg_match('/^[1-9]\d{0,8}$/', $query['page']) === 1
             ? (int) $query['page']
             : 1;
+        $q = is_string($query['q'] ?? null) ? trim(mb_substr(trim($query['q']), 0, self::SEARCH_MAX_LENGTH)) : '';
 
-        return new self($sort, $page);
+        return new self($sort, $page, $q);
     }
 
     /**

@@ -45,14 +45,16 @@ This runs `docker compose up -d --build`, `docker compose exec app composer inst
 
 It also seeds a login account for every seeded employee. All of them use the password `123123123`:
 
-- `admin@mail.test`: Jānis Bērziņš, admin
-- `manager@mail.test`: Ilze Kalniņa, manager
-- `manager2@mail.test`: Andris Ozoliņš, manager
-- `employee@mail.test`: Mārtiņš Liepiņš, employee reporting to Ilze Kalniņa
-- `employee2@mail.test`: Laura Krūmiņa, employee reporting to Ilze Kalniņa
-- `employee3@mail.test`: Kristaps Vītols, employee reporting to Ilze Kalniņa
-- `employee4@mail.test`: Anna Zariņa, employee reporting to Andris Ozoliņš
-- `employee5@mail.test`: Roberts Kalējs, employee reporting to Andris Ozoliņš
+| Email | Person | Role | Use it to test |
+|---|---|---|---|
+| `admin@mail.test` | Jānis Bērziņš | admin | Managing employees, construction sites and work items, and seeing every assignment |
+| `manager@mail.test` | Ilze Kalniņa | manager | Assigning work to a team (Mārtiņš, Laura and Kristaps) and seeing only that team's assignments |
+| `manager2@mail.test` | Andris Ozoliņš | manager | That one manager can't see or assign another manager's employees |
+| `employee@mail.test` | Mārtiņš Liepiņš | employee | My assignments with work in progress |
+| `employee2@mail.test` | Laura Krūmiņa | employee | Work that is planned and hasn't started yet |
+| `employee3@mail.test` | Kristaps Vītols | employee | Overdue work, past its end date but still active |
+| `employee4@mail.test` | Anna Zariņa | employee | Work at the classified Ādaži site, which needs the highest access level |
+| `employee5@mail.test` | Roberts Kalējs | employee | No current work, only finished and cancelled assignments under History |
 
 Like the database passwords, these are dev-only credentials for the local seed data and must never exist in a deployment.
 

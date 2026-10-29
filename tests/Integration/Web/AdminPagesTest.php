@@ -206,6 +206,76 @@ final class AdminPagesTest extends IntegrationTestCase
         assertStringNotContainsString('page=12', $last);
     }
 
+    /**
+     * @return iterable<string, array{string, string, string, string}>
+     */
+    public static function searches(): iterable
+    {
+        yield 'employees' => ['/employees', 'kalniņa', 'Kalniņa, Ilze', 'Vītols, Kristaps'];
+        yield 'employees by email' => ['/employees', 'employee3@', 'Vītols, Kristaps', 'Kalniņa, Ilze'];
+        yield 'sites' => ['/sites', 'Daugavpils', 'Daugavpils School Renovation', 'Ādaži Defence Facility'];
+        yield 'work items' => ['/work-items', 'pipework', 'Welding', 'Roofing'];
+    }
+
+    #[DataProvider('searches')]
+    public function testSearchShowsOnlyMatchingRowsAndAClearLink(string $path, string $q, string $shown, string $hidden): void
+    {
+        $this->asAdmin();
+
+        $unfiltered = (string) $this->request('GET', $path)->getBody();
+        assertStringContainsString('role="search"', $unfiltered);
+        assertStringContainsString($hidden, $unfiltered);
+        assertStringNotContainsString('>Clear</a>', $unfiltered);
+
+        $body = (string) $this->request('GET', $path . '?q=' . rawurlencode($q))->getBody();
+        assertStringContainsString($shown, $body);
+        assertStringNotContainsString($hidden, $body);
+        assertStringContainsString('name="q" value="' . htmlspecialchars($q) . '"', $body);
+        assertMatchesRegularExpression('#<a class="btn btn-link" href="' . preg_quote($path, '#') . '\?sort=[^"&]*">Clear</a>#', $body);
+    }
+
+    public function testSortAndPageLinksKeepTheSearch(): void
+    {
+        for ($i = 1; $i <= 45; $i++) {
+            $this->db()->createCommand()->insert('WORK_ITEM', ['NAME' => sprintf('%s %03d', self::WORK_ITEM, $i)])->execute();
+        }
+        $this->asAdmin();
+
+        $body = (string) $this->request('GET', '/work-items?sort=-name&page=2&q=' . rawurlencode(self::WORK_ITEM))->getBody();
+
+        preg_match_all('/<a class="(?:page-link|link-body-emphasis[^"]*)" href="([^"]*)"/', $body, $links);
+        assertSame(5, count($links[1]));
+        foreach ($links[1] as $href) {
+            assertStringContainsString('q=' . urlencode(self::WORK_ITEM), html_entity_decode($href));
+        }
+        assertStringContainsString('name="sort" value="-name"', $body);
+        assertStringContainsString(self::WORK_ITEM . ' 025', $body);
+        assertStringNotContainsString(self::WORK_ITEM . ' 026', $body);
+        assertStringNotContainsString('Roofing', $body);
+    }
+
+    public function testUnmatchedSearchEchoesTheQueryEscaped(): void
+    {
+        $this->asAdmin();
+
+        $body = (string) $this->request('GET', '/work-items?q=' . rawurlencode('<script>alert(1)</script>"'))->getBody();
+
+        assertStringContainsString('No results for “&lt;script&gt;alert(1)&lt;/script&gt;&quot;”.', $body);
+        assertStringContainsString('name="q" value="&lt;script&gt;alert(1)&lt;/script&gt;&quot;"', $body);
+        assertStringNotContainsString('<script>alert(1)', $body);
+        assertStringNotContainsString('No work items yet.', $body);
+    }
+
+    public function testSearchIsCutToOneHundredCharacters(): void
+    {
+        $this->asAdmin();
+
+        $body = (string) $this->request('GET', '/work-items?q=' . str_repeat('x', 150))->getBody();
+
+        assertStringContainsString('name="q" value="' . str_repeat('x', 100) . '"', $body);
+        assertStringContainsString('No results for “' . str_repeat('x', 100) . '”.', $body);
+    }
+
     public function testValidationErrorsAreShownUnderTheirFields(): void
     {
         $this->asAdmin();

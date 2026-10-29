@@ -127,7 +127,7 @@ final class WorkItemServiceTest extends IntegrationTestCase
     public static function calls(): iterable
     {
         yield 'list' => [static function (WorkItemService $s): void {
-            $s->listPaginator(2, '');
+            $s->listPaginator(2, '', '');
         }];
         yield 'find' => [static function (WorkItemService $s): void {
             $s->find(2, 1);
@@ -155,9 +155,9 @@ final class WorkItemServiceTest extends IntegrationTestCase
                 private WorkItemRepositoryInterface $workItems,
             ) {}
 
-            public function listPaginator(string $sort): OffsetPaginator
+            public function listPaginator(string $sort, string $search): OffsetPaginator
             {
-                return $this->workItems->listPaginator($sort);
+                return $this->workItems->listPaginator($sort, $search);
             }
 
             public function find(int $id): ?WorkItem

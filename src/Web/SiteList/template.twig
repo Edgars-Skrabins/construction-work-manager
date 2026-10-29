@@ -5,7 +5,10 @@
         <a class="btn btn-primary" href="{{ urlGenerator.generate('site.create') }}">Add construction site</a>
     {% endif %}
 </div>
-{% if paginator.getTotalItems() == 0 %}
+{% include 'Web/Shared/Listing/search-form.twig' with {route: 'site.list', placeholder: 'Name or address'} %}
+{% if paginator.getTotalItems() == 0 and q != '' %}
+    <p class="text-secondary">No results for “{{ q }}”.</p>
+{% elseif paginator.getTotalItems() == 0 %}
     <p class="text-secondary">No construction sites yet.</p>
 {% else %}
     <div class="table-responsive">

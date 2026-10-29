@@ -21,7 +21,7 @@ final readonly class EmployeeRepository implements EmployeeRepositoryInterface
         private ConnectionInterface $db,
     ) {}
 
-    public function listPaginator(string $sort): OffsetPaginator
+    public function listPaginator(string $sort, string $search): OffsetPaginator
     {
         $config = [
             'name' => ListSort::columns(['e.LAST_NAME', 'e.FIRST_NAME'], 'e.ID'),
@@ -46,6 +46,13 @@ final readonly class EmployeeRepository implements EmployeeRepositoryInterface
             ->leftJoin(['m' => 'EMPLOYEE'], 'm.ID = e.MANAGER_ID')
             ->leftJoin(['a' => 'ACCOUNT'], 'a.EMPLOYEE_ID = e.ID')
             ->resultCallback(static fn(array $rows): array => array_map(self::listItemFromRow(...), $rows));
+        $query = ListSearch::apply($query, $search, [
+            'e.FIRST_NAME',
+            'e.LAST_NAME',
+            new Expression("CONCAT(e.FIRST_NAME, N' ', e.LAST_NAME)"),
+            new Expression("CONCAT(e.LAST_NAME, N', ', e.FIRST_NAME)"),
+            'a.EMAIL',
+        ]);
 
         /** @var QueryDataReader<int, EmployeeListItem> $reader */
         $reader = new QueryDataReader($query, ListSort::create($config, $sort, 'name'));
