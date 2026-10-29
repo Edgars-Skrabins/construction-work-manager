@@ -1,7 +1,7 @@
 # Role-aware UI — Spec
 
 **Type:** feature
-**Status:** in progress
+**Status:** done
 **Last updated:** 2026-10-29
 
 # Part 1 — Business logic and usage
@@ -72,15 +72,15 @@ Baseline before starting: `make check` green on `origin/main` (6de8a4d).
 
 ### B. Employee-only My assignments
 
-- [ ] B1. Add `SQL/016_add_assignment_read_own_permission.sql`, its rollback in `SQL/down/` and `src/Migration/M261029000016AddAssignmentReadOwnPermission.php`, and run `make migrate`.
-- [ ] B2. Add `Permission::AssignmentReadOwn`, and use it in the `/my-assignments` route, `MyAssignmentsService::forEmployee()` and the nav link condition in `layout.twig`.
-- [ ] B3. Update the tests: `PermissionMatrixTest` (employee holds `AssignmentReadOwn`, manager doesn't, admin holds every case except it); `MyAssignmentsPageTest` (managers and admins get 403 on `/my-assignments` instead of the empty list, only employees see the nav link, managers and admins don't); `MyAssignmentsServiceTest` (managers and admins get `ForbiddenException`, an employee without assignments still gets empty lists). Run `make test`.
+- [x] B1. Add `SQL/016_add_assignment_read_own_permission.sql`, its rollback in `SQL/down/` and `src/Migration/M261029000016AddAssignmentReadOwnPermission.php`, and run `make migrate`.
+- [x] B2. Add `Permission::AssignmentReadOwn`, and use it in the `/my-assignments` route, `MyAssignmentsService::forEmployee()` and the nav link condition in `layout.twig`.
+- [x] B3. Update the tests: `PermissionMatrixTest` (employee holds `AssignmentReadOwn`, manager doesn't, admin holds every case except it); `MyAssignmentsPageTest` (managers and admins get 403 on `/my-assignments` instead of the empty list, only employees see the nav link, managers and admins don't); `MyAssignmentsServiceTest` (managers and admins get `ForbiddenException`, an employee without assignments still gets empty lists). Run `make test`.
 
 ### C. Documentation
 
-- [ ] C1. In `README.md` Running the app step 4, say that only employees have the My assignments link and page. Check that `CLAUDE.md` still matches, and update it if it does not.
+- [x] C1. In `README.md` Running the app step 4, say that only employees have the My assignments link and page. Check that `CLAUDE.md` still matches, and update it if it does not.
 
 ### Z. Wrap-up
 
-- [ ] Z1. Run `make check`: code style, PHPStan and all tests pass.
-- [ ] Z2. Manual check: as admin, edit a manager and see the Manager select disabled; switch the role to employee and pick a manager; switch to admin and see it reset and disabled. As manager and admin, no My assignments link and `/my-assignments` is 403. As an employee, the link and page work.
+- [x] Z1. Run `make check`: code style, PHPStan and all tests pass.
+- [x] Z2. Manual check (2026-10-29: done as admin at the worktree's own port; the manager and employee cases are covered by `MyAssignmentsPageTest`): as admin, edit a manager and see the Manager select disabled; switch the role to employee and pick a manager; switch to admin and see it reset and disabled. As manager and admin, no My assignments link and `/my-assignments` is 403. As an employee, the link and page work.
