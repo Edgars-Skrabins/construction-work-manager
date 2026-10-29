@@ -41,7 +41,7 @@ final class MyAssignmentsPageTest extends IntegrationTestCase
         assertStringContainsString('Required access level: General', $body);
         assertStringContainsString('Concrete works', $body);
         assertStringContainsString('Formwork, reinforcement and pouring of foundations, slabs and walls.', $body);
-        assertMatchesRegularExpression('#\d{4}-\d{2}-\d{2} – \d{4}-\d{2}-\d{2}\s*<span class="badge text-bg-primary">In progress</span>#u', $body);
+        assertMatchesRegularExpression('#<span class="text-nowrap">\d{4}-\d{2}-\d{2} – \d{4}-\d{2}-\d{2}</span>\s*<span class="badge text-bg-primary">In progress</span>#u', $body);
         assertStringNotContainsString(self::OTHER_EMPLOYEES_SITE, $body);
         assertStringNotContainsString(self::OTHER_EMPLOYEES_WORK, $body);
         assertStringNotContainsString(self::EMPTY_STATE, $body);
