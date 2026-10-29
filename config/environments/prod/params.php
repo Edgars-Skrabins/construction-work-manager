@@ -2,4 +2,12 @@
 
 declare(strict_types=1);
 
-return [];
+return [
+    'yiisoft/session' => [
+        'session' => [
+            'options' => [
+                'cookie_secure' => 1,
+            ],
+        ],
+    ],
+];

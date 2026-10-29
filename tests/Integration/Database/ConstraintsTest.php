@@ -35,6 +35,13 @@ final class ConstraintsTest extends IntegrationTestCase
         $this->assertRejected("DELETE FROM RBAC_ITEM WHERE name = N'manager'", 'FK_EMPLOYEE_ROLE');
     }
 
+    public function testManagerWithEmployeesCannotBeDeleted(): void
+    {
+        $this->db()->createCommand('DELETE FROM ACCOUNT WHERE EMPLOYEE_ID = 2')->execute();
+
+        $this->assertRejected('DELETE FROM EMPLOYEE WHERE ID = 2', 'FK_EMPLOYEE_MANAGER_ID');
+    }
+
     /**
      * @return iterable<string, array{string, string}>
      */
@@ -56,7 +63,6 @@ final class ConstraintsTest extends IntegrationTestCase
         ];
         yield 'duplicate work item name' => ["INSERT INTO WORK_ITEM (NAME) VALUES (N'Welding')", 'UQ_WORK_ITEM_NAME'];
         yield 'referenced access level deleted' => ['DELETE FROM ACCESS_LEVEL WHERE ID = 1', 'FK_EMPLOYEE_ACCESS_LEVEL_ID'];
-        yield 'manager with employees deleted' => ['DELETE FROM EMPLOYEE WHERE ID = 2', 'FK_EMPLOYEE_MANAGER_ID'];
         yield 'role item type other than role' => ["UPDATE EMPLOYEE SET ROLE_ITEM_TYPE = N'permission' WHERE ID = 4", 'CK_EMPLOYEE_ROLE_ITEM_TYPE'];
         yield 'unknown item type' => [
             "INSERT INTO RBAC_ITEM (name, type, created_at, updated_at) VALUES (N'test.item', N'group', 0, 0)",
@@ -68,7 +74,7 @@ final class ConstraintsTest extends IntegrationTestCase
     {
         try {
             $this->db()->createCommand($sql)->execute();
-            self::fail("Expected $constraint to reject the row.");
+            self::fail("Expected $constraint to reject the statement.");
         } catch (DbException $e) {
             assertStringContainsString($constraint, $e->getMessage());
         }

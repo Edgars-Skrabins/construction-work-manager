@@ -12,7 +12,7 @@ use function PHPUnit\Framework\assertSame;
 
 final class MigrationRoundTripTest extends IntegrationTestCase
 {
-    private const array TABLES = ['WORK_ITEM', 'CONSTRUCTION_SITE', 'EMPLOYEE', 'ACCESS_LEVEL', 'RBAC_ITEM_CHILD', 'RBAC_ITEM'];
+    private const array TABLES = ['ACCOUNT', 'WORK_ITEM', 'CONSTRUCTION_SITE', 'EMPLOYEE', 'ACCESS_LEVEL', 'RBAC_ITEM_CHILD', 'RBAC_ITEM'];
 
     public function testAllMigrationsRevertAndReapply(): void
     {
