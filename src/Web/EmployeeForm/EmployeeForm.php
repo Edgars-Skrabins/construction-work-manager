@@ -103,13 +103,6 @@ final class EmployeeForm
             return $result->addError('Enter the birth date as YYYY-MM-DD.');
         }
 
-        $today = new DateTimeImmutable('today');
-        if ($date > $today->modify('-16 years')) {
-            $result->addError('The employee must be at least 16 years old.');
-        } elseif ($date <= $today->modify('-101 years')) {
-            $result->addError('The employee must be at most 100 years old.');
-        }
-
         return $result;
     }
 }

@@ -11,10 +11,13 @@ use App\Entity\ConstructionSite;
 use App\Repository\AccessLevelRepositoryInterface;
 use App\Repository\ConstructionSiteData;
 use App\Repository\ConstructionSiteRepositoryInterface;
+use Closure;
 use Yiisoft\Data\Paginator\OffsetPaginator;
 
 final readonly class ConstructionSiteService
 {
+    private const string NAME_TAKEN = 'A construction site with this name already exists.';
+
     public function __construct(
         private ConstructionSiteRepositoryInterface $sites,
         private AccessLevelRepositoryInterface $accessLevels,
@@ -53,7 +56,7 @@ final readonly class ConstructionSiteService
         $this->accessChecker->ensure($actorId, Permission::SiteCreate);
         $this->validate($data, null);
 
-        return $this->sites->create($data);
+        return $this->guardName(fn(): int => $this->sites->create($data));
     }
 
     public function update(int $actorId, int $id, ConstructionSiteData $data): void
@@ -61,7 +64,7 @@ final readonly class ConstructionSiteService
         $this->accessChecker->ensure($actorId, Permission::SiteUpdate);
         $this->validate($data, $id);
 
-        $this->sites->update($id, $data);
+        $this->guardName(fn() => $this->sites->update($id, $data));
     }
 
     public function delete(int $actorId, int $id): void
@@ -75,7 +78,7 @@ final readonly class ConstructionSiteService
     {
         $errors = [];
         if ($this->sites->nameExists($data->name, $exceptId)) {
-            $errors['name'] = 'A construction site with this name already exists.';
+            $errors['name'] = self::NAME_TAKEN;
         }
         if (!$this->accessLevels->exists($data->requiredAccessLevelId)) {
             $errors['requiredAccessLevelId'] = 'Choose an access level.';
@@ -84,5 +87,15 @@ final readonly class ConstructionSiteService
         if ($errors !== []) {
             throw new ValidationException($errors);
         }
+    }
+
+    /**
+     * @template T
+     * @param Closure(): T $write
+     * @return T
+     */
+    private function guardName(Closure $write): mixed
+    {
+        return ValidationException::guardUnique($write, 'UQ_CONSTRUCTION_SITE_NAME', 'name', self::NAME_TAKEN);
     }
 }
