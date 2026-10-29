@@ -27,7 +27,7 @@
                 </button>
                 <div class="collapse navbar-collapse" id="main-navbar">
                     <ul class="navbar-nav me-auto mb-2 mb-lg-0">
-                        {% if access.can('assignment.read') %}
+                        {% if access.can('assignment.readOwn') %}
                             <li class="nav-item">
                                 <a class="nav-link{% if routeName == 'my-assignments' %} active{% endif %}" href="{{ urlGenerator.generate('my-assignments') }}">My assignments</a>
                             </li>
