@@ -53,17 +53,19 @@ Names marked *(from work-assignments)* or *(from admin-management)* come from th
 ### Data
 
 `src/Entity/AssignedWork.php` (new): a `final readonly` class, one row per assignment of the user:
-- `Assignment $assignment` *(from work-assignments: `App\Entity\Assignment`, with `startDate`, `endDate`, `status` and `displayStatus()`)*.
-- `string $siteName`, `string $street`, `string $city`, `string $country`, `string $requiredAccessLevel` (the `ACCESS_LEVEL.NAME`), `string $workItemName`, `?string $workItemDescription`.
+- `AssignmentListItem $item` *(from work-assignments: `App\Entity\AssignmentListItem`, holding the `Assignment` with `startDate`, `endDate`, `status` and `displayStatus()`, plus the work item name, the site name and the site's required access level)*. It is composed, not copied, so no field list exists twice.
+- Only the extra fields: `string $street`, `string $city`, `string $country`, `?string $workItemDescription`. If the site ID isn't on the `Assignment`, add `int $siteId` too.
 - `address(): string` returns `street, city, country`.
 
-`src/Entity/AssignedSite.php` (new): a `final readonly` class for one card: `int $siteId`, `string $siteName`, `string $address`, `string $requiredAccessLevel`, and `/** @var list<AssignedWork> */ array $work`.
+`src/Entity/AssignedSite.php` (new): a `final readonly` class for one card, holding only `/** @var non-empty-list<AssignedWork> */ array $work` (all at the same site). The card's site name, address and required access level are read from its first `AssignedWork`, so the site fields aren't declared a second time.
 
 Repository: a new method on `App\Repository\AssignmentRepositoryInterface` and `App\Repository\AssignmentRepository` *(from work-assignments)*:
 
 - `findAssignedWork(int $employeeId): list<AssignedWork>`
-- One query: `ASSIGNMENT` joined to `CONSTRUCTION_SITE`, `ACCESS_LEVEL` (on `REQUIRED_ACCESS_LEVEL_ID`) and `WORK_ITEM`, `WHERE ASSIGNMENT.EMPLOYEE_ID = :employeeId`, all statuses, ordered by `CONSTRUCTION_SITE.NAME`, `WORK_ITEM.NAME`, `START_DATE`, then `ASSIGNMENT.ID`.
-- The `Assignment` in each row is built with the same row mapping that work-assignments' repository already uses. Work-assignments' `listPaginator` doesn't return the address or the work item description, so it isn't reused.
+- First, as a separate refactor commit, extract one private base-query builder in `AssignmentRepository`: the from, the joins, the scope condition (`All`, `Subordinates`, `Own`) and the shared select. `listPaginator` uses it and keeps its paging and order, and work-assignments' tests stay green without changes.
+- `findAssignedWork()` uses the same builder with the `Own` scope for `$employeeId`, adds the extra columns (`CONSTRUCTION_SITE.STREET`, `CITY`, `COUNTRY`, `WORK_ITEM.DESCRIPTION`), all statuses and no paging, ordered by `CONSTRUCTION_SITE.NAME`, `WORK_ITEM.NAME`, `START_DATE`, then `ASSIGNMENT.ID`.
+- Each row's `AssignmentListItem` is built with the existing `listItemFromRow` / `assignmentFromRow` mapping. Only the extra columns are mapped here.
+- Rejected: calling `listPaginator` and reading every page (N queries for one view, and it lacks the extra columns). Rejected: a second hand-written query (duplicates the joins and the scope).
 
 ### Service
 
@@ -135,6 +137,7 @@ Integration, all inside a transaction that is rolled back. Assignments are inser
 16. **History layout (2026-10-29):** a `<details>` element, closed by default, holding a flat list (site, work item, period, badge), newest end date first. It needs no JavaScript, so it is unaffected by the hardening spec's CSP. Rejected: history grouped by site. Rejected: Bootstrap's JavaScript collapse.
 17. **Period and status on each line (2026-10-29):** each line shows start date – end date and the displayed status badge, reusing work-assignments' `displayStatus()`, `label()` and `badgeClass()`, because the employee needs to know when. Rejected: the period without a badge.
 18. **Date format (2026-10-29):** the same format as the work-assignments list, for consistency across the app.
+19. **One query definition (2026-10-29, agreed with the coordinating session):** `listPaginator` and `findAssignedWork()` share one private base-query builder, and `AssignedWork` composes an `AssignmentListItem` plus only the extra fields. Badges come only from `AssignmentDisplayStatus`, and `ListSort` and the shared partials are reused where they fit. Rejected: reading every page of `listPaginator`. Rejected: a second hand-written query and a second field list.
 
 # Part 3 — Implementation TODO
 
@@ -151,7 +154,8 @@ No duplicated code: reuse what the merged specs already provide (the `Assignment
 ### A. Data
 - [ ] A0. Run `make up` and `make test`, and record the baseline test counts above.
 - [ ] A1. Add `src/Entity/AssignedWork.php` and `src/Entity/AssignedSite.php`.
-- [ ] A2. Add `findAssignedWork(int $employeeId)` to `AssignmentRepositoryInterface` and `AssignmentRepository`, with the joins, the employee `WHERE` and the ordering from 2.2, reusing the existing `Assignment` row mapping.
+- [ ] A2. Refactor commit: extract the private base-query builder (from, joins, scope, shared select) in `AssignmentRepository` and use it in `listPaginator`. Run `make test`: work-assignments' tests pass unchanged.
+- [ ] A3. Add `findAssignedWork(int $employeeId)` to `AssignmentRepositoryInterface` and `AssignmentRepository` on top of that builder, with the extra columns and the ordering from 2.2, reusing `listItemFromRow` / `assignmentFromRow`.
 
 ### B. Service
 - [ ] B1. Add `src/Service/MyAssignments.php` and `src/Service/MyAssignmentsService.php` with `forEmployee()`: permission check, the split into current and history, grouping by site, and the history order.
