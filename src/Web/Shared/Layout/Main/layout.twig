@@ -6,7 +6,7 @@
 {% do this.addJsVars(assetManager.getJsVars()) %}
 {% do this.beginPage() %}
 <!DOCTYPE html>
-<html lang="{{ applicationParams.locale }}">
+<html lang="{{ applicationParams.locale }}" data-bs-theme="dark">
 <head>
     <meta charset="{{ applicationParams.charset }}">
     <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -14,10 +14,10 @@
     <title>{{ this.getTitle() }}</title>
     {% do this.head() %}
 </head>
-<body class="d-flex flex-column bg-light">
+<body class="d-flex flex-column">
 {% do this.beginBody() %}
 <header>
-    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+    <nav class="navbar navbar-expand-lg site-navbar">
         <div class="container">
             <a class="navbar-brand" href="{{ aliases.get('@baseUrl') }}">{{ applicationParams.name }}</a>
             {% if not currentUser.isGuest() %}
@@ -56,7 +56,7 @@
                     <form class="d-flex flex-wrap align-items-center gap-2 gap-lg-3 pb-2 pb-lg-0" method="post" action="{{ urlGenerator.generate('logout') }}">
                         {{ csrf.hiddenInput()|raw }}
                         <span class="navbar-text">{{ currentUser.getIdentity().fullName() }} ({{ currentUser.getIdentity().role.value }})</span>
-                        <button type="submit" class="btn btn-outline-light btn-sm">Log out</button>
+                        <button type="submit" class="btn btn-outline-secondary btn-sm">Log out</button>
                     </form>
                 </div>
             {% endif %}
