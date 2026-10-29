@@ -15,6 +15,7 @@ use App\Entity\Employee;
 use App\Repository\AssignmentRepositoryInterface;
 use App\Repository\ConstructionSiteRepositoryInterface;
 use App\Repository\EmployeeRepositoryInterface;
+use App\Repository\TransactionRunnerInterface;
 use App\Repository\WorkItemRepositoryInterface;
 use App\Service\AssignmentService;
 use App\Service\NotFoundException;
@@ -25,6 +26,7 @@ use Closure;
 use DateTimeImmutable;
 use DateTimeZone;
 use PHPUnit\Framework\Attributes\DataProvider;
+use Yiisoft\Db\Exception\SerializationFailureException;
 use Yiisoft\Translator\TranslatorInterface;
 
 use function PHPUnit\Framework\assertCount;
@@ -145,7 +147,7 @@ final class AssignmentServiceTest extends IntegrationTestCase
         yield 'several errors at once' => [9999, 4, '2026-11-20', '2026-11-10', [
             'endDate' => "The end date can't be before the start date.",
             'workItem' => 'Choose a work item.',
-            'constructionSite' => 'The site requires access level 4; the employee has level 3.',
+            'constructionSite' => 'The site requires access level 4; the employee has level 2.',
         ]];
     }
 
@@ -198,6 +200,22 @@ final class AssignmentServiceTest extends IntegrationTestCase
         assertSame(AssignmentStatus::Done, $this->assignments()->find(2, $assignment->id)?->assignment->status);
 
         $this->assertErrors(fn() => $this->assignments()->update(2, $assignment->id, '2026-11-10', '2026-11-20', 'active'), $levelError);
+    }
+
+    public function testADeadlockedSaveAsksToTryAgain(): void
+    {
+        $assignment = $this->existing(5, 1, 2, '2026-11-10', '2026-11-20');
+        $deadlocked = new class implements TransactionRunnerInterface {
+            public function run(callable $work): mixed
+            {
+                throw new SerializationFailureException('Transaction was deadlocked and has been chosen as the deadlock victim.', ['40001', 1205, '']);
+            }
+        };
+        $assignments = $this->assignmentsAt(new DateTimeImmutable('2026-10-29 12:00', new DateTimeZone('Europe/Riga')), $deadlocked);
+        $tryAgain = ['startDate' => "The assignment couldn't be saved because of a change made at the same time. Try again."];
+
+        $this->assertErrors(fn() => $assignments->create(2, 5, 3, 2, '2026-11-10', '2026-11-20'), $tryAgain);
+        $this->assertErrors(fn() => $assignments->update(2, $assignment->id, '2026-11-10', '2026-11-25', 'active'), $tryAgain);
     }
 
     public function testAnotherManagersAssignmentIsNotFound(): void
@@ -280,10 +298,11 @@ final class AssignmentServiceTest extends IntegrationTestCase
         $manager = $this->assignments()->formOptions(2);
         $admin = $this->assignments()->formOptions(1);
 
-        assertSame([4, 5, 6], self::sortedIds($manager->employees));
-        assertSame([4, 5, 6, 7, 8], self::sortedIds($admin->employees));
-        assertCount(4, $manager->sites);
-        assertCount(5, $manager->workItems);
+        assertSame([4, 5, 6, ...range(59, 70)], self::sortedIds($manager->employees));
+        assertSame([...range(4, 8), ...range(16, 80)], self::sortedIds($admin->employees));
+        assertSame([], $this->assignments()->formOptions(15)->employees);
+        assertCount(11, $manager->sites);
+        assertCount(25, $manager->workItems);
     }
 
     public function testCalendarShowsTheTeamOfTheActorsStoredRole(): void
@@ -297,8 +316,8 @@ final class AssignmentServiceTest extends IntegrationTestCase
         assertSame([5, 4, 6], self::employeeIds($this->assignments()->calendar(2, $from, $to, null)));
         assertSame([8, 5, 4, 6, 7], self::employeeIds($this->assignments()->calendar(1, $from, $to, null)));
         assertSame([4], self::employeeIds($this->assignments()->calendar(2, $from, $to, 4)));
-        assertSame([4, 5, 6], self::sortedIds($this->assignments()->teamEmployees(2)));
-        assertSame([4, 5, 6, 7, 8], self::sortedIds($this->assignments()->teamEmployees(1)));
+        assertSame([4, 5, 6, ...range(59, 70)], self::sortedIds($this->assignments()->teamEmployees(2)));
+        assertSame([...range(4, 8), ...range(16, 80)], self::sortedIds($this->assignments()->teamEmployees(1)));
     }
 
     /**
@@ -398,7 +417,7 @@ final class AssignmentServiceTest extends IntegrationTestCase
         return $this->service(AssignmentService::class);
     }
 
-    private function assignmentsAt(DateTimeImmutable $now): AssignmentService
+    private function assignmentsAt(DateTimeImmutable $now, ?TransactionRunnerInterface $transaction = null): AssignmentService
     {
         return new AssignmentService(
             $this->service(AssignmentRepositoryInterface::class),
@@ -408,6 +427,7 @@ final class AssignmentServiceTest extends IntegrationTestCase
             $this->service(AccessChecker::class),
             $this->service(AccessScope::class),
             new FixedClock($now),
+            $transaction ?? $this->service(TransactionRunnerInterface::class),
             $this->service(TranslatorInterface::class),
         );
     }

@@ -18,6 +18,7 @@ use App\Web\Shared\Rendering\RenderBeforeSessionClose;
 use App\Web\Shared\Language\LanguageMiddleware;
 use PHPUnit\Framework\Attributes\DataProvider;
 use Psr\Http\Message\ResponseInterface;
+use Psr\Http\Message\ServerRequestFactoryInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Yiisoft\Csrf\CsrfTokenMiddleware;
 use Yiisoft\ErrorHandler\Middleware\ErrorCatcher;
@@ -27,6 +28,8 @@ use Yiisoft\Yii\Http\Application;
 
 use function PHPUnit\Framework\assertCount;
 use function PHPUnit\Framework\assertFalse;
+use function PHPUnit\Framework\assertGreaterThan;
+use function PHPUnit\Framework\assertLessThanOrEqual;
 use function PHPUnit\Framework\assertNotNull;
 use function PHPUnit\Framework\assertSame;
 use function PHPUnit\Framework\assertStringNotContainsString;
@@ -94,6 +97,44 @@ final class ApiPipelineTest extends IntegrationTestCase
     public function testLanguageCookieDoesNotTranslateProblems(): void
     {
         $this->assertUnauthorized($this->handleRequest('GET', '/api/v1/anything', [], ['locale' => 'lv']));
+    }
+
+    public function testTwentyRejectedRequestsFromOneAddressGetTooManyRequests(): void
+    {
+        $plainKey = $this->service(ApiKeyService::class)->issue('North Gate', null)->plainKey;
+        for ($i = 0; $i < 19; $i++) {
+            $this->assertUnauthorized($this->handleRequest('GET', '/api/v1/anything', ['Authorization' => 'Bearer cwm_wrong']));
+        }
+        $this->assertUnauthorized($this->handleRequest('GET', '/api/v1/anything'));
+
+        $response = $this->handleRequest('GET', '/api/v1/anything', ['Authorization' => 'Bearer ' . $plainKey]);
+
+        assertSame(429, $response->getStatusCode());
+        assertSame('application/problem+json; charset=utf-8', $response->getHeaderLine('Content-Type'));
+        assertSame('no-store', $response->getHeaderLine('Cache-Control'));
+        assertSame('{"type":"about:blank","title":"Too Many Requests","status":429}', (string) $response->getBody());
+        $retryAfter = (int) $response->getHeaderLine('Retry-After');
+        assertGreaterThan(840, $retryAfter);
+        assertLessThanOrEqual(900, $retryAfter);
+        assertFalse($response->hasHeader('WWW-Authenticate'));
+    }
+
+    public function testFailuresFromAnotherAddressDoNotBlockTheClient(): void
+    {
+        $plainKey = $this->service(ApiKeyService::class)->issue('North Gate', null)->plainKey;
+        $request = $this->createRequest('GET', '/api/v1/anything', ['Authorization' => 'Bearer cwm_wrong']);
+        $attacker = $this->service(ServerRequestFactoryInterface::class)
+            ->createServerRequest('GET', 'http://localhost/api/v1/anything', ['REMOTE_ADDR' => '198.51.100.9'])
+            ->withHeader('Authorization', 'Bearer cwm_wrong');
+        for ($i = 0; $i < 20; $i++) {
+            $this->assertUnauthorized($this->service(Application::class)->handle($attacker));
+        }
+
+        $response = $this->handleRequest('GET', '/api/v1/anything', ['Authorization' => 'Bearer ' . $plainKey]);
+
+        assertSame(404, $response->getStatusCode());
+        assertSame(429, $this->service(Application::class)->handle($attacker)->getStatusCode());
+        assertSame(401, $this->service(Application::class)->handle($request)->getStatusCode());
     }
 
     public function testDuplicateAuthorizationHeaderIsRejected(): void

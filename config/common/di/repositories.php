@@ -8,6 +8,8 @@ use App\Repository\ApiKeyRepository;
 use App\Repository\ApiKeyRepositoryInterface;
 use App\Repository\AssignmentRepository;
 use App\Repository\AssignmentRepositoryInterface;
+use App\Repository\AuthThrottleRepository;
+use App\Repository\AuthThrottleRepositoryInterface;
 use App\Repository\ConstructionSiteRepository;
 use App\Repository\ConstructionSiteRepositoryInterface;
 use App\Repository\DbTransactionRunner;
@@ -21,6 +23,7 @@ return [
     AccessLevelRepositoryInterface::class => AccessLevelRepository::class,
     ApiKeyRepositoryInterface::class => ApiKeyRepository::class,
     AssignmentRepositoryInterface::class => AssignmentRepository::class,
+    AuthThrottleRepositoryInterface::class => AuthThrottleRepository::class,
     ConstructionSiteRepositoryInterface::class => ConstructionSiteRepository::class,
     EmployeeRepositoryInterface::class => EmployeeRepository::class,
     TransactionRunnerInterface::class => DbTransactionRunner::class,

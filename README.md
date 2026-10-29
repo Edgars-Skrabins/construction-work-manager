@@ -42,20 +42,28 @@ Build and start the containers, install the Composer dependencies and apply the 
 make up
 ```
 
-This runs `docker compose up -d --build`, `docker compose exec app composer install` and `docker compose exec app ./yii migrate:up`. It starts SQL Server, creates the app database and the database logins, starts the app, brings the schema up to date and loads the seed data: 8 employees (an admin, two managers and their employees), 4 construction sites, 5 work items and 6 assignments of work items to employees at sites, dated around the day of the migration so they show every status (Planned, In progress, Overdue, Done and Cancelled). SQL Server keeps its data in a Docker volume between restarts.
+This runs `docker compose up -d --build`, `docker compose exec app composer install` and `docker compose exec app ./yii migrate:up`. It starts SQL Server, creates the app database and the database logins, starts the app, brings the schema up to date and loads the seed data. SQL Server keeps its data in a Docker volume between restarts. The seed data is:
 
-It also seeds a login account for every seeded employee. All of them use the password `123123123`:
+- 80 employees: 3 admins, 7 managers and 70 employees with all four access levels, spread across six of the managers. Margus Tamm is a manager without subordinates, and a few employees have no assignments.
+- 11 construction sites in Latvia, Lithuania and Estonia with every required access level. Kaunas Logistics Hub has no assignments.
+- 25 work items, real construction trades. Elevator installation has no assignments.
+- 177 assignments, dated around the day of the migration so they show every status (Planned, In progress, Overdue, Done and Cancelled), work that starts or ends today, one-day and year-long periods, employees working at several sites at once and sites with many employees today. Four active assignments are flagged because the employee's access level is below the site's.
+
+The lists have several pages: Employees 4, Assignments 9 for the admin and 3 for `manager@mail.test`.
+
+It also seeds seven login accounts, one for each case worth logging in for. All of them use the password `123123123`:
 
 | Email | Person | Role | Use it to test |
 |---|---|---|---|
 | `admin@mail.test` | Jānis Bērziņš | admin | Managing employees, construction sites and work items, and seeing every assignment |
-| `manager@mail.test` | Ilze Kalniņa | manager | Assigning work to a team (Mārtiņš, Laura and Kristaps) and seeing only that team's assignments |
-| `manager2@mail.test` | Andris Ozoliņš | manager | That one manager can't see or assign another manager's employees |
-| `employee@mail.test` | Mārtiņš Liepiņš | employee | My assignments with work in progress |
-| `employee2@mail.test` | Laura Krūmiņa | employee | Work that is planned and hasn't started yet |
-| `employee3@mail.test` | Kristaps Vītols | employee | Overdue work, past its end date but still active |
-| `employee4@mail.test` | Anna Zariņa | employee | Work at the classified Ādaži site, which needs the highest access level |
-| `employee5@mail.test` | Roberts Kalējs | employee | No current work, only finished and cancelled assignments under History |
+| `manager@mail.test` | Ilze Kalniņa | manager | A big team of 15 employees with work at 10 sites in every status, including flagged assignments, over several pages |
+| `manager2@mail.test` | Andris Ozoliņš | manager | A small team of two (Anna Zariņa and Roberts Kalējs), and that one manager can't see or assign another manager's employees |
+| `manager3@mail.test` | Margus Tamm | manager | A manager without a team: the empty assignment list and an employee picker with nobody in it |
+| `employee@mail.test` | Mārtiņš Liepiņš | employee | My assignments at three sites in every status, work starting today and ending today, and History |
+| `employee2@mail.test` | Laura Krūmiņa | employee | No current work, only finished and cancelled assignments under History |
+| `employee3@mail.test` | Kristaps Vītols | employee | A lowered access level: one active assignment is flagged as "Access level too low", and the API leaves him out for that site |
+
+The other employees have no login, so the admin can try giving them one.
 
 Like the database passwords, these are dev-only credentials for the local seed data and must never exist in a deployment.
 
@@ -66,9 +74,10 @@ Like the database passwords, these are dev-only credentials for the local seed d
 3. As a manager (`manager@mail.test`), you land on Assignments after login, the work items given to your own employees at construction sites. You can sort the list, add an assignment (only sites your chosen employee's access level allows are offered), change its dates or mark it Done or Cancelled, and delete it. The admin sees and manages every employee's assignments. A badge marks an active assignment whose employee's access level is now too low for its site. Managers also have Employees in the navbar: a read-only list of their own employees, and its Work calendar (`/employees/calendar`), a month grid of the team's assigned work with today highlighted, previous and next month links and a filter for one employee. On a phone it becomes a list of the days with work. The admin sees everyone in both.
 4. As an employee (`employee@mail.test`), you land on My assignments after login: one section per construction site with its address, required access level and a Google Maps link, listing your current work with its dates and status, each as its own block with a stripe in its status color. Finished and cancelled work is under History. Only employees have the My assignments link and page, because work is only assigned to employees.
 5. An employee the admin gives a login email gets a one-time setup code, shown to the admin once and valid for 72 hours. The employee opens "First login? Set your password" on the login page (`/set-password`), enters the email, the code and a new password, and is logged in.
-6. The language selector at the right of the navbar, also on the login page, switches the UI between English, Latvian, Lithuanian, Estonian, Russian, Finnish and Swedish. The choice is kept in a cookie for a year. Names of employees, sites, work items and access levels are shown as stored, dates stay `YYYY-MM-DD`, and the API stays English.
-7. External pass systems use the JSON API under `/api/v1`. Each client needs its own API key, sent as `Authorization: Bearer <key>`. Create one with `docker compose exec app ./yii api-key:create "North Gate"` (optionally with `--expires=YYYY-MM-DD`). The key is shown only once and only its hash is stored. `GET /api/v1/construction-sites/{id}/employees` returns the site and the employees who need access to it today: those with an active assignment there whose access level is still high enough. For example, `curl -H "Authorization: Bearer <key>" http://localhost:8080/api/v1/construction-sites/1/employees`. Errors are JSON problem details: a missing, wrong, revoked or expired key gets `401`, an unknown site `404` and a malformed site ID `422`.
-8. Stop the containers with `make down` (`docker compose down`). `docker compose down -v` also deletes the database volume.
+6. After 5 failed attempts for one email within 15 minutes, or 20 from one IP address, the login page and the set-password page answer "Too many attempts. Try again in N minutes." until the 15 minutes are over. A successful login clears that email's failures. The limits are the `authThrottle` params in `config/common/params.php`.
+7. The language selector at the right of the navbar, also on the login page, switches the UI between English, Latvian, Lithuanian, Estonian, Russian, Finnish and Swedish. The choice is kept in a cookie for a year. Names of employees, sites, work items and access levels are shown as stored, dates stay `YYYY-MM-DD`, and the API stays English.
+8. External pass systems use the JSON API under `/api/v1`. Each client needs its own API key, sent as `Authorization: Bearer <key>`. Create one with `docker compose exec app ./yii api-key:create "North Gate"` (optionally with `--expires=YYYY-MM-DD`). The key is shown only once and only its hash is stored. `GET /api/v1/construction-sites/{id}/employees` returns the site and the employees who need access to it today: those with an active assignment there whose access level is still high enough. For example, `curl -H "Authorization: Bearer <key>" http://localhost:8080/api/v1/construction-sites/1/employees`. Errors are JSON problem details: a missing, wrong, revoked or expired key gets `401`, an unknown site `404` and a malformed site ID `422`. After 20 rejected requests from one IP address within 15 minutes, that address gets `429` with a `Retry-After` header until the 15 minutes are over.
+9. Stop the containers with `make down` (`docker compose down`). `docker compose down -v` also deletes the database volume.
 
 ## Running tests
 

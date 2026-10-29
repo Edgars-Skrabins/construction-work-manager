@@ -72,6 +72,12 @@ final readonly class EmployeeRepository implements EmployeeRepositoryInterface
         return $this->query()->where(['e.ID' => $id])->one();
     }
 
+    public function findForUpdate(int $id): ?Employee
+    {
+        /** @var Employee|null */
+        return $this->query()->from(new Expression('EMPLOYEE e WITH (UPDLOCK)'))->where(['e.ID' => $id])->one();
+    }
+
     public function roleOf(int $id): ?Role
     {
         $role = (new Query($this->db))->select('ROLE')->from('EMPLOYEE')->where(['ID' => $id])->scalar();

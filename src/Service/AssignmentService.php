@@ -20,10 +20,13 @@ use App\Entity\Employee;
 use App\Repository\AssignmentRepositoryInterface;
 use App\Repository\ConstructionSiteRepositoryInterface;
 use App\Repository\EmployeeRepositoryInterface;
+use App\Repository\TransactionRunnerInterface;
 use App\Repository\WorkItemRepositoryInterface;
+use Closure;
 use DateTimeImmutable;
 use Psr\Clock\ClockInterface;
 use Yiisoft\Data\Paginator\OffsetPaginator;
+use Yiisoft\Db\Exception\SerializationFailureException;
 use Yiisoft\Translator\TranslatorInterface;
 
 use function sprintf;
@@ -40,6 +43,7 @@ final readonly class AssignmentService
         private AccessChecker $accessChecker,
         private AccessScope $accessScope,
         private ClockInterface $clock,
+        private TransactionRunnerInterface $transaction,
         private TranslatorInterface $translator,
     ) {}
 
@@ -100,32 +104,35 @@ final readonly class AssignmentService
         string $endDate,
     ): int {
         $this->accessChecker->ensure($actorId, Permission::AssignmentCreate);
+        $scope = $this->scope($actorId);
 
-        $employee = $this->employees->find($employeeId);
-        if ($employee === null || !$this->isAssignable($employee, $actorId, $this->scope($actorId))) {
-            throw new ForbiddenException(sprintf('Employee %d may not assign employee %d.', $actorId, $employeeId));
-        }
+        return $this->save(function () use ($actorId, $scope, $employeeId, $workItemId, $constructionSiteId, $startDate, $endDate): int {
+            $employee = $this->employees->findForUpdate($employeeId);
+            if ($employee === null || !$this->isAssignable($employee, $actorId, $scope)) {
+                throw new ForbiddenException(sprintf('Employee %d may not assign employee %d.', $actorId, $employeeId));
+            }
 
-        $errors = [];
-        $period = $this->period($startDate, $endDate, $errors);
-        if ($this->workItems->find($workItemId) === null) {
-            $errors['workItem'] = $this->translator->translate('Choose a work item.');
-        }
-        $site = $this->sites->find($constructionSiteId);
-        if ($site === null) {
-            $errors['constructionSite'] = $this->translator->translate('Choose a construction site.');
-        } else {
-            $this->checkAccessLevel($employee, $site, $errors);
-        }
-        if ($period !== null && $errors === []) {
-            $this->checkOverlap($employeeId, $workItemId, $constructionSiteId, $period, null, $errors);
-        }
+            $errors = [];
+            $period = $this->period($startDate, $endDate, $errors);
+            if ($this->workItems->find($workItemId) === null) {
+                $errors['workItem'] = $this->translator->translate('Choose a work item.');
+            }
+            $site = $this->sites->findForUpdate($constructionSiteId);
+            if ($site === null) {
+                $errors['constructionSite'] = $this->translator->translate('Choose a construction site.');
+            } else {
+                $this->checkAccessLevel($employee, $site, $errors);
+            }
+            if ($period !== null && $errors === []) {
+                $this->checkOverlap($employeeId, $workItemId, $constructionSiteId, $period, null, $errors);
+            }
 
-        if ($errors !== [] || $period === null) {
-            throw new ValidationException($errors !== [] ? $errors : $this->invalidPeriod());
-        }
+            if ($errors !== [] || $period === null) {
+                throw new ValidationException($errors !== [] ? $errors : $this->invalidPeriod());
+            }
 
-        return $this->assignments->create($employeeId, $workItemId, $constructionSiteId, $period[0], $period[1], $actorId);
+            return $this->assignments->create($employeeId, $workItemId, $constructionSiteId, $period[0], $period[1], $actorId);
+        });
     }
 
     public function update(int $actorId, int $id, string $startDate, string $endDate, string $status): void
@@ -133,29 +140,31 @@ final readonly class AssignmentService
         $this->accessChecker->ensure($actorId, Permission::AssignmentUpdate);
         $assignment = $this->scopedOrFail($actorId, $id);
 
-        $errors = [];
-        $period = $this->period($startDate, $endDate, $errors);
-        $newStatus = AssignmentStatus::tryFrom($status);
-        if ($newStatus === null) {
-            $errors['status'] = $this->translator->translate('Choose a status.');
-        }
-
-        if ($newStatus === AssignmentStatus::Active) {
-            $employee = $this->employees->find($assignment->employeeId);
-            $site = $this->sites->find($assignment->constructionSiteId);
-            if ($employee !== null && $site !== null) {
-                $this->checkAccessLevel($employee, $site, $errors);
+        $this->save(function () use ($assignment, $startDate, $endDate, $status): void {
+            $errors = [];
+            $period = $this->period($startDate, $endDate, $errors);
+            $newStatus = AssignmentStatus::tryFrom($status);
+            if ($newStatus === null) {
+                $errors['status'] = $this->translator->translate('Choose a status.');
             }
-            if ($period !== null && $errors === []) {
-                $this->checkOverlap($assignment->employeeId, $assignment->workItemId, $assignment->constructionSiteId, $period, $assignment->id, $errors);
+
+            if ($newStatus === AssignmentStatus::Active) {
+                $employee = $this->employees->findForUpdate($assignment->employeeId);
+                $site = $this->sites->findForUpdate($assignment->constructionSiteId);
+                if ($employee !== null && $site !== null) {
+                    $this->checkAccessLevel($employee, $site, $errors);
+                }
+                if ($period !== null && $errors === []) {
+                    $this->checkOverlap($assignment->employeeId, $assignment->workItemId, $assignment->constructionSiteId, $period, $assignment->id, $errors);
+                }
             }
-        }
 
-        if ($errors !== [] || $period === null || $newStatus === null) {
-            throw new ValidationException($errors !== [] ? $errors : $this->invalidPeriod());
-        }
+            if ($errors !== [] || $period === null || $newStatus === null) {
+                throw new ValidationException($errors !== [] ? $errors : $this->invalidPeriod());
+            }
 
-        $this->assignments->updatePeriodAndStatus($assignment->id, $period[0], $period[1], $newStatus);
+            $this->assignments->updatePeriodAndStatus($assignment->id, $period[0], $period[1], $newStatus);
+        });
     }
 
     public function delete(int $actorId, int $id): void
@@ -168,6 +177,20 @@ final readonly class AssignmentService
     public function displayStatus(Assignment $assignment): AssignmentDisplayStatus
     {
         return $assignment->displayStatus($this->clock->now()->setTime(0, 0));
+    }
+
+    /**
+     * @template T
+     * @param Closure(): T $work
+     * @return T
+     */
+    private function save(Closure $work): mixed
+    {
+        try {
+            return $this->transaction->run($work);
+        } catch (SerializationFailureException) {
+            throw ValidationException::forField('startDate', $this->translator->translate("The assignment couldn't be saved because of a change made at the same time. Try again."));
+        }
     }
 
     private function scope(int $actorId): Scope

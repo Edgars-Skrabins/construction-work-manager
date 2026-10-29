@@ -99,7 +99,19 @@ final class ConstructionSiteServiceTest extends IntegrationTestCase
     {
         $names = array_map(static fn(ConstructionSite $site): string => $site->name, $this->service(ConstructionSiteRepositoryInterface::class)->all());
 
-        assertSame(['Ādaži Defence Facility', 'Āgenskalns Residential Block', 'Daugavpils School Renovation', 'Rīga Thermal Power Plant Upgrade'], $names);
+        assertSame([
+            'Ādaži Defence Facility',
+            'Āgenskalns Residential Block',
+            'Daugavpils School Renovation',
+            'Jelgava Library Reconstruction',
+            'Kaunas Logistics Hub',
+            'Liepāja Port Terminal Extension',
+            'Rīga Thermal Power Plant Upgrade',
+            'Tallinn Data Centre',
+            'Valmiera Hospital New Wing',
+            'Ventspils Water Treatment Plant',
+            'Vilnius Office Campus',
+        ], $names);
     }
 
     public function testUnusedSiteIsDeleted(): void
@@ -182,6 +194,11 @@ final class ConstructionSiteServiceTest extends IntegrationTestCase
             public function find(int $id): ?ConstructionSite
             {
                 return $this->sites->find($id);
+            }
+
+            public function findForUpdate(int $id): ?ConstructionSite
+            {
+                return $this->sites->findForUpdate($id);
             }
 
             public function all(): array

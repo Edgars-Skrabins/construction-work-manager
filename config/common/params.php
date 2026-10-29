@@ -20,6 +20,13 @@ use Yiisoft\Yii\View\Renderer\CsrfViewInjection;
 return [
     'application' => require __DIR__ . '/application.php',
 
+    'authThrottle' => [
+        'windowMinutes' => 15,
+        'emailLimit' => 5,
+        'ipLimit' => 20,
+        'apiIpLimit' => 20,
+    ],
+
     'yiisoft/aliases' => [
         'aliases' => require __DIR__ . '/aliases.php',
     ],

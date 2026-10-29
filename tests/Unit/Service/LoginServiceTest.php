@@ -6,9 +6,15 @@ namespace App\Tests\Unit\Service;
 
 use App\Access\Role;
 use App\Entity\Account;
+use App\Entity\AuthThrottle;
 use App\Entity\UserIdentity;
 use App\Repository\AccountRepositoryInterface;
+use App\Repository\AuthThrottleRepositoryInterface;
+use App\Service\AttemptThrottle;
 use App\Service\LoginService;
+use App\Service\ThrottleLimits;
+use App\Service\TooManyAttemptsException;
+use App\Tests\FixedClock;
 use ArrayObject;
 use DateTimeImmutable;
 use LogicException;
@@ -28,22 +34,26 @@ use function PHPUnit\Framework\assertTrue;
 final class LoginServiceTest extends TestCase
 {
     private const string PASSWORD = 'correct-password';
+    private const string IP = '203.0.113.7';
 
     /** @var ArrayObject<int, string> */
     private ArrayObject $savedHashes;
 
     private CurrentUser $currentUser;
 
+    /** @var ArrayObject<string, AuthThrottle> */
+    private ArrayObject $throttles;
+
     public function testCorrectCredentialsLogInTheEmployee(): void
     {
-        assertTrue($this->service()->login('active@mail.test', self::PASSWORD));
+        assertTrue($this->service()->login('active@mail.test', self::PASSWORD, self::IP));
         assertSame('1', $this->currentUser->getId());
     }
 
     #[DataProvider('rejectedLogins')]
     public function testRejectedLoginStaysGuest(string $email, string $password): void
     {
-        assertFalse($this->service()->login($email, $password));
+        assertFalse($this->service()->login($email, $password, self::IP));
         assertTrue($this->currentUser->isGuest());
     }
 
@@ -59,9 +69,60 @@ final class LoginServiceTest extends TestCase
         yield 'empty password' => ['active@mail.test', ''];
     }
 
+    public function testFifthFailureLocksTheEmailEvenForTheRightPassword(): void
+    {
+        $service = $this->service();
+        for ($i = 0; $i < 5; $i++) {
+            assertFalse($service->login('active@mail.test', 'wrong-password', self::IP));
+        }
+
+        try {
+            $service->login(' Active@Mail.TEST ', self::PASSWORD, '198.51.100.2');
+            self::fail('The sixth attempt should be throttled.');
+        } catch (TooManyAttemptsException $exception) {
+            assertSame(900, $exception->retryAfterSeconds);
+        }
+        assertTrue($this->currentUser->isGuest());
+    }
+
+    public function testUnknownEmailIsThrottledLikeAKnownOne(): void
+    {
+        $service = $this->service();
+        for ($i = 0; $i < 5; $i++) {
+            assertFalse($service->login('nobody@mail.test', self::PASSWORD, self::IP));
+        }
+
+        $this->expectException(TooManyAttemptsException::class);
+        $service->login('nobody@mail.test', self::PASSWORD, '198.51.100.2');
+    }
+
+    public function testEmptyPasswordIsNotCounted(): void
+    {
+        $service = $this->service();
+        for ($i = 0; $i < 5; $i++) {
+            $service->login('active@mail.test', '', self::IP);
+        }
+
+        assertTrue($service->login('active@mail.test', self::PASSWORD, self::IP));
+    }
+
+    public function testSuccessClearsTheEmailButNotTheAddress(): void
+    {
+        $service = $this->service();
+        for ($i = 0; $i < 4; $i++) {
+            $service->login('active@mail.test', 'wrong-password', self::IP);
+        }
+        assertTrue($service->login('active@mail.test', self::PASSWORD, self::IP));
+
+        for ($i = 0; $i < 4; $i++) {
+            assertFalse($service->login('active@mail.test', 'wrong-password', self::IP));
+        }
+        assertSame(8, $this->throttles['login.ip|' . hash('sha256', self::IP)]?->failures);
+    }
+
     public function testOutdatedHashIsRehashedAfterLogin(): void
     {
-        assertTrue($this->service()->login('outdated@mail.test', self::PASSWORD));
+        assertTrue($this->service()->login('outdated@mail.test', self::PASSWORD, self::IP));
 
         $hash = $this->savedHashes[5];
         assertIsString($hash);
@@ -72,7 +133,7 @@ final class LoginServiceTest extends TestCase
 
     public function testCurrentHashIsNotRewritten(): void
     {
-        $this->service()->login('active@mail.test', self::PASSWORD);
+        $this->service()->login('active@mail.test', self::PASSWORD, self::IP);
 
         assertFalse($this->savedHashes->offsetExists(1));
     }
@@ -86,7 +147,7 @@ final class LoginServiceTest extends TestCase
     public function testLogoutMakesTheUserAGuest(): void
     {
         $service = $this->service();
-        $service->login('active@mail.test', self::PASSWORD);
+        $service->login('active@mail.test', self::PASSWORD, self::IP);
 
         $service->logout();
 
@@ -177,6 +238,39 @@ final class LoginServiceTest extends TestCase
 
         $this->currentUser = new CurrentUser($identityRepository, $events);
 
-        return new LoginService($accountRepository, $identityRepository, $hasher, $this->currentUser, new NullSession());
+        $this->throttles = new ArrayObject();
+        $throttleRepository = new class ($this->throttles) implements AuthThrottleRepositoryInterface {
+            /**
+             * @param ArrayObject<string, AuthThrottle> $rows
+             */
+            public function __construct(
+                private readonly ArrayObject $rows,
+            ) {}
+
+            public function find(string $scope, string $keyHash): ?AuthThrottle
+            {
+                return $this->rows[$scope . '|' . $keyHash] ?? null;
+            }
+
+            public function recordFailure(string $scope, string $keyHash, DateTimeImmutable $now, DateTimeImmutable $windowStartsAfter): void
+            {
+                $row = $this->find($scope, $keyHash);
+                $this->rows[$scope . '|' . $keyHash] = $row === null || $row->windowStart <= $windowStartsAfter
+                    ? new AuthThrottle(1, $now)
+                    : new AuthThrottle($row->failures + 1, $row->windowStart);
+            }
+
+            public function clear(string $scope, string $keyHash): void
+            {
+                unset($this->rows[$scope . '|' . $keyHash]);
+            }
+        };
+        $throttle = new AttemptThrottle(
+            $throttleRepository,
+            new ThrottleLimits(windowMinutes: 15, emailLimit: 5, ipLimit: 20, apiIpLimit: 20),
+            new FixedClock(new DateTimeImmutable('2026-10-29 10:00:00')),
+        );
+
+        return new LoginService($accountRepository, $identityRepository, $hasher, $this->currentUser, new NullSession(), $throttle);
     }
 }

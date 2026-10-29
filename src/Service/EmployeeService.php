@@ -100,13 +100,13 @@ final readonly class EmployeeService
     public function update(int $actorId, int $id, EmployeeInput $input): SavedEmployee
     {
         $this->accessChecker->ensure($actorId, Permission::EmployeeUpdate);
-        $employee = $this->employees->find($id);
-        if ($employee === null) {
-            throw new InvalidArgumentException(sprintf('Employee %d does not exist.', $id));
-        }
-        $data = $this->validate($input, $employee, $actorId);
 
-        return $this->guardEmail(fn(): SavedEmployee => $this->transaction->run(function () use ($employee, $data, $input): SavedEmployee {
+        return $this->guardEmail(fn(): SavedEmployee => $this->transaction->run(function () use ($actorId, $id, $input): SavedEmployee {
+            $employee = $this->employees->findForUpdate($id);
+            if ($employee === null) {
+                throw new InvalidArgumentException(sprintf('Employee %d does not exist.', $id));
+            }
+            $data = $this->validate($input, $employee, $actorId);
             $this->employees->update($employee->id, $data, $employee->role !== $data->role);
 
             return new SavedEmployee($employee->id, $this->updateAccount($employee, $input));
