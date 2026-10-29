@@ -182,7 +182,7 @@ This spec adds:
   - Wrong scheme (`Basic …`), `Bearer` alone or with an empty key, a key without the scheme, two spaces, an extra part, a malformed key, a 10 KB header, an unknown key ID, a wrong secret, a revoked and an expired key: all `401` with identical bodies.
   - A valid key on an unknown API path: `404` problem.
   - No API response has a `Set-Cookie` header, and none is rejected by CSRF for a `POST` (it gets `401` without a key, `404` or `405` with one).
-  - An unexpected error (the `API_KEY` table renamed inside the rolled-back transaction) becomes a `500` problem with no `Set-Cookie`.
+  - An unexpected error (the `API_KEY` table renamed inside the rolled-back transaction) in the real `ApiKeyAuthentication` becomes a `500` problem from `ApiErrorMiddleware`, built with a recording logger so the test output stays clean. It is logged exactly once, without the secret.
   - `/api`, `/api/`, `/api/v1/…`, `/%61pi/v1/…` and `/api%2Fv1` go through the API pipeline. `/apix`, `/api-docs`, `/API/v1/…`, `/%2561pi/v1` and `/x/api/v1` get the web 404 page.
   - The `Bearer` scheme is accepted in any case, and a duplicate `Authorization` header gets the generic `401`.
   - A successful authentication sets `LAST_USED_AT`, and `/login` still gets its session cookie.

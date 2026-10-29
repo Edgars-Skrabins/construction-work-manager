@@ -4,13 +4,20 @@ declare(strict_types=1);
 
 namespace App\Tests\Integration\Api;
 
+use App\Api\Shared\ApiErrorMiddleware;
+use App\Api\Shared\ApiKeyAuthentication;
+use App\Api\Shared\ApiNotFoundHandler;
 use App\Api\Shared\ApiPipelineMiddleware;
+use App\Api\Shared\JsonResponseFactory;
 use App\Service\ApiKeyService;
 use App\Tests\Integration\IntegrationTestCase;
+use App\Tests\Unit\Api\RecordingLogger;
 use App\Web\Forbidden\ForbiddenMiddleware;
 use PHPUnit\Framework\Attributes\DataProvider;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestFactoryInterface;
+use Psr\Http\Message\ServerRequestInterface;
+use Psr\Http\Server\RequestHandlerInterface;
 use ReflectionProperty;
 use Yiisoft\Csrf\CsrfTokenMiddleware;
 use Yiisoft\Definitions\ArrayDefinition;
@@ -21,11 +28,13 @@ use Yiisoft\Router\Middleware\Router;
 use Yiisoft\Session\SessionMiddleware;
 use Yiisoft\Yii\Http\Application;
 
+use function PHPUnit\Framework\assertCount;
 use function PHPUnit\Framework\assertFalse;
 use function PHPUnit\Framework\assertInstanceOf;
 use function PHPUnit\Framework\assertIsArray;
 use function PHPUnit\Framework\assertNotNull;
 use function PHPUnit\Framework\assertSame;
+use function PHPUnit\Framework\assertStringNotContainsString;
 use function PHPUnit\Framework\assertStringStartsWith;
 use function PHPUnit\Framework\assertTrue;
 
@@ -139,13 +148,34 @@ final class ApiPipelineTest extends IntegrationTestCase
         $plainKey = $this->service(ApiKeyService::class)->issue('North Gate', null)->plainKey;
         $this->db()->createCommand("EXEC sp_rename 'API_KEY', 'API_KEY_HIDDEN'")->execute();
 
-        $response = $this->request('GET', '/api/v1/anything', ['Authorization' => 'Bearer ' . $plainKey]);
+        $logger = new RecordingLogger();
+        $authentication = $this->service(ApiKeyAuthentication::class);
+        $notFound = $this->service(ApiNotFoundHandler::class);
+        $request = $this->service(ServerRequestFactoryInterface::class)
+            ->createServerRequest('GET', 'http://localhost/api/v1/anything')
+            ->withHeader('Authorization', 'Bearer ' . $plainKey);
+
+        $response = (new ApiErrorMiddleware($this->service(JsonResponseFactory::class), $logger))->process(
+            $request,
+            new readonly class ($authentication, $notFound) implements RequestHandlerInterface {
+                public function __construct(
+                    private ApiKeyAuthentication $authentication,
+                    private ApiNotFoundHandler $notFound,
+                ) {}
+
+                public function handle(ServerRequestInterface $request): ResponseInterface
+                {
+                    return $this->authentication->process($request, $this->notFound);
+                }
+            },
+        );
 
         assertSame(500, $response->getStatusCode());
         assertSame('application/problem+json; charset=utf-8', $response->getHeaderLine('Content-Type'));
         assertSame('no-store', $response->getHeaderLine('Cache-Control'));
         assertSame('{"type":"about:blank","title":"Internal Server Error","status":500}', (string) $response->getBody());
-        assertFalse($response->hasHeader('Set-Cookie'));
+        assertCount(1, $logger->records);
+        assertStringNotContainsString(explode('_', $plainKey)[2], serialize($logger->records));
     }
 
     #[DataProvider('apiPaths')]

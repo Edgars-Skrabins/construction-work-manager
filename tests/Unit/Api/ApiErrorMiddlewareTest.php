@@ -13,9 +13,7 @@ use PHPUnit\Framework\TestCase;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Psr\Http\Server\RequestHandlerInterface;
-use Psr\Log\AbstractLogger;
 use RuntimeException;
-use Stringable;
 
 use function PHPUnit\Framework\assertCount;
 use function PHPUnit\Framework\assertSame;
@@ -27,15 +25,7 @@ final class ApiErrorMiddlewareTest extends TestCase
 
     public function testExceptionBecomesProblemAndIsLoggedWithoutHeaders(): void
     {
-        $logger = new class extends AbstractLogger {
-            /** @var list<array{mixed, string, array<array-key, mixed>}> */
-            public array $records = [];
-
-            public function log($level, string|Stringable $message, array $context = []): void
-            {
-                $this->records[] = [$level, (string) $message, $context];
-            }
-        };
+        $logger = new RecordingLogger();
         $middleware = new ApiErrorMiddleware($this->factory(), $logger);
         $handler = $this->handler(static function (ServerRequestInterface $request): ResponseInterface {
             throw new RuntimeException('Database is down.');
@@ -58,9 +48,7 @@ final class ApiErrorMiddlewareTest extends TestCase
 
     public function testEmptyMethodNotAllowedBecomesProblemKeepingAllow(): void
     {
-        $middleware = new ApiErrorMiddleware($this->factory(), new class extends AbstractLogger {
-            public function log($level, string|Stringable $message, array $context = []): void {}
-        });
+        $middleware = new ApiErrorMiddleware($this->factory(), new RecordingLogger());
         $handler = $this->handler(static fn(): ResponseInterface => (new ResponseFactory())->createResponse(405)->withHeader('Allow', 'GET'));
 
         $response = $middleware->process($this->request(), $handler);
@@ -72,9 +60,7 @@ final class ApiErrorMiddlewareTest extends TestCase
 
     public function testOtherResponsesPassThrough(): void
     {
-        $middleware = new ApiErrorMiddleware($this->factory(), new class extends AbstractLogger {
-            public function log($level, string|Stringable $message, array $context = []): void {}
-        });
+        $middleware = new ApiErrorMiddleware($this->factory(), new RecordingLogger());
         $original = $this->factory()->data(['ok' => true]);
 
         assertSame($original, $middleware->process($this->request(), $this->handler(static fn(): ResponseInterface => $original)));
