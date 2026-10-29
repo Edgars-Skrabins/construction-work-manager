@@ -170,7 +170,7 @@ Every public method takes the acting employee's ID as its first argument and cal
   - `delete(int $actorId, int $id): void` needs `EmployeeDelete` and throws `InUseException`.
   - `EmployeeInput` holds the validated form values (`?string $email`, `bool $loginActive` included). `SavedEmployee` holds `int $id` and `?string $setupCode` (formatted, only when a code was issued).
   - It applies the manager rules, the self-lockout rules, the access level and email uniqueness checks, and the account changes from Part 1, all inside one `TransactionRunnerInterface::run()`.
-- `ConstructionSiteService` and `WorkItemService`: `listPaginator`, `find`, `create`, `update` (each needs the entity's matching permission, with list and find needing update) and `delete`. Duplicate names throw `ValidationException::forField('name', ...)`. `delete` turns an `IntegrityException` into `InUseException`.
+- `ConstructionSiteService` and `WorkItemService`: `listPaginator`, `find`, `create`, `update` (each needs the entity's matching permission, with list and find needing update) and `delete`. Duplicate names throw `ValidationException::forField('name', ...)`; the site service reports a duplicate name and an unknown access level together. `ConstructionSiteService::accessLevels(int $actorId)` (needs `SiteRead`) feeds the form's select. `delete` turns an `IntegrityException` into `InUseException`.
 - `PasswordSetupService` (depends on `AccountRepositoryInterface`, `PasswordHasher`, `SetupCodeGenerator`, `LoginService`): `setPassword(string $email, string $code, string $password): bool`.
   - It finds the account by email, and verifies a dummy hash when there is none or it has no code.
   - It returns false unless the account is active, has no password, the code isn't expired and the normalized code verifies.
@@ -303,8 +303,8 @@ Baseline before starting: unit 52 tests, integration 143 tests, all passing.
 ### B. Work items and construction sites
 - [x] B1. Add `WorkItem`, `WorkItemData`, `WorkItemRepositoryInterface`, `WorkItemRepository`, `ValidationException`, `InUseException` and `WorkItemService`, with `WorkItemServiceTest`.
 - [x] B2. Add the `WorkItemList`, `WorkItemForm` and `WorkItemDelete` pages and their routes.
-- [ ] B3. Add `AccessLevel` with its repository, `ConstructionSite`, `ConstructionSiteData`, the site repository and `ConstructionSiteService`, with `ConstructionSiteServiceTest`.
-- [ ] B4. Add the `SiteList`, `SiteForm` and `SiteDelete` pages and their routes.
+- [x] B3. Add `AccessLevel` with its repository, `ConstructionSite`, `ConstructionSiteData`, the site repository and `ConstructionSiteService`, with `ConstructionSiteServiceTest`.
+- [x] B4. Add the `SiteList`, `SiteForm` and `SiteDelete` pages and their routes.
 
 ### C. Employees and logins
 - [ ] C1. Extend `Account` and `AccountRepository` with the setup code and write methods. Add `SetupCodeGenerator` with its unit test.
