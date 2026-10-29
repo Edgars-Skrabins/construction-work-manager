@@ -15,6 +15,7 @@ use Yiisoft\Validator\Rule\Required;
 
 final class SetPasswordForm
 {
+    #[Label('Email')]
     #[Required]
     public string $email = '';
 

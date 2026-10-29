@@ -35,15 +35,19 @@ final class EmployeeForm
     #[Callback(method: 'checkBirthDate')]
     public string $birthDate = '';
 
+    #[Label('Access level')]
     #[In([1, 2, 3, 4], message: 'Choose an access level.')]
     public string $accessLevelId = '';
 
+    #[Label('Role')]
     #[In(['admin', 'manager', 'employee'], message: 'Choose a role.')]
     public string $role = '';
 
+    #[Label('Manager')]
     #[Regex('/^\d{0,10}$/', message: 'Choose a manager.')]
     public string $managerId = '';
 
+    #[Label('Login email')]
     #[Email(skipOnEmpty: true)]
     #[Length(max: 254, skipOnEmpty: true)]
     public string $email = '';

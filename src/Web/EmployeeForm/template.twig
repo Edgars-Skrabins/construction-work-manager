@@ -1,4 +1,4 @@
-{% set title = employee ? 'Edit employee' : 'Add employee' %}
+{% set title = employee ? t('Edit employee') : t('Add employee') %}
 {% do this.setTitle(title) %}
 {% do assetManager.register('App\\Web\\Shared\\Layout\\Main\\EmployeeAsset') %}
 <div class="row justify-content-center">
@@ -6,10 +6,10 @@
         <h1 class="h3 mb-4">{{ title }}</h1>
         {% if employee and employee.account and employee.account.passwordHash is null %}
             <div class="alert alert-info d-flex justify-content-between align-items-center" role="status">
-                <span>Login pending: the employee hasn't set a password yet.</span>
+                <span>{{ t("Login pending: the employee hasn't set a password yet.") }}</span>
                 <form method="post" action="{{ urlGenerator.generate('employee.setupCode', {id: employee.id}) }}">
                     {{ csrf.hiddenInput()|raw }}
-                    <button type="submit" class="btn btn-sm btn-outline-primary">New setup code</button>
+                    <button type="submit" class="btn btn-sm btn-outline-primary">{{ t('New setup code') }}</button>
                 </form>
             </div>
         {% endif %}
@@ -17,25 +17,25 @@
             {{ csrf.hiddenInput()|raw }}
             <div class="row">
                 <div class="col-md-6 mb-3">
-                    <label for="firstName" class="form-label">First name</label>
+                    <label for="firstName" class="form-label">{{ t('First name') }}</label>
                     <input type="text" class="form-control{% if errors.firstName is defined %} is-invalid{% endif %}" id="firstName" name="firstName" value="{{ form.firstName }}" maxlength="100" required>
                     {% include 'Web/Shared/Form/field-errors.twig' with {errors: errors.firstName ?? []} %}
                 </div>
                 <div class="col-md-6 mb-3">
-                    <label for="lastName" class="form-label">Last name</label>
+                    <label for="lastName" class="form-label">{{ t('Last name') }}</label>
                     <input type="text" class="form-control{% if errors.lastName is defined %} is-invalid{% endif %}" id="lastName" name="lastName" value="{{ form.lastName }}" maxlength="100" required>
                     {% include 'Web/Shared/Form/field-errors.twig' with {errors: errors.lastName ?? []} %}
                 </div>
             </div>
             <div class="mb-3">
-                <label for="birthDate" class="form-label">Birth date</label>
+                <label for="birthDate" class="form-label">{{ t('Birth date') }}</label>
                 <input type="date" class="form-control{% if errors.birthDate is defined %} is-invalid{% endif %}" id="birthDate" name="birthDate" value="{{ form.birthDate }}" required>
                 {% include 'Web/Shared/Form/field-errors.twig' with {errors: errors.birthDate ?? []} %}
             </div>
             <div class="mb-3">
-                <label for="accessLevelId" class="form-label">Access level</label>
+                <label for="accessLevelId" class="form-label">{{ t('Access level') }}</label>
                 <select class="form-select{% if errors.accessLevelId is defined %} is-invalid{% endif %}" id="accessLevelId" name="accessLevelId" required>
-                    <option value="">Choose…</option>
+                    <option value="">{{ t('Choose…') }}</option>
                     {% for level in accessLevels %}
                         <option value="{{ level.id }}"{% if form.accessLevelId == level.id ~ '' %} selected{% endif %}>{{ level.id }} – {{ level.name }}</option>
                     {% endfor %}
@@ -43,39 +43,39 @@
                 {% include 'Web/Shared/Form/field-errors.twig' with {errors: errors.accessLevelId ?? []} %}
             </div>
             <div class="mb-3">
-                <label for="role" class="form-label">Role</label>
+                <label for="role" class="form-label">{{ t('Role') }}</label>
                 <select class="form-select{% if errors.role is defined %} is-invalid{% endif %}" id="role" name="role" required>
-                    <option value="">Choose…</option>
+                    <option value="">{{ t('Choose…') }}</option>
                     {% for role in roles %}
-                        <option value="{{ role }}"{% if form.role == role %} selected{% endif %}>{{ role }}</option>
+                        <option value="{{ role }}"{% if form.role == role %} selected{% endif %}>{{ t(role) }}</option>
                     {% endfor %}
                 </select>
                 {% include 'Web/Shared/Form/field-errors.twig' with {errors: errors.role ?? []} %}
             </div>
             <div class="mb-3">
-                <label for="managerId" class="form-label">Manager</label>
+                <label for="managerId" class="form-label">{{ t('Manager') }}</label>
                 <select class="form-select{% if errors.managerId is defined %} is-invalid{% endif %}" id="managerId" name="managerId" aria-describedby="managerHelp"{% if form.managerLocked() %} disabled{% endif %}>
-                    <option value="">No manager</option>
+                    <option value="">{{ t('No manager') }}</option>
                     {% for manager in managers %}
                         <option value="{{ manager.id }}"{% if not form.managerLocked() and form.managerId == manager.id ~ '' %} selected{% endif %}>{{ manager.fullName() }}</option>
                     {% endfor %}
                 </select>
-                <div id="managerHelp" class="form-text">Only employees have a manager. It is cleared for managers and admins.</div>
+                <div id="managerHelp" class="form-text">{{ t('Only employees have a manager. It is cleared for managers and admins.') }}</div>
                 {% include 'Web/Shared/Form/field-errors.twig' with {errors: errors.managerId ?? []} %}
             </div>
             <div class="mb-3">
-                <label for="email" class="form-label">Login email</label>
+                <label for="email" class="form-label">{{ t('Login email') }}</label>
                 <input type="email" class="form-control{% if errors.email is defined %} is-invalid{% endif %}" id="email" name="email" value="{{ form.email }}" maxlength="254" aria-describedby="emailHelp">
-                <div id="emailHelp" class="form-text">Leave empty for no login. A new login gets a one-time setup code.</div>
+                <div id="emailHelp" class="form-text">{{ t('Leave empty for no login. A new login gets a one-time setup code.') }}</div>
                 {% include 'Web/Shared/Form/field-errors.twig' with {errors: errors.email ?? []} %}
             </div>
             <div class="form-check mb-4">
                 <input class="form-check-input{% if errors.loginActive is defined %} is-invalid{% endif %}" type="checkbox" id="loginActive" name="loginActive" value="1"{% if form.loginActive %} checked{% endif %}>
-                <label class="form-check-label" for="loginActive">Login active</label>
+                <label class="form-check-label" for="loginActive">{{ t('Login active') }}</label>
                 {% include 'Web/Shared/Form/field-errors.twig' with {errors: errors.loginActive ?? []} %}
             </div>
-            <button type="submit" class="btn btn-primary">Save</button>
-            <a class="btn btn-link" href="{{ urlGenerator.generate('employee.list') }}">Cancel</a>
+            <button type="submit" class="btn btn-primary">{{ t('Save') }}</button>
+            <a class="btn btn-link" href="{{ urlGenerator.generate('employee.list') }}">{{ t('Cancel') }}</a>
         </form>
     </div>
 </div>

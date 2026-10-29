@@ -13,6 +13,7 @@ use App\Web\Shared\Throttling\TooManyAttempts;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Yiisoft\Http\Method;
+use Yiisoft\Translator\TranslatorInterface;
 use Yiisoft\User\CurrentUser;
 use Yiisoft\Yii\View\Renderer\WebViewRenderer;
 
@@ -24,6 +25,7 @@ final readonly class Action
         private CurrentUser $currentUser,
         private LoginService $loginService,
         private ReturnUrl $returnUrl,
+        private TranslatorInterface $translator,
     ) {}
 
     public function __invoke(ServerRequestInterface $request): ResponseInterface
@@ -41,15 +43,15 @@ final readonly class Action
             $password = is_array($body) && is_string($body['password'] ?? null) ? $body['password'] : '';
 
             if (trim($email) === '' || $password === '') {
-                $error = 'Enter your email and password.';
+                $error = $this->translator->translate('Enter your email and password.');
             } else {
                 try {
                     if ($this->loginService->login($email, $password, ClientIp::of($request))) {
                         return $this->redirector->to($this->returnUrl->pull());
                     }
-                    $error = 'Invalid email or password.';
+                    $error = $this->translator->translate('Invalid email or password.');
                 } catch (TooManyAttemptsException $exception) {
-                    return TooManyAttempts::respond($this->render($email, TooManyAttempts::message($exception)), $exception);
+                    return TooManyAttempts::respond($this->render($email, TooManyAttempts::message($exception, $this->translator)), $exception);
                 }
             }
         }

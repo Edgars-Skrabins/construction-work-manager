@@ -1,25 +1,25 @@
-{% do this.setTitle('Setup code') %}
+{% do this.setTitle(t('Setup code')) %}
 <div class="row justify-content-center">
     <div class="col-lg-8">
-        <h1 class="h3 mb-4">Setup code for {{ employee.fullName() }}</h1>
+        <h1 class="h3 mb-4">{{ t('Setup code for {name}', {name: employee.fullName()}) }}</h1>
         {% if error %}
             <div class="alert alert-danger" role="alert">{{ error }}</div>
         {% endif %}
         {% if employee.account %}
-            <p>Login email: <strong>{{ employee.account.email }}</strong></p>
+            <p>{{ t('Login email') }}: <strong>{{ employee.account.email }}</strong></p>
         {% endif %}
         {% if setupCode %}
             <p class="display-6 font-monospace">{{ setupCode }}</p>
-            <div class="alert alert-warning" role="status">Give this code to the employee. It is shown only once and is valid for 72 hours. They enter it on the Set password page.</div>
+            <div class="alert alert-warning" role="status">{{ t('Give this code to the employee. It is shown only once and is valid for 72 hours. They enter it on the Set password page.') }}</div>
         {% else %}
-            <p class="text-secondary">The setup code is no longer shown.</p>
+            <p class="text-secondary">{{ t('The setup code is no longer shown.') }}</p>
         {% endif %}
         {% if pending %}
             <form method="post" action="{{ urlGenerator.generate('employee.setupCode', {id: employee.id}) }}" class="d-inline">
                 {{ csrf.hiddenInput()|raw }}
-                <button type="submit" class="btn btn-outline-primary">New setup code</button>
+                <button type="submit" class="btn btn-outline-primary">{{ t('New setup code') }}</button>
             </form>
         {% endif %}
-        <a class="btn btn-link" href="{{ urlGenerator.generate('employee.list') }}">Back to employees</a>
+        <a class="btn btn-link" href="{{ urlGenerator.generate('employee.list') }}">{{ t('Back to employees') }}</a>
     </div>
 </div>

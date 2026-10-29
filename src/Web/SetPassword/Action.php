@@ -12,6 +12,7 @@ use App\Web\Shared\Throttling\TooManyAttempts;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Yiisoft\Http\Method;
+use Yiisoft\Translator\TranslatorInterface;
 use Yiisoft\User\CurrentUser;
 use Yiisoft\Validator\ValidatorInterface;
 use Yiisoft\Yii\View\Renderer\WebViewRenderer;
@@ -24,6 +25,7 @@ final readonly class Action
         private CurrentUser $currentUser,
         private ValidatorInterface $validator,
         private PasswordSetupService $passwordSetup,
+        private TranslatorInterface $translator,
     ) {}
 
     public function __invoke(ServerRequestInterface $request): ResponseInterface
@@ -45,9 +47,9 @@ final readonly class Action
                     if ($this->passwordSetup->setPassword($form->email, $form->setupCode, $form->password, ClientIp::of($request))) {
                         return $this->redirector->toRoute('home');
                     }
-                    $error = 'Invalid email or setup code.';
+                    $error = $this->translator->translate('Invalid email or setup code.');
                 } catch (TooManyAttemptsException $exception) {
-                    return TooManyAttempts::respond($this->render($form->email, [], TooManyAttempts::message($exception)), $exception);
+                    return TooManyAttempts::respond($this->render($form->email, [], TooManyAttempts::message($exception, $this->translator)), $exception);
                 }
             }
         }

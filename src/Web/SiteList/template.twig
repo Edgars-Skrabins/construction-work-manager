@@ -1,27 +1,27 @@
-{% do this.setTitle('Construction sites') %}
+{% do this.setTitle(t('Construction sites')) %}
 <div class="d-flex justify-content-between align-items-center mb-4">
-    <h1 class="h3 mb-0">Construction sites</h1>
+    <h1 class="h3 mb-0">{{ t('Construction sites') }}</h1>
     {% if access.can('site.create') %}
-        <a class="btn btn-primary" href="{{ urlGenerator.generate('site.create') }}">Add construction site</a>
+        <a class="btn btn-primary" href="{{ urlGenerator.generate('site.create') }}">{{ t('Add construction site') }}</a>
     {% endif %}
 </div>
-{% include 'Web/Shared/Listing/search-form.twig' with {route: 'site.list', placeholder: 'Code, name or address'} %}
+{% include 'Web/Shared/Listing/search-form.twig' with {route: 'site.list', placeholder: t('Code, name or address')} %}
 {% if paginator.getTotalItems() == 0 and q != '' %}
-    <p class="text-secondary">No results for “{{ q }}”.</p>
+    <p class="text-secondary">{{ t('No results for “{query}”.', {query: q}) }}</p>
 {% elseif paginator.getTotalItems() == 0 %}
-    <p class="text-secondary">No construction sites yet.</p>
+    <p class="text-secondary">{{ t('No construction sites yet.') }}</p>
 {% else %}
     <div class="table-responsive">
         <table class="table table-striped align-middle">
             <thead>
                 <tr>
-                    <th scope="col">{% include 'Web/Shared/Listing/sort-link.twig' with {label: 'Code', key: 'code', route: 'site.list'} %}</th>
-                    <th scope="col">{% include 'Web/Shared/Listing/sort-link.twig' with {label: 'Name', key: 'name', route: 'site.list'} %}</th>
-                    <th scope="col">{% include 'Web/Shared/Listing/sort-link.twig' with {label: 'City', key: 'city', route: 'site.list'} %}</th>
-                    <th scope="col">{% include 'Web/Shared/Listing/sort-link.twig' with {label: 'Country', key: 'country', route: 'site.list'} %}</th>
-                    <th scope="col" class="text-end">{% include 'Web/Shared/Listing/sort-link.twig' with {label: 'Area (m²)', key: 'area', route: 'site.list'} %}</th>
-                    <th scope="col">{% include 'Web/Shared/Listing/sort-link.twig' with {label: 'Required access level', key: 'accessLevel', route: 'site.list'} %}</th>
-                    <th scope="col" class="text-end">Actions</th>
+                    <th scope="col">{% include 'Web/Shared/Listing/sort-link.twig' with {label: t('Code'), key: 'code', route: 'site.list'} %}</th>
+                    <th scope="col">{% include 'Web/Shared/Listing/sort-link.twig' with {label: t('Name'), key: 'name', route: 'site.list'} %}</th>
+                    <th scope="col">{% include 'Web/Shared/Listing/sort-link.twig' with {label: t('City'), key: 'city', route: 'site.list'} %}</th>
+                    <th scope="col">{% include 'Web/Shared/Listing/sort-link.twig' with {label: t('Country'), key: 'country', route: 'site.list'} %}</th>
+                    <th scope="col" class="text-end">{% include 'Web/Shared/Listing/sort-link.twig' with {label: t('Area (m²)'), key: 'area', route: 'site.list'} %}</th>
+                    <th scope="col">{% include 'Web/Shared/Listing/sort-link.twig' with {label: t('Required access level'), key: 'accessLevel', route: 'site.list'} %}</th>
+                    <th scope="col" class="text-end">{{ t('Actions') }}</th>
                 </tr>
             </thead>
             <tbody>
@@ -35,10 +35,10 @@
                         <td>{{ site.requiredAccessLevelName }}</td>
                         <td class="text-end text-nowrap">
                             {% if access.can('site.update') %}
-                                <a class="btn btn-sm btn-outline-primary" href="{{ urlGenerator.generate('site.edit', {id: site.id}) }}">Edit</a>
+                                <a class="btn btn-sm btn-outline-primary" href="{{ urlGenerator.generate('site.edit', {id: site.id}) }}">{{ t('Edit') }}</a>
                             {% endif %}
                             {% if access.can('site.delete') %}
-                                <a class="btn btn-sm btn-outline-danger" href="{{ urlGenerator.generate('site.delete', {id: site.id}) }}">Delete</a>
+                                <a class="btn btn-sm btn-outline-danger" href="{{ urlGenerator.generate('site.delete', {id: site.id}) }}">{{ t('Delete') }}</a>
                             {% endif %}
                         </td>
                     </tr>

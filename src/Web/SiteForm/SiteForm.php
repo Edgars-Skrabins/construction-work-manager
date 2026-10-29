@@ -21,18 +21,22 @@ final class SiteForm
     #[Regex(SiteCode::PATTERN, message: SiteCode::FORM_MESSAGE, skipOnEmpty: true)]
     public string $code = '';
 
+    #[Label('Name')]
     #[Required]
     #[Length(max: 150)]
     public string $name = '';
 
+    #[Label('Street')]
     #[Required]
     #[Length(max: 200)]
     public string $street = '';
 
+    #[Label('City')]
     #[Required]
     #[Length(max: 100)]
     public string $city = '';
 
+    #[Label('Country')]
     #[Required]
     #[Length(max: 100)]
     public string $country = '';

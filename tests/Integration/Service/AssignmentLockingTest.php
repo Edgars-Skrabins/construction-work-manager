@@ -36,6 +36,7 @@ use Yiisoft\Db\Connection\ConnectionInterface;
 use Yiisoft\Db\Driver\Pdo\PdoConnectionInterface;
 use Yiisoft\Db\Exception\Exception;
 use Yiisoft\Security\PasswordHasher;
+use Yiisoft\Translator\TranslatorInterface;
 
 use function PHPUnit\Framework\assertContains;
 use function PHPUnit\Framework\assertInstanceOf;
@@ -319,6 +320,7 @@ final class AssignmentLockingTest extends IntegrationTestCase
             $this->service(PasswordHasher::class),
             $this->service(SetupCodeGenerator::class),
             $this->service(ClockInterface::class),
+            $this->service(TranslatorInterface::class),
         );
     }
 
