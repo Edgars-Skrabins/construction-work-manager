@@ -11,6 +11,7 @@ use App\Repository\ApiKeyRepositoryInterface;
 use DateTimeImmutable;
 use DateTimeZone;
 use InvalidArgumentException;
+use Psr\Clock\ClockInterface;
 
 final readonly class ApiKeyService
 {
@@ -21,6 +22,7 @@ final readonly class ApiKeyService
 
     public function __construct(
         private ApiKeyRepositoryInterface $repository,
+        private ClockInterface $clock,
     ) {}
 
     public function issue(string $clientName, ?DateTimeImmutable $expiresAt): IssuedApiKey
@@ -89,6 +91,6 @@ final readonly class ApiKeyService
 
     private function now(): DateTimeImmutable
     {
-        return new DateTimeImmutable('now', new DateTimeZone('UTC'));
+        return $this->clock->now()->setTimezone(new DateTimeZone('UTC'));
     }
 }

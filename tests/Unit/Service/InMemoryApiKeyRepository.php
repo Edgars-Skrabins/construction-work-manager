@@ -19,6 +19,8 @@ final class InMemoryApiKeyRepository implements ApiKeyRepositoryInterface
     /** @var list<int> */
     public array $touched = [];
 
+    public ?DateTimeImmutable $touchedAt = null;
+
     public int $takenLookups = 0;
 
     public function insert(string $keyId, string $clientName, string $secretHash, ?DateTimeImmutable $expiresAt): ApiKey
@@ -75,6 +77,7 @@ final class InMemoryApiKeyRepository implements ApiKeyRepositoryInterface
     public function touchLastUsed(int $id, DateTimeImmutable $at): void
     {
         $this->touched[] = $id;
+        $this->touchedAt = $at;
     }
 
     public function replace(ApiKey $apiKey): void
