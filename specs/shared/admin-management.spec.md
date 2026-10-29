@@ -185,7 +185,8 @@ Actions get the acting ID with `(int) $currentUser->getId()`, render through `We
 - `WorkItemList/`, `WorkItemForm/` (with `WorkItemForm.php`), `WorkItemDelete/`.
 - `SetPassword/` (with `SetPasswordForm.php`).
 - `src/Web/Login/template.twig` gets the "First login? Set your password" link.
-- Flash messages: `src/Web/Shared/Flash/FlashMessages.php` wraps `FlashInterface` with `addSuccess(string $message)` and `success(): list<string>`. The list actions, which are the redirect targets after saving and deleting, read `success()` during the request and pass it to their template as `messages`. The template includes `src/Web/Shared/Flash/messages.twig`, which renders each message as an `alert-success`.
+- Flash messages: `src/Web/Shared/Flash/FlashMessages.php` wraps `FlashInterface` with `addSuccess(string $message)` and `success(): list<string>`. Actions add messages, and the layout shows them through the `flash` view parameter.
+- `src/Web/Shared/Rendering/RenderBeforeSessionClose.php`: a PSR-15 middleware that reads the response body once, so the lazily rendered `DataResponse` (template and layout) runs while the session is still open. It sits right before `ForbiddenMiddleware` in `config/web/di/application.php`, inside `SessionMiddleware` and `CsrfTokenMiddleware`, so the 403 and 404 pages are covered too.
 - `src/Web/Shared/Form/field-errors.twig`: included with a list of messages, renders Bootstrap `invalid-feedback`. Fields with errors get `is-invalid`.
 
 ### Routes (`config/common/routes.php`)
@@ -212,9 +213,10 @@ Inside the authenticated group, each with `RequirePermission::for(...)`:
 
 ### Layout and view parameters
 
-- `config/common/params.php` view parameters gain `'access' => Reference::to(ViewAccess::class)`.
+- `config/common/params.php` view parameters gain `'access' => Reference::to(ViewAccess::class)` and `'flash' => Reference::to(FlashMessages::class)`.
 - `layout.twig`:
   - The navbar gets a `navbar-nav` list after the brand with the three links, each wrapped in `{% if access.can('<entity>.update') %}`, and marked `active` when `currentRoute.getName()` starts with the route prefix. Later specs add their links to this list, each with its own `access.can()` check.
+  - Above `content`, each message in `flash.success()` renders as an `alert-success` (no JavaScript).
   - The role shows as `currentUser.getIdentity().role.value`.
 
 ### Tests
@@ -243,6 +245,7 @@ Inside the authenticated group, each with `RequirePermission::for(...)`:
   - Validation errors show under their field. Deleting shows the flash; a blocked delete shows 409 with the reason. A missing ID gives 404.
   - As manager 2 and employee 4: no links, and every route gives 403.
   - As a guest, through the real routes: `/employees` gives a 302 to `/login`, never a 403, which proves the `Authentication` group runs before `RequirePermission`.
+- `tests/Integration/Web/LazyRenderingSessionTest.php`: for `/login` and an unknown URL as a guest, and for an unknown URL and `/work-items` as admin, rendering the page leaves the session closed with at most one session cookie, and a following login POST with a fresh session still passes CSRF. `ForbiddenMiddlewareTest` checks that `RenderBeforeSessionClose` sits right before `ForbiddenMiddleware`, inside the session and CSRF middleware.
 - `tests/Integration/Web/WebClient.php`: a trait with `request()`, `logIn()`, `submit()` and `csrfToken()`, extracted from `AuthenticationTest`, which now uses it, so every page test drives the app the same way.
 - `tests/Unit/Service/InUseExceptionTest.php`: `isConstraintConflict()` is true for error 547 and false for any other integrity error.
 - `tests/Integration/Web/SetPasswordTest.php`: an admin creates an employee with an email, then a guest sets a password with the code, is logged in, and can later log in on `/login`; a wrong code shows the generic error; a logged-in user is redirected.
@@ -284,7 +287,7 @@ Inside the authenticated group, each with `RequirePermission::for(...)`:
 24. **Script 012:** `012_add_account_setup_code`, agreed with the coordinating session. `work-assignments` owns 010 and 011, and this spec owns 012 to 014, using only 012.
 25. **Setup code hash and expiry (2026-10-29, after the coordinating session's security review):** the code stays a `PasswordHasher` (bcrypt) hash, because it is typed by hand and has about 50 bits, so a slow hash is what protects a leaked database; `password_verify` already compares in constant time. Rejected: SHA-256 with `hash_equals`, which only fits codes of 128 bits or more (about 26 characters). The expiry is shortened from 7 days to 72 hours, which still covers a weekend handover. Rejected: 7 days and 24 hours.
 26. **Shared read methods for `work-assignments` (2026-10-29):** `EmployeeRepositoryInterface::withRole()`, `ConstructionSiteRepositoryInterface::all()`, `WorkItemRepositoryInterface::all()` and `AccessLevelRepositoryInterface::all()` serve its pickers, so it needs no lookups of its own. Assignable employees are `withRole(Role::Employee, managerId: $managerId)`, each `Employee` carrying `accessLevelId`. Rejected: a separate `employeesWithRoleEmployee()` method, which `withRole()` already covers. "Work items" is the catalog's UI label throughout (Decision Log #148).
-27. **Flash messages read by actions (2026-10-29, found while implementing A4):** `WebViewRenderer` renders lazily, after `SessionMiddleware` has closed the session, so a layout that reads `FlashInterface` reopens the session after it was committed. In tests that dropped the session cookie and broke CSRF. The redirect-target actions read the flash during the request and pass it to a shared partial. Rejected: a middleware that preloads flash messages on every request, and reading them in the layout (the first version of this spec).
+27. **Pages render before the session closes (2026-10-29, found while implementing A4, revised the same day):** `WebViewRenderer` returns a lazily rendered `DataResponse`, so the layout ran after `SessionMiddleware` had committed. Anything the layout read from the session (flash messages, and `currentUser` on the 404 page, whose fallback handler never touches it first) reopened the session after the commit, which dropped the session cookie and broke the next request's CSRF check. `RenderBeforeSessionClose` forces rendering inside the session middleware, which removes the whole class of bug, so the `flash` view parameter is back and the layout shows the messages. `LazyRenderingSessionTest` guards it. Rejected: redirect-target actions reading the flash and passing it to their templates (the first fix, which left the 404 page broken and every future public page exposed), and patching each public page to touch the session early.
 
 # Part 3 — Implementation TODO
 
