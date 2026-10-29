@@ -41,9 +41,16 @@ Build and start the containers, install the Composer dependencies and apply the 
 make up
 ```
 
-This runs `docker compose up -d --build`, `docker compose exec app composer install` and `docker compose exec app ./yii migrate:up`. It starts SQL Server, creates the app database and the database logins, starts the app, brings the schema up to date and loads the seed data: 8 employees (an admin, two managers and their employees), 4 construction sites, 5 work items and 6 assignments of work items to employees at sites, dated around the day of the migration so they show every status (Planned, In progress, Overdue, Done and Cancelled). SQL Server keeps its data in a Docker volume between restarts.
+This runs `docker compose up -d --build`, `docker compose exec app composer install` and `docker compose exec app ./yii migrate:up`. It starts SQL Server, creates the app database and the database logins, starts the app, brings the schema up to date and loads the seed data. SQL Server keeps its data in a Docker volume between restarts. The seed data is:
 
-It also seeds a login account for every seeded employee. All of them use the password `123123123`:
+- 80 employees: 3 admins, 7 managers and 70 employees with all four access levels, spread across six of the managers. Margus Tamm is a manager without subordinates, and a few employees have no assignments.
+- 11 construction sites in Latvia, Lithuania and Estonia with every required access level. Kaunas Logistics Hub has no assignments.
+- 25 work items, real construction trades. Elevator installation has no assignments.
+- 167 assignments, dated around the day of the migration so they show every status (Planned, In progress, Overdue, Done and Cancelled), work that starts or ends today, one-day and year-long periods, employees working at several sites at once and sites with many employees today. Two active assignments are flagged because the employee's access level is below the site's.
+
+The lists have several pages: Employees 4, Assignments 9 for the admin and 2 for `manager@mail.test`.
+
+It also seeds these login accounts. All of them use the password `123123123`:
 
 - `admin@mail.test`: Jānis Bērziņš, admin
 - `manager@mail.test`: Ilze Kalniņa, manager
@@ -53,6 +60,15 @@ It also seeds a login account for every seeded employee. All of them use the pas
 - `employee3@mail.test`: Kristaps Vītols, employee reporting to Ilze Kalniņa
 - `employee4@mail.test`: Anna Zariņa, employee reporting to Andris Ozoliņš
 - `employee5@mail.test`: Roberts Kalējs, employee reporting to Andris Ozoliņš
+- `admin2@mail.test`: Dace Ābele, admin
+- `manager3@mail.test`: Gatis Lācis, manager of 11 employees, including the special cases below
+- `manager4@mail.test`: Margus Tamm, manager without subordinates
+- `employee6@mail.test`: Edgars Kļaviņš, works at three sites at the same time
+- `employee7@mail.test`: Zane Pētersone, has two assignments flagged because her access level is now too low for their sites
+- `employee8@mail.test`: Raivis Siliņš, has no assignments
+- `employee9@mail.test`: Līga Strazdiņa, has work starting today, ending today, a one-day job today, one tomorrow and a year-long one
+
+The other employees have no login, so the admin can try giving them one.
 
 Like the database passwords, these are dev-only credentials for the local seed data and must never exist in a deployment.
 
