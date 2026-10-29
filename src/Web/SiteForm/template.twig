@@ -13,8 +13,11 @@
             {{ csrf.hiddenInput()|raw }}
             <div class="mb-3">
                 <label for="code" class="form-label">Site code</label>
-                <input type="text" class="form-control{% if errors.code is defined %} is-invalid{% endif %}" id="code" name="code" value="{{ form.code }}" maxlength="30" autocapitalize="characters" spellcheck="false" required>
+                <input type="text" class="form-control{% if errors.code is defined %} is-invalid{% endif %}" id="code" name="code" value="{{ form.code }}" maxlength="30" autocapitalize="characters" spellcheck="false"{% if site %} aria-describedby="codeHelp"{% endif %} required>
                 {% include 'Web/Shared/Form/field-errors.twig' with {errors: errors.code ?? []} %}
+                {% if site %}
+                    <div id="codeHelp" class="form-text">Pass systems identify the site by this code. If you change it, update them too.</div>
+                {% endif %}
             </div>
             {% for field in fields %}
                 <div class="mb-3">

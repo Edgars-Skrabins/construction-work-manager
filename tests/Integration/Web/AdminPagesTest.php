@@ -246,6 +246,14 @@ final class AdminPagesTest extends IntegrationTestCase
         yield 'taken' => ['dgp-sch-01', 'A construction site with this code already exists.'];
     }
 
+    public function testOnlyTheEditFormWarnsAboutChangingTheCode(): void
+    {
+        $this->asAdmin();
+
+        assertStringContainsString('Pass systems identify the site by this code.', (string) $this->request('GET', '/sites/1/edit')->getBody());
+        assertStringNotContainsString('Pass systems identify the site by this code.', (string) $this->request('GET', '/sites/create')->getBody());
+    }
+
     public function testSitesCanBeSortedByCode(): void
     {
         $this->asAdmin();

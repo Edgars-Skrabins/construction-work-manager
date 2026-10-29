@@ -58,7 +58,7 @@ This changes the addressing defined by the frozen `pass-system-api` spec. Everyt
   Sites 5 to 11 come from the demo-data seed (`SQL/016`, branch `feature/demo-data`). The backfill sets each code only where that ID exists with that name, and gives every other site still without a code `SITE-<ID>` (for example `SITE-27`).
 - **Rules:**
   - Every site has exactly one code, and no two sites share one. Comparison follows the database collation, so codes are unique ignoring case; since they are stored uppercased this changes nothing in practice.
-  - The code can be changed on the edit form. The pass system then has to use the new code; the app keeps no history of old codes.
+  - The code can be changed on the edit form. The pass system then has to use the new code; the app keeps no history of old codes. The edit form says so under the field: "Pass systems identify the site by this code. If you change it, update them too."
   - The API never addresses a site by its ID any more. An old-style numeric path like `/construction-sites/1/employees` fails the format check (`422`, too short), and a numeric one that fits the format (`/construction-sites/123/employees`) gets `404` unless a site has that code.
   - Only admins (`site.create`, `site.update`) set codes, as with every other site field. No new permission.
 - **Out of scope:**
@@ -117,7 +117,7 @@ The column is added in its own batch, because SQL Server compiles a batch before
 ### PHP: web
 
 - `src/Web/SiteForm/SiteForm.php`: `#[Label('Site code')] #[Required] #[Regex(SiteCode::PATTERN, message: SiteCode::FORM_MESSAGE, skipOnEmpty: true)] public string $code = '';` as the first property. `fromBody()` reads it with `SiteCode::normalize(FormBody::string($body, 'code'))`, `fromSite()` copies it, `toData()` passes it.
-- `src/Web/SiteForm/template.twig`: a `Site code` text input first, `maxlength="30"`, `autocapitalize="characters"`, `spellcheck="false"`, with the field errors under it, written like the other text fields.
+- `src/Web/SiteForm/template.twig`: a `Site code` text input first, `maxlength="30"`, `autocapitalize="characters"`, `spellcheck="false"`, with the field errors under it, written like the other text fields. On the edit form only, a `form-text` help line `codeHelp` (linked with `aria-describedby`) under it, written like the employee form's help texts.
 - `src/Web/SiteList/template.twig`: a sortable `Code` column (key `code`) before Name, showing `site.code`. After PR #19, the search placeholder becomes "Code, name or address".
 
 ### PHP: API
@@ -150,6 +150,7 @@ The column is added in its own batch, because SQL Server compiles a batch before
 6. **The backfill matches on ID and name, with `SITE-<ID>` as the fallback.** It works whether or not the demo-data seed (`SQL/016`) is on `main` when 019 runs, never gives a renamed site a misleading code, and every site gets a valid, unique code. `SITE-<ID>` can't collide with the explicit codes.
 7. **The duplicate check is a pre-check plus `guardUnique()` on `UQ_CONSTRUCTION_SITE_CODE`**, as the name is handled (validation-races). The two guards are nested so each constraint reports under its own field.
 8. **The code is editable.** A site's BIS case number can be corrected after entry; the pass system has to follow the change.
+9. **The edit form warns that pass systems use the code** (coordinator, 2026-10-29). Editing stays allowed; the help text makes the consequence visible. The create form doesn't show it, since no pass system knows a new site yet.
 
 # Part 3 — Implementation TODO
 
@@ -174,6 +175,7 @@ Baseline before starting: 150 unit tests and 530 integration tests on `main` (ef
 - [x] C3. Update the README's API paragraph and `CLAUDE.md`'s API notes. `make check`.
 
 ### D. Search
+- [x] D0. Add the edit-form help text under the code, with an `AdminPagesTest` check that the edit form shows it and the create form doesn't.
 - [ ] D1. Once PR #19 (list search) is on `main`, merge `origin/main`, add `s.CODE` to the site search columns, change the placeholder to "Code, name or address", and add an `AdminPagesTest` or `ListingTest` case that searching a code finds its site. `make check`.
 
 ### Z. Wrap-up
