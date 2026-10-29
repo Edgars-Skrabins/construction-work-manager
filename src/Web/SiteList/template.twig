@@ -1,0 +1,45 @@
+{% do this.setTitle('Construction sites') %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1 class="h3 mb-0">Construction sites</h1>
+    {% if access.can('site.create') %}
+        <a class="btn btn-primary" href="{{ urlGenerator.generate('site.create') }}">Add construction site</a>
+    {% endif %}
+</div>
+{% if paginator.getTotalItems() == 0 %}
+    <p class="text-secondary">No construction sites yet.</p>
+{% else %}
+    <div class="table-responsive">
+        <table class="table table-striped align-middle bg-white">
+            <thead>
+                <tr>
+                    <th scope="col">{% include 'Web/Shared/Listing/sort-link.twig' with {label: 'Name', key: 'name', route: 'site.list'} %}</th>
+                    <th scope="col">{% include 'Web/Shared/Listing/sort-link.twig' with {label: 'City', key: 'city', route: 'site.list'} %}</th>
+                    <th scope="col">{% include 'Web/Shared/Listing/sort-link.twig' with {label: 'Country', key: 'country', route: 'site.list'} %}</th>
+                    <th scope="col" class="text-end">{% include 'Web/Shared/Listing/sort-link.twig' with {label: 'Area (m²)', key: 'area', route: 'site.list'} %}</th>
+                    <th scope="col">{% include 'Web/Shared/Listing/sort-link.twig' with {label: 'Required access level', key: 'accessLevel', route: 'site.list'} %}</th>
+                    <th scope="col" class="text-end">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for site in paginator.read() %}
+                    <tr>
+                        <td>{{ site.name }}</td>
+                        <td>{{ site.city }}</td>
+                        <td>{{ site.country }}</td>
+                        <td class="text-end">{{ site.areaM2 }}</td>
+                        <td>{{ site.requiredAccessLevelName }}</td>
+                        <td class="text-end text-nowrap">
+                            {% if access.can('site.update') %}
+                                <a class="btn btn-sm btn-outline-primary" href="{{ urlGenerator.generate('site.edit', {id: site.id}) }}">Edit</a>
+                            {% endif %}
+                            {% if access.can('site.delete') %}
+                                <a class="btn btn-sm btn-outline-danger" href="{{ urlGenerator.generate('site.delete', {id: site.id}) }}">Delete</a>
+                            {% endif %}
+                        </td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% include 'Web/Shared/Listing/pagination.twig' with {route: 'site.list'} %}
+{% endif %}
