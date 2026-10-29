@@ -30,6 +30,17 @@ final class LayoutTest extends IntegrationTestCase
     }
 
     #[DataProvider('landingPages')]
+    public function testHomeRedirectsToTheRolesLandingPage(string $email, string $landingPage): void
+    {
+        $this->logIn($email, '123123123');
+
+        $response = $this->request('GET', '/');
+
+        assertSame(302, $response->getStatusCode());
+        assertSame($landingPage, $response->getHeaderLine('Location'));
+    }
+
+    #[DataProvider('landingPages')]
     public function testNavbarCollapsesBehindATogglerWithTheLinksAndLogoutInside(string $email, string $landingPage): void
     {
         $this->logIn($email, '123123123');

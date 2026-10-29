@@ -107,9 +107,9 @@ Baseline before starting: record the test counts from `make check` in A0.
 - [x] B2. Add `text-nowrap` to the date cells of the employee and assignment lists.
 
 ### C. Landing redirects
-- [ ] C1. Change `src/Web/HomePage/Action.php` to redirect by role as in 2.2, and delete `src/Web/HomePage/template.twig`.
-- [ ] C2. Move the tests that read the home page to the landing pages: `AuthenticationTest` (login returns to `/` and then redirects, the admin's name and the logout CSRF token come from `/employees`), `AdminPagesTest` (navigation from `/employees`, the manager's body from `/assignments`), `AssignmentPagesTest` (the employee's body from `/my-assignments`) and `MyAssignmentsPageTest` (admins and managers are redirected from `/` and still see an empty My assignments). Add the landing redirect test for all three roles to `LayoutTest`.
-- [ ] C3. Update `README.md` (Running the app: where each role lands after login) and `CLAUDE.md` if they mention the home page.
+- [x] C1. Change `src/Web/HomePage/Action.php` to redirect by role as in 2.2, and delete `src/Web/HomePage/template.twig`.
+- [x] C2. Move the tests that read the home page to the landing pages: `AuthenticationTest` (login returns to `/` and then redirects, the admin's name and the logout CSRF token come from `/employees`), `AdminPagesTest` (navigation from `/employees`, the manager's body from `/assignments`), `AssignmentPagesTest` (the employee's body from `/my-assignments`) and `MyAssignmentsPageTest` (admins and managers are redirected from `/` and still see an empty My assignments). Add the landing redirect test for all three roles to `LayoutTest`.
+- [x] C3. Update `README.md` (Running the app: where each role lands after login) and `CLAUDE.md` if they mention the home page.
 
 ### Z. Wrap-up
 - [ ] Z1. `make check` passes.

@@ -104,16 +104,13 @@ final class MyAssignmentsPageTest extends IntegrationTestCase
     }
 
     #[DataProvider('nonEmployees')]
-    public function testOtherRolesKeepTheHomePageAndSeeAnEmptyList(string $email): void
+    public function testOtherRolesSeeAnEmptyList(string $email): void
     {
         $this->logIn($email, '123123123');
 
-        $home = $this->request('GET', '/');
         $response = $this->request('GET', '/my-assignments');
         $body = (string) $response->getBody();
 
-        assertSame(200, $home->getStatusCode());
-        assertStringContainsString('<title>Construction Work Manager</title>', (string) $home->getBody());
         assertSame(200, $response->getStatusCode());
         assertStringContainsString(self::EMPTY_STATE, $body);
         assertStringNotContainsString(self::SITE, $body);

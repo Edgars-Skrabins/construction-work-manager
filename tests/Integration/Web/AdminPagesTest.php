@@ -40,7 +40,7 @@ final class AdminPagesTest extends IntegrationTestCase
     {
         $this->asAdmin();
 
-        $body = (string) $this->request('GET', '/')->getBody();
+        $body = (string) $this->request('GET', '/employees')->getBody();
 
         assertStringContainsString('href="/employees">Employees</a>', $body);
         assertStringContainsString('href="/sites">Construction sites</a>', $body);
@@ -85,7 +85,7 @@ final class AdminPagesTest extends IntegrationTestCase
     public function testOtherRolesSeeNoAdminLinksAndCannotPost(): void
     {
         $this->logIn('manager@mail.test', '123123123');
-        $body = (string) $this->request('GET', '/')->getBody();
+        $body = (string) $this->request('GET', '/assignments')->getBody();
 
         assertStringNotContainsString('href="/employees"', $body);
         assertStringNotContainsString('href="/sites"', $body);
