@@ -244,7 +244,7 @@ Inside the authenticated group, each with `RequirePermission::for(...)`:
   - As manager 2 and employee 4: no links, and every route gives 403.
   - As a guest, through the real routes: `/employees` gives a 302 to `/login`, never a 403, which proves the `Authentication` group runs before `RequirePermission`.
 - `tests/Integration/Web/WebClient.php`: a trait with `request()`, `logIn()`, `submit()` and `csrfToken()`, extracted from `AuthenticationTest`, which now uses it, so every page test drives the app the same way.
-- `tests/Unit/Service/InUseExceptionTest.php`: error 547 becomes `InUseException`, and any other integrity error is rethrown.
+- `tests/Unit/Service/InUseExceptionTest.php`: `isConstraintConflict()` is true for error 547 and false for any other integrity error.
 - `tests/Integration/Web/SetPasswordTest.php`: an admin creates an employee with an email, then a guest sets a password with the code, is logged in, and can later log in on `/login`; a wrong code shows the generic error; a logged-in user is redirected.
 - `tests/Integration/Web/RequirePermissionTest.php`: passes for a permitted user, throws `ForbiddenException` for a guest and for a missing permission. Through the app, a guest opening `/employees` is redirected to `/login` (302), never 403.
 - `MigrationRoundTripTest` still passes with 012. `AuthenticationTest` still finds "Jānis Bērziņš (admin)".

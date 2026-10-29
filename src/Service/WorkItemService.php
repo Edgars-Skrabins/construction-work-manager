@@ -59,7 +59,11 @@ final readonly class WorkItemService
         try {
             $this->workItems->delete($id);
         } catch (IntegrityException $e) {
-            throw InUseException::fromDelete($e, "This work item is still in use and can't be deleted.");
+            if (!InUseException::isConstraintConflict($e)) {
+                throw $e;
+            }
+
+            throw new InUseException("This work item is still in use and can't be deleted.", 0, $e);
         }
     }
 

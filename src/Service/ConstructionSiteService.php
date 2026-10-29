@@ -72,7 +72,11 @@ final readonly class ConstructionSiteService
         try {
             $this->sites->delete($id);
         } catch (IntegrityException $e) {
-            throw InUseException::fromDelete($e, "This construction site is still in use and can't be deleted.");
+            if (!InUseException::isConstraintConflict($e)) {
+                throw $e;
+            }
+
+            throw new InUseException("This construction site is still in use and can't be deleted.", 0, $e);
         }
     }
 

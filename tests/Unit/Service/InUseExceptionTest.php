@@ -8,29 +8,19 @@ use App\Service\InUseException;
 use PHPUnit\Framework\TestCase;
 use Yiisoft\Db\Exception\IntegrityException;
 
-use function PHPUnit\Framework\assertSame;
+use function PHPUnit\Framework\assertFalse;
+use function PHPUnit\Framework\assertTrue;
 
 final class InUseExceptionTest extends TestCase
 {
-    public function testConstraintConflictBecomesInUse(): void
+    public function testErrorNumber547IsAConstraintConflict(): void
     {
-        $integrity = new IntegrityException('conflict', ['23000', 547, 'conflict']);
-
-        $inUse = InUseException::fromDelete($integrity, 'Still in use.');
-
-        assertSame('Still in use.', $inUse->getMessage());
-        assertSame($integrity, $inUse->getPrevious());
+        assertTrue(InUseException::isConstraintConflict(new IntegrityException('conflict', ['23000', 547, 'conflict'])));
     }
 
-    public function testOtherIntegrityErrorIsRethrown(): void
+    public function testOtherIntegrityErrorIsNotAConstraintConflict(): void
     {
-        $integrity = new IntegrityException('duplicate', ['23000', 2627, 'duplicate']);
-
-        try {
-            InUseException::fromDelete($integrity, 'Still in use.');
-            self::fail('Expected the integrity error to be rethrown.');
-        } catch (IntegrityException $e) {
-            assertSame($integrity, $e);
-        }
+        assertFalse(InUseException::isConstraintConflict(new IntegrityException('duplicate', ['23000', 2627, 'duplicate'])));
+        assertFalse(InUseException::isConstraintConflict(new IntegrityException('unknown', null)));
     }
 }
