@@ -1,0 +1,20 @@
+{% if paginator.isPaginationRequired() %}
+    {% set current = paginator.getCurrentPage() %}
+    {% set last = paginator.getTotalPages() %}
+    {% set sort = paginator.getSort().getOrderAsString() %}
+    <nav aria-label="Pages">
+        <ul class="pagination">
+            <li class="page-item{% if current == 1 %} disabled{% endif %}">
+                <a class="page-link" href="{{ urlGenerator.generate(route, [], {sort: sort, page: current - 1}) }}">Previous</a>
+            </li>
+            {% for number in 1..last %}
+                <li class="page-item{% if number == current %} active{% endif %}">
+                    <a class="page-link" href="{{ urlGenerator.generate(route, [], {sort: sort, page: number}) }}"{% if number == current %} aria-current="page"{% endif %}>{{ number }}</a>
+                </li>
+            {% endfor %}
+            <li class="page-item{% if current == last %} disabled{% endif %}">
+                <a class="page-link" href="{{ urlGenerator.generate(route, [], {sort: sort, page: current + 1}) }}">Next</a>
+            </li>
+        </ul>
+    </nav>
+{% endif %}
