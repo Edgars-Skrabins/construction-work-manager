@@ -214,6 +214,7 @@ final class AdminPagesTest extends IntegrationTestCase
         yield 'employees' => ['/employees', 'kalniņa', 'Kalniņa, Ilze', 'Vītols, Kristaps'];
         yield 'employees by email' => ['/employees', 'employee3@', 'Vītols, Kristaps', 'Kalniņa, Ilze'];
         yield 'sites' => ['/sites', 'Daugavpils', 'Daugavpils School Renovation', 'Ādaži Defence Facility'];
+        yield 'sites by code' => ['/sites', 'rix-tec', 'Rīga Thermal Power Plant Upgrade', 'Āgenskalns Residential Block'];
         yield 'work items' => ['/work-items', 'pipework', 'Welding', 'Roofing'];
     }
 

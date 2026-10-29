@@ -176,8 +176,8 @@ Baseline before starting: 150 unit tests and 530 integration tests on `main` (ef
 
 ### D. Search
 - [x] D0. Add the edit-form help text under the code, with an `AdminPagesTest` check that the edit form shows it and the create form doesn't.
-- [ ] D1. Once PR #19 (list search) is on `main`, merge `origin/main`, add `s.CODE` to the site search columns, change the placeholder to "Code, name or address", and add an `AdminPagesTest` or `ListingTest` case that searching a code finds its site. `make check`.
+- [x] D1. Once PR #19 (list search) is on `main`, merge `origin/main`, add `s.CODE` to the site search columns, change the placeholder to "Code, name or address", and add an `AdminPagesTest` or `ListingTest` case that searching a code finds its site. `make check`.
 
 ### Z. Wrap-up
-- [ ] Z1. `make check` green.
+- [x] Z1. `make check` green.
 - [ ] Z2. Manual check in the running app at `http://127.0.0.1:<port>`: as admin, add a site with a lowercase code and see it saved uppercased in the list, try a duplicate and a malformed code; create an API key and `curl` `/api/v1/construction-sites/RIX-AGK-01/employees`, a lowercase code, an unknown code and `1`.

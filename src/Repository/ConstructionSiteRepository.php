@@ -30,7 +30,7 @@ final readonly class ConstructionSiteRepository implements ConstructionSiteRepos
 
         /** @var QueryDataReader<int, ConstructionSite> $reader */
         $reader = new QueryDataReader(
-            ListSearch::apply($this->query(), $search, ['s.NAME', 's.STREET', 's.CITY', 's.COUNTRY']),
+            ListSearch::apply($this->query(), $search, ['s.CODE', 's.NAME', 's.STREET', 's.CITY', 's.COUNTRY']),
             ListSort::create($config, $sort, 'name'),
         );
 
