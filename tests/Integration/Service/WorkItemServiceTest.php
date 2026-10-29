@@ -59,6 +59,7 @@ final class WorkItemServiceTest extends IntegrationTestCase
 
     public function testUnusedWorkItemIsDeleted(): void
     {
+        $this->db()->createCommand('DELETE FROM ASSIGNMENT WHERE WORK_ITEM_ID = 5')->execute();
         $this->workItems()->delete(1, 5);
 
         assertNull($this->workItems()->find(1, 5));
