@@ -122,9 +122,9 @@ Registered in `config/console/commands.php` and written with `#[AsCommand]`, lik
 
 `src/Api/` mirrors `src/Web/`: `src/Api/Shared/` holds the pipeline pieces and `src/Api/V1/<Endpoint>/` holds each endpoint's action.
 
-- `src/Api/Shared/ApiPipelineMiddleware.php`: the first entry of the global middleware list. For a request whose path is `/api` or starts with `/api/`, it dispatches the request through its own `MiddlewareDispatcher` with `[ApiErrorMiddleware, ApiKeyAuthentication, Router]` and `ApiNotFoundHandler` as the fallback, and returns that response without calling the web handler. Any other request goes to the web handler unchanged. So API requests never reach `ErrorCatcher`, `SessionMiddleware`, `CsrfTokenMiddleware`, `RequestCatcherMiddleware` or `ForbiddenMiddleware`.
+- `src/Api/Shared/ApiPipelineMiddleware.php`: the first entry of the global middleware list. For a request whose path, decoded with `urldecode()` exactly as the FastRoute matcher decodes it, is `/api` or starts with `/api/`, it dispatches the request through its own `MiddlewareDispatcher` with `[ApiErrorMiddleware, ApiKeyAuthentication, Router]` and `ApiNotFoundHandler` as the fallback, and returns that response without calling the web handler. Any other request goes to the web handler unchanged. So API requests never reach `ErrorCatcher`, `SessionMiddleware`, `CsrfTokenMiddleware`, `RequestCatcherMiddleware` or `ForbiddenMiddleware`.
 - `src/Api/Shared/ApiErrorMiddleware.php`: catches any `Throwable`, logs it through `LoggerInterface` with only its class, message, file and line (never request headers), and returns a `500` problem. It turns an empty `405` from `Router` into a `405` problem that keeps the `Allow` header.
-- `src/Api/Shared/ApiKeyAuthentication.php`: reads the `Authorization` header. It must be `Bearer <key>` (scheme case-insensitive, one space, nothing after the key). Calls `ApiKeyService::authenticate()`. Failure returns the generic `401` problem with `WWW-Authenticate: Bearer`. Success adds the `ApiKey` as the request attribute `apiKey` and passes on.
+- `src/Api/Shared/ApiKeyAuthentication.php`: reads the `Authorization` header. There must be exactly one, and it must be `Bearer <key>` (scheme case-insensitive, one space, nothing after the key). Calls `ApiKeyService::authenticate()`. Failure returns the generic `401` problem with `WWW-Authenticate: Bearer`. Success adds the `ApiKey` as the request attribute `apiKey` and passes on.
 - `src/Api/Shared/ApiNotFoundHandler.php`: returns a `404` problem with `"detail": "Not found."`.
 - `src/Api/Shared/JsonResponseFactory.php`: `data(array $body, int $status = 200)` and `problem(int $status, ?string $detail = null, array $headers = [])`. Bodies are encoded with `JSON_THROW_ON_ERROR | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES`. Content types are `application/json; charset=utf-8` and `application/problem+json; charset=utf-8`. Problems have `type` `about:blank`, `title` the status's reason phrase, `status`, and `detail` only when given. Every API response also gets `Cache-Control: no-store`. The other security headers, `nosniff` included, come from the Caddy header block for every response (hardening, Decision Log #95), so they are not repeated here.
 - `src/Api/V1/SiteEmployees/Action.php`: reads the `id` route argument, returns `422` unless it matches `^[1-9][0-9]{0,9}$` and fits in an `int` (2147483647), calls `SiteAccessService::forSite()`, returns `404` when it returns null, else `200` with the body from Part 1. Ignores the query string and any request body.
@@ -170,7 +170,8 @@ This spec adds:
   - `issue()` returns a key matching the format, stores only `hash('sha256', secret)`, never the plain key, trims the client name, and rejects an empty or too long name and a past expiry.
   - A key ID collision is regenerated.
   - `authenticate()` accepts the issued key and touches last used. It returns null without touching for a malformed key, an unknown key ID, a wrong secret, a revoked and an expired key.
-- `tests/Unit/Api/JsonResponseFactoryTest.php`: content types, the `Cache-Control` header, unescaped Unicode, problem fields with and without detail.
+- `tests/Unit/Api/JsonResponseFactoryTest.php`: content types, the `Cache-Control` header, unescaped Unicode, problem fields with and without detail, and invalid UTF-8 throwing `JsonException`.
+- `tests/Unit/Api/ApiErrorMiddlewareTest.php`, with a recording logger: an exception becomes a `500` problem without detail and is logged with only class, message, file and line, never the `Authorization` value. An empty `405` becomes a `405` problem keeping `Allow`, and other responses pass through unchanged.
 
 **Integration**
 - `tests/Integration/Database/ApiKeySchemaTest.php`: in a rolled-back transaction, a duplicate key ID is rejected by `UQ_API_KEY_KEY_ID`, an uppercase or short key ID by `CK_API_KEY_KEY_ID`, a blank client name by `CK_API_KEY_CLIENT_NAME`, a bad hash by `CK_API_KEY_SECRET_HASH`. `MigrationRoundTripTest` gets `API_KEY` in its table list.
@@ -178,10 +179,13 @@ This spec adds:
 - `tests/Integration/Console/ApiKeyCommandsTest.php`: with Symfony's `CommandTester`, create prints a key that `authenticate()` accepts, invalid dates and empty names fail, list shows the key ID and never the secret or hash, revoke makes `authenticate()` return null and fails for an unknown key ID.
 - `tests/Integration/Api/ApiPipelineTest.php`, through `Application` like `WebSmokeTest`, before the endpoint exists:
   - `GET /api/v1/anything` without a key: `401` problem with `WWW-Authenticate: Bearer` and the exact generic body.
-  - Wrong scheme (`Basic …`), `Bearer` with nothing, a malformed key, an unknown key ID, a wrong secret, a revoked and an expired key: all `401` with identical bodies.
+  - Wrong scheme (`Basic …`), `Bearer` alone or with an empty key, a key without the scheme, two spaces, an extra part, a malformed key, a 10 KB header, an unknown key ID, a wrong secret, a revoked and an expired key: all `401` with identical bodies.
   - A valid key on an unknown API path: `404` problem.
   - No API response has a `Set-Cookie` header, and none is rejected by CSRF for a `POST` (it gets `401` without a key, `404` or `405` with one).
-  - A thrown exception in an API handler becomes a `500` problem, and the logged message contains no `Authorization` value.
+  - An unexpected error (the `API_KEY` table renamed inside the rolled-back transaction) becomes a `500` problem with no `Set-Cookie`.
+  - `/api`, `/api/`, `/api/v1/…`, `/%61pi/v1/…` and `/api%2Fv1` go through the API pipeline. `/apix`, `/api-docs`, `/API/v1/…`, `/%2561pi/v1` and `/x/api/v1` get the web 404 page.
+  - The `Bearer` scheme is accepted in any case, and a duplicate `Authorization` header gets the generic `401`.
+  - A successful authentication sets `LAST_USED_AT`, and `/login` still gets its session cookie.
   - The configured web middleware list is `ApiPipelineMiddleware` followed by the unchanged web list.
   - `WebSmokeTest` still passes, so web requests are untouched.
 - `tests/Integration/Api/SiteEmployeesTest.php` (block E), with assignments inserted in a rolled-back transaction and the shared clock fixed to a known Riga date:
@@ -227,6 +231,7 @@ This spec adds:
 26. **One query, owned by work-assignments (2026-10-29):** the endpoint calls `AssignmentRepositoryInterface::findEmployeesNeedingAccess()` instead of its own `SiteAccessRepository`, so the rule lives in one place. Its fields are exactly this API's employee fields. Rejected: a second query in this spec.
 27. **Shared clock (2026-10-29):** all time comes from the shared PSR-20 `ClockInterface`, for testability and one source of time. Key expiry, `LAST_USED_AT` and `REVOKED_AT` are stored in UTC, and the access date is the Riga date. Until block E's rebase brings the clock to this branch, `ApiKeyService::now()` creates the UTC time itself, and E0 switches it to the clock. Rejected: adding `psr/clock` and a clock class on this branch too, which would collide with work-assignments' copy.
 28. **Seed data in examples (2026-10-29):** the example response uses seed site 1 and seed employee 4.
+29. **API path decoded like the router (2026-10-29, block C):** `ApiPipelineMiddleware` decides on `urldecode()` of the path, the same decoding the FastRoute matcher uses, so a percent-encoded `/%61pi/...` can never reach an API route through the web stack without key authentication. Case and double encoding don't match API routes in either stack, so they go to the web 404.
 
 # Part 3 — Implementation TODO
 
@@ -247,10 +252,10 @@ Baseline before starting: unit 52 tests, integration 143 tests, all passing.
 - [x] B2. Add `ApiKeyCommandsTest`. Run `make test`.
 
 ### C. API pipeline, authentication and JSON errors
-- [ ] C1. Add `JsonResponseFactory` and `JsonResponseFactoryTest`.
-- [ ] C2. Add `ApiErrorMiddleware`, `ApiKeyAuthentication` and `ApiNotFoundHandler`.
-- [ ] C3. Add `ApiPipelineMiddleware` and put it first in `config/web/di/application.php`, leaving the rest of the list unchanged.
-- [ ] C4. Add `ApiPipelineTest`, and check that `WebSmokeTest`, `AuthenticationTest` and `ForbiddenMiddlewareTest` still pass. Run `make test`.
+- [x] C1. Add `JsonResponseFactory` and `JsonResponseFactoryTest`.
+- [x] C2. Add `ApiErrorMiddleware`, `ApiKeyAuthentication` and `ApiNotFoundHandler`.
+- [x] C3. Add `ApiPipelineMiddleware` and put it first in `config/web/di/application.php`, leaving the rest of the list unchanged.
+- [x] C4. Add `ApiPipelineTest`, and check that `WebSmokeTest`, `AuthenticationTest` and `ForbiddenMiddlewareTest` still pass. Run `make test`.
 
 ### D. Documentation
 - [ ] D1. Update `README.md` (Project structure, Running the app, Commands) and `CLAUDE.md` (Layout, Architecture) as described in 2.2, without the site-employees `curl` example until block E.
