@@ -73,7 +73,11 @@ final readonly class AccountRepository implements AccountRepositoryInterface
                     'SETUP_CODE_EXPIRES_AT' => null,
                     'UPDATED_AT' => new Expression('SYSUTCDATETIME()'),
                 ],
-                ['EMPLOYEE_ID' => $employeeId, 'SETUP_CODE_HASH' => $setupCodeHash, 'PASSWORD_HASH' => null],
+                [
+                    'and',
+                    ['EMPLOYEE_ID' => $employeeId, 'SETUP_CODE_HASH' => $setupCodeHash, 'PASSWORD_HASH' => null, 'IS_ACTIVE' => 1],
+                    ['>', 'SETUP_CODE_EXPIRES_AT', new Expression('SYSUTCDATETIME()')],
+                ],
             )
             ->execute();
 
