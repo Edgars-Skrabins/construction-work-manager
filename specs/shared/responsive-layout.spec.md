@@ -1,7 +1,7 @@
 # Responsive layout — Spec
 
 **Type:** bug fix
-**Status:** ready for implementation
+**Status:** in progress
 **Last updated:** 2026-10-29
 
 # Part 1 — Business logic and usage
@@ -98,9 +98,9 @@ Read Part 1 and Part 2 before starting. Work through the tasks in order and tick
 Baseline before starting: record the test counts from `make check` in A0.
 
 ### A. Navbar
-- [ ] A0. Start the stack, run `make check`, and record the test counts here.
-- [ ] A1. Rewrite the navbar in `layout.twig` as in 2.2.
-- [ ] A2. Add `tests/Integration/Web/LayoutTest.php` with the toggler, no-toggler-for-guests and no-inline-script tests from 2.2. `make check` passes.
+- [x] A0. Start the stack, run `make check`, and record the test counts here. Baseline: `make check` passes with 136 unit tests (465 assertions) and 485 integration tests (4090 assertions).
+- [x] A1. Rewrite the navbar in `layout.twig` as in 2.2.
+- [x] A2. Add `tests/Integration/Web/LayoutTest.php` with the toggler, no-toggler-for-guests and no-inline-script tests from 2.2. `make check` passes.
 
 ### B. My assignments and table dates
 - [ ] B1. Make the My assignments rows wrap and split `period-status.twig` as in 2.2. Update the assertions in `MyAssignmentsPageTest` that match the old period-status markup, if any.
