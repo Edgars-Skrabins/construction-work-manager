@@ -262,6 +262,7 @@ Baseline before starting: unit 52 tests, integration 143 tests, all passing (tak
 
 ### C. Service (after admin-management has merged)
 - [ ] C0. Rebase onto `origin/main` once admin-management has merged, and verify the class names and signatures listed in 2.1 against the merged code, including the page folder style. Ask before deviating from anything in this spec.
+- [ ] C0a. After the rebase, switch admin-management's `EmployeeService`, `PasswordSetupService` and `AccountRepository` from their own `new DateTimeImmutable('now', UTC)` to the injected `ClockInterface`, keeping storage formatting in UTC, and give their tests a fixed clock where that makes them deterministic. One commit, "Use the shared clock in services". Also build the `DateTimeZone` once in `Clock`'s constructor, so a bad timezone fails on first resolve.
 - [ ] C1. Add `App\Service\AssignmentService` with every method and rule in 2.2.
 - [ ] C2. Add `tests/Integration/Service/AssignmentServiceTest.php`, and run `make test`.
 
