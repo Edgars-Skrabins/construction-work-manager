@@ -1,7 +1,7 @@
 # Languages — Spec
 
 **Type:** feature
-**Status:** ready for implementation
+**Status:** in progress
 **Last updated:** 2026-10-29
 
 # Part 1 — Business logic and usage
@@ -203,19 +203,20 @@ Translations are written for a native speaker in a construction company's office
 | Admin (role) | Administrators | Administratorius | Administraator | Администратор | Pääkäyttäjä | Administratör |
 | Access level | Piekļuves līmenis | Prieigos lygis | Ligipääsutase | Уровень допуска | Kulkuoikeustaso | Behörighetsnivå |
 | Required access level | Nepieciešamais piekļuves līmenis | Reikalingas prieigos lygis | Nõutav ligipääsutase | Требуемый уровень допуска | Vaadittu kulkuoikeustaso | Krävd behörighetsnivå |
-| Planned | Plānots | Suplanuota | Planeeritud | Запланировано | Suunniteltu | Planerad |
+| Planned | Plānots | Suplanuota | Planeeritud | Запланировано | Suunniteltu | Planerat |
 | In progress | Procesā | Vykdoma | Töös | В работе | Käynnissä | Pågår |
-| Overdue | Nokavēts | Vėluoja | Hilinenud | Просрочено | Myöhässä | Försenad |
-| Done | Pabeigts | Atlikta | Tehtud | Выполнено | Valmis | Klar |
-| Cancelled | Atcelts | Atšaukta | Tühistatud | Отменено | Peruttu | Avbruten |
-| Active | Aktīvs | Aktyvi | Aktiivne | Активно | Aktiivinen | Aktiv |
+| Overdue | Nokavēts | Pavėluota | Hilinenud | Просрочено | Myöhässä | Försenat |
+| Done | Pabeigts | Atlikta | Tehtud | Выполнено | Valmis | Klart |
+| Cancelled | Atcelts | Atšaukta | Tühistatud | Отменено | Peruttu | Avbrutet |
+| Active | Aktīvs | Aktyvi | Aktiivne | Активно | Aktiivinen | Aktivt |
 | Setup code | Aktivizācijas kods | Aktyvinimo kodas | Aktiveerimiskood | Код активации | Aktivointikoodi | Aktiveringskod |
 | Log in / Log out | Pieteikties / Iziet | Prisijungti / Atsijungti | Logi sisse / Logi välja | Войти / Выйти | Kirjaudu sisään / Kirjaudu ulos | Logga in / Logga ut |
 | Save / Delete / Cancel / Edit | Saglabāt / Dzēst / Atcelt / Rediģēt | Išsaugoti / Ištrinti / Atšaukti / Redaguoti | Salvesta / Kustuta / Tühista / Muuda | Сохранить / Удалить / Отмена / Изменить | Tallenna / Poista / Peruuta / Muokkaa | Spara / Ta bort / Avbryt / Redigera |
 | History | Vēsture | Istorija | Ajalugu | История | Historia | Historik |
 | Language | Valoda | Kalba | Keel | Язык | Kieli | Språk |
+| Login (employee list column) | Konts | Paskyra | Konto | Вход | Käyttäjätili | Konto |
 
-Status badges agree with their noun where the language needs it (Lithuanian "užduotis" is feminine, so "Aktyvi", "Atlikta"); the Russian statuses are neuter adverb-like forms that read well on a badge.
+Status badges agree with their noun where the language needs it: Lithuanian "užduotis" is feminine ("Aktyvi", "Atlikta", "Pavėluota"), Swedish "uppdrag" is neuter ("Planerat", "Klart", "Aktivt"), and the Russian statuses are neuter forms that read well on a badge. "Active" and "Inactive" are also the login statuses in the employee list, so that column's header is translated with a noun of the same gender ("Konts", "Paskyra", "Konto").
 
 ### Tests
 
@@ -259,6 +260,9 @@ Status badges agree with their noun where the language needs it (Lithuanian "už
 11. **Calendar month and day names from ICU,** capitalized for headings. Native data for all seven languages, no hand-written lists to keep in sync.
 12. **Dates stay `Y-m-d`; the API and console stay English.** Decided by the user and the existing architecture.
 13. **Implemented in parallel against current `main`, merged last.** Five branches are built at the same time and add or change UI text: demo data, the dark theme, the manager team view and calendar, list search, and the role-aware employee form and navigation. This branch is implemented against `main` as it is now. Its pull request merges after those five. Just before it merges, `origin/main` is merged into it (never rebased), and every string those branches added or changed is put through `t()` and translated into all six languages. `MessageCatalogTest` and the untranslated-text sweep catch any gaps. Rejected: waiting for the five branches to merge first (serializes the work; changed by the coordinator on the user's behalf, 2026-10-29).
+14. **Role names are translated through their stored value** (2026-10-29). Templates show `t(role.value)` with the IDs `admin`, `manager` and `employee`, translated in lower case, so no new `Role::label()` is needed. If the role-aware UI branch adds one, block Y switches to it.
+15. **The employee list's name column is headed "Employee", not "Name"** (2026-10-29). With English as the ID, one "Name" can't be both a person's name and a site's or work item's name, which Latvian, Lithuanian and Russian word differently ("Vārds" / "Nosaukums"). "Employee" is what the assignment list already uses for the same column.
+16. **Implementation details settled while building** (2026-10-29): `LanguageCookie` also takes `ClockInterface` and writes the expiry in UTC; the selector and the navbar toggler share one flex group, so on a phone they wrap together to the right under the brand; the catalog test reads IDs with regular expressions (Twig `t('…')`, PHP `->translate()`, `->addError()` and `->addSuccess()` literals) instead of `ContentParser`, and of the validator rules' messages it takes `getMessage()` and `Length`'s min and max messages, the ones a string form property can produce; the untranslated-text sweep compares whole text nodes and the `aria-label`, `data-confirm`, `title` and `placeholder` attributes with every ID (placeholders as wildcards), so English data such as work item names doesn't cause false hits.
 
 # Part 3 — Implementation TODO
 
@@ -266,39 +270,39 @@ Read Part 1 and Part 2 before starting. Work through the tasks in order and tick
 
 Implement against current `main` without waiting for the five branches in decision 13. Block Y brings in their strings before this branch merges. Where 2.2 names code from those branches (the manager team pages and calendar, role labels, the dark-theme navbar classes), do that part in Y once it is on `main`.
 
-Baseline before starting: to be recorded at the start of implementation (`make check` unit and integration test and assertion counts).
+Baseline before starting: `make check` on `main` at `6de8a4d` passes cs and stan with 139 unit tests (470 assertions) and 517 integration tests (4353 assertions). Locally this branch's stack shares another checkout's SQL Server with its own `DB_TEST_NAME`, so `DatabaseConnectionTest::testTestEnvironmentUsesTestDatabase` fails locally only, before and after the change; CI uses the default name.
 
 ### A. Translation infrastructure
-- [ ] A1. `make composer require yiisoft/translator:^3.2.1 yiisoft/translator-message-php:^1.1.2 yiisoft/cookies:^1.2.4`. `composer.lock` updated.
-- [ ] A2. Add `Language` and `LanguageTest` as in 2.2.
-- [ ] A3. Add the `@messages` alias, the translator and validator params, `config/common/di/translator.php`, and empty `messages/{lv,lt,et,ru,fi,sv}/app.php`; run `composer yii-config-rebuild`. Remove `locale` from `ApplicationParams` and `config/common/application.php`.
-- [ ] A4. Add `LanguageMiddleware` with its unit test and put it after `ApiPipelineMiddleware` in `config/web/di/application.php`.
-- [ ] A5. Add `TranslatorExtension`, register it in `config/common/di/twig.php`, add `ViewLanguage` and the `language` view parameter, and set `<html lang="{{ language.current().value }}">` in `layout.twig`. `make check` passes.
+- [x] A1. `make composer require yiisoft/translator:^3.2.1 yiisoft/translator-message-php:^1.1.2 yiisoft/cookies:^1.2.4`. `composer.lock` updated.
+- [x] A2. Add `Language` and `LanguageTest` as in 2.2.
+- [x] A3. Add the `@messages` alias, the translator and validator params, `config/common/di/translator.php`, and empty `messages/{lv,lt,et,ru,fi,sv}/app.php`; run `composer yii-config-rebuild`. Remove `locale` from `ApplicationParams` and `config/common/application.php`.
+- [x] A4. Add `LanguageMiddleware` with its unit test and put it after `ApiPipelineMiddleware` in `config/web/di/application.php`.
+- [x] A5. Add `TranslatorExtension`, register it in `config/common/di/twig.php`, add `ViewLanguage` and the `language` view parameter, and set `<html lang="{{ language.current().value }}">` in `layout.twig`. `make check` passes.
 
 ### B. Switching and selector
-- [ ] B1. Add `LocalPath` and `LanguageCookie` with their unit tests, the `app/language` param (prod: secure), `config/web/di/language.php`, then `src/Web/Language/Action.php` and the `language` route as in 2.2.
-- [ ] B2. Add `language-selector.twig`, include it in `layout.twig`, and check its placement for guests and logged-in users at phone and desktop widths. Update `LayoutTest` for the new navbar markup if its regexes no longer match.
-- [ ] B3. Add the switching, cookie, redirect and selector parts of `tests/Integration/Web/LanguageTest.php`. `make check` passes.
+- [x] B1. Add `LocalPath` and `LanguageCookie` with their unit tests, the `app/language` param (prod: secure), `config/web/di/language.php`, then `src/Web/Language/Action.php` and the `language` route as in 2.2.
+- [x] B2. Add `language-selector.twig`, include it in `layout.twig`, and check its placement for guests and logged-in users at phone and desktop widths. Update `LayoutTest` for the new navbar markup if its regexes no longer match.
+- [x] B3. Add the switching, cookie, redirect and selector parts of `tests/Integration/Web/LanguageTest.php`. `make check` passes.
 
 ### C. Strings through the translator
-- [ ] C1. Wrap every literal in every template (layout and partials included) in `t()`, page titles included, with named parameters for dynamic parts.
-- [ ] C2. Translate enum and role labels in templates, flashes in `FlashMessages`, action messages (login and others) and service messages, converting `sprintf` messages to named parameters. Exceptions that never reach the user stay as they are.
-- [ ] C3. Give every validated form property a `#[Label]`.
-- [ ] C4. Calendar month and weekday names from `IntlDateFormatter` as in 2.2; other calendar text through `t()`.
-- [ ] C5. Add `MessageCatalogTest` with the code extraction. It fails, listing every ID missing from the (still empty) files; use that list as the inventory.
+- [x] C1. Wrap every literal in every template (layout and partials included) in `t()`, page titles included, with named parameters for dynamic parts.
+- [x] C2. Translate enum and role labels in templates, flashes in `FlashMessages`, action messages (login and others) and service messages, converting `sprintf` messages to named parameters. Exceptions that never reach the user stay as they are.
+- [x] C3. Give every validated form property a `#[Label]`.
+- [ ] C4. Calendar month and weekday names from `IntlDateFormatter` as in 2.2; other calendar text through `t()`. Moved to Y2: the calendar isn't on `main` yet.
+- [x] C5. Add `MessageCatalogTest` with the code extraction. It fails, listing every ID missing from the (still empty) files; use that list as the inventory.
 
 ### D. Translations
-- [ ] D1. Write `messages/lv/app.php` with every ID from C5, following the glossary.
-- [ ] D2. Write `messages/lt/app.php`.
-- [ ] D3. Write `messages/et/app.php`.
-- [ ] D4. Write `messages/ru/app.php`.
-- [ ] D5. Write `messages/fi/app.php`.
-- [ ] D6. Write `messages/sv/app.php`. `MessageCatalogTest` passes.
-- [ ] D7. Read every page in each language in the running app and fix wording that is wrong, unnatural or too long for its button or badge, especially on a phone-width screen.
+- [x] D1. Write `messages/lv/app.php` with every ID from C5, following the glossary.
+- [x] D2. Write `messages/lt/app.php`.
+- [x] D3. Write `messages/et/app.php`.
+- [x] D4. Write `messages/ru/app.php`.
+- [x] D5. Write `messages/fi/app.php`.
+- [x] D6. Write `messages/sv/app.php`. `MessageCatalogTest` passes.
+- [x] D7. Read every page in each language in the running app and fix wording that is wrong, unnatural or too long for its button or badge, especially on a phone-width screen. Done: every translation reviewed in the catalog source; the login, assignments, 403 and collapsed-menu pages checked in Latvian at desktop and phone width, Russian and Finnish rendering covered by the tests. The phone check moved the toggler next to the selector (decision 16).
 
 ### E. Rendering tests
-- [ ] E1. Add the two-language page test, the translated validation and service error tests and the untranslated-text sweep to `tests/Integration/Web/LanguageTest.php`, and the English API test.
-- [ ] E2. Update existing tests broken by the changes (constructor arguments of services and `FlashMessages`, `ApplicationParams`). `make check` passes.
+- [x] E1. Add the two-language page test, the translated validation and service error tests and the untranslated-text sweep to `tests/Integration/Web/LanguageTest.php`, and the English API test.
+- [x] E2. Update existing tests broken by the changes (constructor arguments of services and `FlashMessages`, `ApplicationParams`). `make check` passes.
 
 ### Y. Last-merge catch-up (after the five other branches have merged into `main`)
 - [ ] Y1. Merge `origin/main` into `feature/languages` (never rebase or force-push) and resolve the conflicts. Templates, services and the layout will conflict with C1 and C2: keep the other branches' markup and behaviour, and put their text through `t()`.
@@ -308,5 +312,5 @@ Baseline before starting: to be recorded at the start of implementation (`make c
 - [ ] Y5. Repeat Y1 to Y4 if `main` moves again before this branch merges.
 
 ### Z. Wrap-up
-- [ ] Z1. Update `CLAUDE.md` and `README.md` as in 2.2, merging with the other branches' doc changes. `make check` passes; record the test counts here.
+- [x] Z1. Update `CLAUDE.md` and `README.md` as in 2.2, merging with the other branches' doc changes. `make check` passes; record the test counts here. Before block Y: 188 unit tests (3183 assertions) and 565 integration tests (4964 assertions), all passing apart from the local-only database-name test from the baseline.
 - [ ] Z2. Manual check in the running app: on `/login` switch to Latviešu, log in as `manager@mail.test`, see the assignments list, the team view and calendar in Latvian, save an assignment and see the translated flash, switch to Русский on the same page, log out and see the login page still in Russian, then switch back to English. Call the API with a `locale=lv` cookie and see English problem details.
