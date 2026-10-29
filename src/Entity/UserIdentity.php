@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Entity;
 
+use App\Access\Role;
 use Yiisoft\Auth\IdentityInterface;
 
 final readonly class UserIdentity implements IdentityInterface
@@ -12,7 +13,7 @@ final readonly class UserIdentity implements IdentityInterface
         public int $employeeId,
         public string $firstName,
         public string $lastName,
-        public string $role,
+        public Role $role,
     ) {}
 
     public function getId(): string

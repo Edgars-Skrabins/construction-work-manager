@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Repository;
 
+use App\Access\Role;
 use App\Entity\UserIdentity;
 use Yiisoft\Auth\IdentityRepositoryInterface;
 use Yiisoft\Db\Connection\ConnectionInterface;
@@ -37,7 +38,7 @@ final readonly class UserIdentityRepository implements IdentityRepositoryInterfa
             employeeId: (int) $row['ID'],
             firstName: $row['FIRST_NAME'],
             lastName: $row['LAST_NAME'],
-            role: $row['ROLE'],
+            role: Role::from($row['ROLE']),
         );
     }
 }

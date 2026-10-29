@@ -21,9 +21,14 @@
         <div class="container">
             <a class="navbar-brand" href="{{ aliases.get('@baseUrl') }}">{{ applicationParams.name }}</a>
             {% if not currentUser.isGuest() %}
+                {% set routeName = currentRoute.getName() ?? '' %}
+                <ul class="navbar-nav flex-row gap-3 me-auto">
+                </ul>
+            {% endif %}
+            {% if not currentUser.isGuest() %}
                 <form class="d-flex align-items-center gap-3" method="post" action="{{ urlGenerator.generate('logout') }}">
                     {{ csrf.hiddenInput()|raw }}
-                    <span class="navbar-text">{{ currentUser.getIdentity().fullName() }} ({{ currentUser.getIdentity().role }})</span>
+                    <span class="navbar-text">{{ currentUser.getIdentity().fullName() }} ({{ currentUser.getIdentity().role.value }})</span>
                     <button type="submit" class="btn btn-outline-light btn-sm">Log out</button>
                 </form>
             {% endif %}

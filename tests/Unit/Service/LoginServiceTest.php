@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Tests\Unit\Service;
 
+use App\Access\Role;
 use App\Entity\Account;
 use App\Entity\UserIdentity;
 use App\Repository\AccountRepositoryInterface;
@@ -120,7 +121,7 @@ final class LoginServiceTest extends TestCase
         $identityRepository = new class implements IdentityRepositoryInterface {
             public function findIdentity(string $id): UserIdentity
             {
-                return new UserIdentity((int) $id, 'Test', 'User', 'employee');
+                return new UserIdentity((int) $id, 'Test', 'User', Role::Employee);
             }
         };
 
