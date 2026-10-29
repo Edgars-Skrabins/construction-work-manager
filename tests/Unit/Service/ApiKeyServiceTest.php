@@ -7,9 +7,9 @@ namespace App\Tests\Unit\Service;
 use App\Entity\ApiKey;
 use App\Entity\ApiKeyStatus;
 use App\Service\ApiKeyService;
+use App\Service\ValidationException;
 use App\Tests\FixedClock;
 use DateTimeImmutable;
-use InvalidArgumentException;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 
@@ -53,7 +53,7 @@ final class ApiKeyServiceTest extends TestCase
     #[DataProvider('invalidIssues')]
     public function testInvalidIssueIsRejected(string $clientName, ?string $expiresAt): void
     {
-        $this->expectException(InvalidArgumentException::class);
+        $this->expectException(ValidationException::class);
 
         $this->service->issue($clientName, $expiresAt === null ? null : self::at($expiresAt));
     }

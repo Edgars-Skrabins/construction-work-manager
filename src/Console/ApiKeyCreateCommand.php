@@ -5,9 +5,9 @@ declare(strict_types=1);
 namespace App\Console;
 
 use App\Service\ApiKeyService;
+use App\Service\ValidationException;
 use DateTimeImmutable;
 use DateTimeZone;
-use InvalidArgumentException;
 use Symfony\Component\Console\Attribute\AsCommand;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputArgument;
@@ -43,7 +43,7 @@ final class ApiKeyCreateCommand extends Command
         try {
             $expiresAt = is_string($expires) ? $this->parseDate($expires) : null;
             $issued = $this->apiKeyService->issue(is_string($client) ? $client : '', $expiresAt);
-        } catch (InvalidArgumentException $e) {
+        } catch (ValidationException $e) {
             $output->writeln('<error>' . $e->getMessage() . '</error>');
             return ExitCode::DATAERR;
         }
@@ -62,7 +62,7 @@ final class ApiKeyCreateCommand extends Command
     {
         $date = DateTimeImmutable::createFromFormat('!Y-m-d', $value, new DateTimeZone('UTC'));
         if ($date === false || $date->format('Y-m-d') !== $value) {
-            throw new InvalidArgumentException('The expiry date must be a valid date in the format YYYY-MM-DD.');
+            throw ValidationException::forField('expires', 'The expiry date must be a valid date in the format YYYY-MM-DD.');
         }
 
         return $date;

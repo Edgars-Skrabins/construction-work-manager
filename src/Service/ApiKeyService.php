@@ -10,7 +10,6 @@ use App\Entity\IssuedApiKey;
 use App\Repository\ApiKeyRepositoryInterface;
 use DateTimeImmutable;
 use DateTimeZone;
-use InvalidArgumentException;
 use Psr\Clock\ClockInterface;
 
 final readonly class ApiKeyService
@@ -29,13 +28,13 @@ final readonly class ApiKeyService
     {
         $clientName = trim($clientName);
         if ($clientName === '') {
-            throw new InvalidArgumentException('The client name must not be empty.');
+            throw ValidationException::forField('client', 'The client name must not be empty.');
         }
         if (mb_strlen($clientName) > self::CLIENT_NAME_MAX_LENGTH) {
-            throw new InvalidArgumentException('The client name must be at most 100 characters.');
+            throw ValidationException::forField('client', 'The client name must be at most 100 characters.');
         }
         if ($expiresAt !== null && $expiresAt <= $this->now()) {
-            throw new InvalidArgumentException('The expiry date must be in the future.');
+            throw ValidationException::forField('expires', 'The expiry date must be in the future.');
         }
 
         do {
