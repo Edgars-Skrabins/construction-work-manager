@@ -77,6 +77,12 @@ final class LoginServiceTest extends TestCase
         assertFalse($this->savedHashes->offsetExists(1));
     }
 
+    public function testAlreadyVerifiedEmployeeIsLoggedInById(): void
+    {
+        assertTrue($this->service()->loginEmployee(7));
+        assertSame('7', $this->currentUser->getId());
+    }
+
     public function testLogoutMakesTheUserAGuest(): void
     {
         $service = $this->service();

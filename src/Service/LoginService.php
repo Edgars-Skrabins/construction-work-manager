@@ -39,16 +39,18 @@ final readonly class LoginService
             return false;
         }
 
-        $identity = $this->identities->findIdentity((string) $account->employeeId);
-        if ($identity === null) {
-            return false;
-        }
-
         if ($this->passwordHasher->needsRehash($account->passwordHash)) {
             $this->accounts->updatePasswordHash($account->employeeId, $this->passwordHasher->hash($password));
         }
 
-        return $this->currentUser->login($identity);
+        return $this->loginEmployee($account->employeeId);
+    }
+
+    public function loginEmployee(int $employeeId): bool
+    {
+        $identity = $this->identities->findIdentity((string) $employeeId);
+
+        return $identity !== null && $this->currentUser->login($identity);
     }
 
     public function logout(): void

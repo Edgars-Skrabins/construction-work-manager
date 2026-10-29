@@ -43,6 +43,6 @@ final readonly class PasswordSetupService
             return false;
         }
 
-        return $this->loginService->login($email, $password);
+        return $this->loginService->loginEmployee($account->employeeId);
     }
 }
