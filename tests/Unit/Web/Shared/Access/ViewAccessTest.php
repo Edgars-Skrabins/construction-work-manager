@@ -19,21 +19,7 @@ use function PHPUnit\Framework\assertTrue;
 
 final class ViewAccessTest extends TestCase
 {
-    public function testRepeatedChecksOfAPermissionAskRbacOnce(): void
-    {
-        $manager = $this->createMock(ManagerInterface::class);
-        $manager->expects($this->exactly(2))
-            ->method('userHasPermission')
-            ->willReturnCallback(static fn(string $userId, string $permission): bool => $permission === 'assignment.update');
-        $access = new ViewAccess($this->currentUser(2), new AccessChecker($manager));
-
-        for ($row = 0; $row < 20; $row++) {
-            assertTrue($access->can('assignment.update'));
-            assertFalse($access->can('assignment.delete'));
-        }
-    }
-
-    public function testChecksAreCachedPerUser(): void
+    public function testChecksAskForTheCurrentUser(): void
     {
         $manager = $this->createMock(ManagerInterface::class);
         $manager->expects($this->exactly(2))

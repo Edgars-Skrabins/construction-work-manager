@@ -8,15 +8,18 @@ use Yiisoft\Rbac\ManagerInterface;
 
 use function sprintf;
 
-final readonly class AccessChecker
+final class AccessChecker
 {
+    /** @var array<string, bool> */
+    private array $checked = [];
+
     public function __construct(
-        private ManagerInterface $manager,
+        private readonly ManagerInterface $manager,
     ) {}
 
     public function can(int $employeeId, Permission $permission): bool
     {
-        return $this->manager->userHasPermission((string) $employeeId, $permission->value);
+        return $this->checked[$employeeId . ' ' . $permission->value] ??= $this->manager->userHasPermission((string) $employeeId, $permission->value);
     }
 
     public function ensure(int $employeeId, Permission $permission): void

@@ -63,7 +63,6 @@ final readonly class Action
                 'setupCode' => $this->flash->setupCode(),
                 'pending' => $pending,
                 'error' => null,
-            ])
-            ->withHeader('Cache-Control', 'no-store');
+            ]);
     }
 }
