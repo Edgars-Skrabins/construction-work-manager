@@ -109,6 +109,7 @@ Script number 016 is not used (no seed).
   - `issue(string $clientName, ?DateTimeImmutable $expiresAt): IssuedApiKey`: trims the client name and throws `InvalidArgumentException` for an empty one or one longer than 100 characters, and for an expiry not in the future. Generates the key ID, regenerating it while `findByKeyId()` finds one (the unique constraint backs this up), generates the secret, stores `hash('sha256', $secret)`.
   - `authenticate(string $plainKey): ?ApiKey`: returns null for a malformed key. Looks up the key ID. When there is no row it still runs `hash_equals` against a fixed dummy hash, so unknown key IDs take the same time. Compares `hash('sha256', $secret)` with the stored hash using `hash_equals`. Returns null for a mismatch, a revoked or an expired key. On success calls `touchLastUsed()` with `now()` and returns the key.
   - `revoke(string $keyId): bool`, passing `now()`, and `list(): list<ApiKey>`.
+  - `status(ApiKey $apiKey): ApiKeyStatus`: the string-backed enum `App\Entity\ApiKeyStatus` (`Active`, `Expired`, `Revoked`) at `now()`, used by `api-key:list`, so the service stays the one source of time.
 
 ### PHP: console (namespace `App\Console`)
 
@@ -232,6 +233,7 @@ This spec adds:
 27. **Shared clock (2026-10-29):** all time comes from the shared PSR-20 `ClockInterface`, for testability and one source of time. Key expiry, `LAST_USED_AT` and `REVOKED_AT` are stored in UTC, and the access date is the Riga date. Until block E's rebase brings the clock to this branch, `ApiKeyService::now()` creates the UTC time itself, and E0 switches it to the clock. Rejected: adding `psr/clock` and a clock class on this branch too, which would collide with work-assignments' copy.
 28. **Seed data in examples (2026-10-29):** the example response uses seed site 1 and seed employee 4.
 29. **API path decoded like the router (2026-10-29, block C):** `ApiPipelineMiddleware` decides on `urldecode()` of the path, the same decoding the FastRoute matcher uses, so a percent-encoded `/%61pi/...` can never reach an API route through the web stack without key authentication. Case and double encoding don't match API routes in either stack, so they go to the web 404.
+30. **No duplicated code (2026-10-29, after block D):** helpers that blocks C and D copied from code on `main` live in one place: `IntegrationTestCase::handleRequest()` (also used by `WebSmokeTest`) and `IntegrationTestCase::webMiddlewares()` (also used by `ForbiddenMiddlewareTest`), and `tests/Support/CallableRequestHandler` and `tests/Support/RecordingLogger`, shared by unit and integration tests. `api-key:list` gets each key's status from `ApiKeyService::status()`, which returns the `ApiKeyStatus` enum, instead of creating its own current time.
 
 # Part 3 — Implementation TODO
 
@@ -261,8 +263,8 @@ Baseline before starting: unit 52 tests, integration 143 tests, all passing.
 - [x] D1. Update `README.md` (Project structure, Running the app, Commands) and `CLAUDE.md` (Layout, Architecture) as described in 2.2, without the site-employees `curl` example until block E.
 
 ### E. Site employees endpoint (after work-assignments merges)
-- [ ] E0. Rebase onto `origin/main`, check that migrations 010 to 014 and this spec's 015 apply in order, and check that `ClockInterface`, `AssignmentRepositoryInterface::findEmployeesNeedingAccess()` (returning `list<EmployeeNeedingAccess>`) and `ConstructionSiteRepositoryInterface::find()` exist as described in 2.2.
-- [ ] E1. Inject `ClockInterface` into `ApiKeyService`, replace the private `now()` with `$clock->now()->setTimezone(UTC)` so the clock is the only source of time, and switch `ApiKeyServiceTest` to a fixed clock.
+- [ ] E0. Rebase onto `origin/main`, check that migrations 010 to 014 and this spec's 015 apply in order, and check that `ClockInterface`, `AssignmentRepositoryInterface::findEmployeesNeedingAccess()` (returning `list<EmployeeNeedingAccess>`) and `ConstructionSiteRepositoryInterface::find()` exist as described in 2.2. Admin-management adds a `WebClient` test trait in `tests/Integration/Web/WebClient.php` that also sends requests through `Application`: keep a single request helper by building one on the other (`IntegrationTestCase::handleRequest()` or `WebClient`), whichever leaves less code. `ForbiddenMiddlewareTest.php` is changed on both branches, so keep both changes when resolving the conflict.
+- [ ] E1. Inject `ClockInterface` into `ApiKeyService`, replace the private `now()` with `$clock->now()->setTimezone(UTC)` so the clock is the only source of time, and switch `ApiKeyServiceTest` to a fixed clock. `Clock` returns `Europe/Riga` time: comparisons with the UTC expiry stay correct because `DateTimeImmutable` compares instants, and every time shown or stored is converted to UTC explicitly.
 - [ ] E2. Add `SiteAccess` and `SiteAccessService`.
 - [ ] E3. Add `src/Api/V1/SiteEmployees/Action.php` and the `/api/v1` route group in `config/common/routes.php`.
 - [ ] E4. Add `SiteEmployeesTest`. Run `make test`.
