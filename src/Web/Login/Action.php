@@ -10,6 +10,7 @@ use App\Web\Shared\Redirect\Redirector;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Yiisoft\Http\Method;
+use Yiisoft\Translator\TranslatorInterface;
 use Yiisoft\User\CurrentUser;
 use Yiisoft\Yii\View\Renderer\WebViewRenderer;
 
@@ -21,6 +22,7 @@ final readonly class Action
         private CurrentUser $currentUser,
         private LoginService $loginService,
         private ReturnUrl $returnUrl,
+        private TranslatorInterface $translator,
     ) {}
 
     public function __invoke(ServerRequestInterface $request): ResponseInterface
@@ -38,11 +40,11 @@ final readonly class Action
             $password = is_array($body) && is_string($body['password'] ?? null) ? $body['password'] : '';
 
             if (trim($email) === '' || $password === '') {
-                $error = 'Enter your email and password.';
+                $error = $this->translator->translate('Enter your email and password.');
             } elseif ($this->loginService->login($email, $password)) {
                 return $this->redirector->to($this->returnUrl->pull());
             } else {
-                $error = 'Invalid email or password.';
+                $error = $this->translator->translate('Invalid email or password.');
             }
         }
 

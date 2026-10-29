@@ -25,6 +25,7 @@ use DateTimeImmutable;
 use DateTimeZone;
 use PHPUnit\Framework\Attributes\DataProvider;
 use Yiisoft\Security\PasswordHasher;
+use Yiisoft\Translator\TranslatorInterface;
 
 use function PHPUnit\Framework\assertFalse;
 use function PHPUnit\Framework\assertNotNull;
@@ -379,6 +380,7 @@ final class EmployeeServiceTest extends IntegrationTestCase
             $this->service(PasswordHasher::class),
             $this->service(SetupCodeGenerator::class),
             new FixedClock($now),
+            $this->service(TranslatorInterface::class),
         );
     }
 

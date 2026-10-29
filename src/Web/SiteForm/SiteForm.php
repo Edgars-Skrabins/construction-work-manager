@@ -15,18 +15,22 @@ use Yiisoft\Validator\Rule\Required;
 
 final class SiteForm
 {
+    #[Label('Name')]
     #[Required]
     #[Length(max: 150)]
     public string $name = '';
 
+    #[Label('Street')]
     #[Required]
     #[Length(max: 200)]
     public string $street = '';
 
+    #[Label('City')]
     #[Required]
     #[Length(max: 100)]
     public string $city = '';
 
+    #[Label('Country')]
     #[Required]
     #[Length(max: 100)]
     public string $country = '';

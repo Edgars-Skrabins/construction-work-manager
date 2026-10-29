@@ -24,6 +24,7 @@ use Closure;
 use DateTimeImmutable;
 use DateTimeZone;
 use PHPUnit\Framework\Attributes\DataProvider;
+use Yiisoft\Translator\TranslatorInterface;
 
 use function PHPUnit\Framework\assertCount;
 use function PHPUnit\Framework\assertNotNull;
@@ -358,6 +359,7 @@ final class AssignmentServiceTest extends IntegrationTestCase
             $this->service(AccessChecker::class),
             $this->service(AccessScope::class),
             new FixedClock($now),
+            $this->service(TranslatorInterface::class),
         );
     }
 }

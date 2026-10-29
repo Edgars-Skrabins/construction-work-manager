@@ -40,7 +40,7 @@ final class ForbiddenMiddlewareTest extends IntegrationTestCase
 
         assertSame(403, $response->getStatusCode());
         assertStringContainsString('<title>403</title>', $body);
-        assertStringContainsString("You don't have permission to do this.", $body);
+        assertStringContainsString('You don&#039;t have permission to do this.', $body);
         assertStringContainsString('class="navbar-brand"', $body);
     }
 

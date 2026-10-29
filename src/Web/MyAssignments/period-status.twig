@@ -1,4 +1,4 @@
 <span class="d-inline-flex flex-wrap align-items-center gap-2">
     <span class="text-nowrap">{{ work.item.assignment.startDate|date('Y-m-d') }} – {{ work.item.assignment.endDate|date('Y-m-d') }}</span>
-    <span class="badge {{ status.badgeClass() }}">{{ status.label() }}</span>
+    <span class="badge {{ status.badgeClass() }}">{{ t(status.label()) }}</span>
 </span>

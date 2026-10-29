@@ -1,24 +1,24 @@
-{% do this.setTitle('Employees') %}
+{% do this.setTitle(t('Employees')) %}
 <div class="d-flex justify-content-between align-items-center mb-4">
-    <h1 class="h3 mb-0">Employees</h1>
+    <h1 class="h3 mb-0">{{ t('Employees') }}</h1>
     {% if access.can('employee.create') %}
-        <a class="btn btn-primary" href="{{ urlGenerator.generate('employee.create') }}">Add employee</a>
+        <a class="btn btn-primary" href="{{ urlGenerator.generate('employee.create') }}">{{ t('Add employee') }}</a>
     {% endif %}
 </div>
 {% if paginator.getTotalItems() == 0 %}
-    <p class="text-secondary">No employees yet.</p>
+    <p class="text-secondary">{{ t('No employees yet.') }}</p>
 {% else %}
     <div class="table-responsive">
         <table class="table table-striped align-middle bg-white">
             <thead>
                 <tr>
-                    <th scope="col">{% include 'Web/Shared/Listing/sort-link.twig' with {label: 'Name', key: 'name', route: 'employee.list'} %}</th>
-                    <th scope="col">{% include 'Web/Shared/Listing/sort-link.twig' with {label: 'Birth date', key: 'birthDate', route: 'employee.list'} %}</th>
-                    <th scope="col">{% include 'Web/Shared/Listing/sort-link.twig' with {label: 'Access level', key: 'accessLevel', route: 'employee.list'} %}</th>
-                    <th scope="col">{% include 'Web/Shared/Listing/sort-link.twig' with {label: 'Role', key: 'role', route: 'employee.list'} %}</th>
-                    <th scope="col">{% include 'Web/Shared/Listing/sort-link.twig' with {label: 'Manager', key: 'manager', route: 'employee.list'} %}</th>
-                    <th scope="col">Login</th>
-                    <th scope="col" class="text-end">Actions</th>
+                    <th scope="col">{% include 'Web/Shared/Listing/sort-link.twig' with {label: t('Employee'), key: 'name', route: 'employee.list'} %}</th>
+                    <th scope="col">{% include 'Web/Shared/Listing/sort-link.twig' with {label: t('Birth date'), key: 'birthDate', route: 'employee.list'} %}</th>
+                    <th scope="col">{% include 'Web/Shared/Listing/sort-link.twig' with {label: t('Access level'), key: 'accessLevel', route: 'employee.list'} %}</th>
+                    <th scope="col">{% include 'Web/Shared/Listing/sort-link.twig' with {label: t('Role'), key: 'role', route: 'employee.list'} %}</th>
+                    <th scope="col">{% include 'Web/Shared/Listing/sort-link.twig' with {label: t('Manager'), key: 'manager', route: 'employee.list'} %}</th>
+                    <th scope="col">{{ t('Login') }}</th>
+                    <th scope="col" class="text-end">{{ t('Actions') }}</th>
                 </tr>
             </thead>
             <tbody>
@@ -27,15 +27,15 @@
                         <td>{{ employee.lastName }}, {{ employee.firstName }}</td>
                         <td class="text-nowrap">{{ employee.birthDate|date('Y-m-d') }}</td>
                         <td>{{ employee.accessLevelName }}</td>
-                        <td>{{ employee.role.value }}</td>
+                        <td>{{ t(employee.role.value) }}</td>
                         <td>{{ employee.managerName ?? '—' }}</td>
-                        <td>{{ employee.loginStatus.value }}</td>
+                        <td>{{ t(employee.loginStatus.value) }}</td>
                         <td class="text-end text-nowrap">
                             {% if access.can('employee.update') %}
-                                <a class="btn btn-sm btn-outline-primary" href="{{ urlGenerator.generate('employee.edit', {id: employee.id}) }}">Edit</a>
+                                <a class="btn btn-sm btn-outline-primary" href="{{ urlGenerator.generate('employee.edit', {id: employee.id}) }}">{{ t('Edit') }}</a>
                             {% endif %}
                             {% if access.can('employee.delete') and employee.id ~ '' != currentUser.getId() %}
-                                <a class="btn btn-sm btn-outline-danger" href="{{ urlGenerator.generate('employee.delete', {id: employee.id}) }}">Delete</a>
+                                <a class="btn btn-sm btn-outline-danger" href="{{ urlGenerator.generate('employee.delete', {id: employee.id}) }}">{{ t('Delete') }}</a>
                             {% endif %}
                         </td>
                     </tr>

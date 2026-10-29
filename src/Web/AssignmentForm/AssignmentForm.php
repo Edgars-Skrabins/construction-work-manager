@@ -6,16 +6,28 @@ namespace App\Web\AssignmentForm;
 
 use App\Entity\Assignment;
 use App\Web\Shared\Form\FormBody;
+use Yiisoft\Validator\Label;
 use Yiisoft\Validator\Rule\Required;
 use Yiisoft\Validator\RulesProviderInterface;
 
 final class AssignmentForm implements RulesProviderInterface
 {
+    #[Label('Employee')]
     public string $employee = '';
+
+    #[Label('Work item')]
     public string $workItem = '';
+
+    #[Label('Construction site')]
     public string $constructionSite = '';
+
+    #[Label('Start date')]
     public string $startDate = '';
+
+    #[Label('End date')]
     public string $endDate = '';
+
+    #[Label('Status')]
     public string $status = '';
 
     public function __construct(

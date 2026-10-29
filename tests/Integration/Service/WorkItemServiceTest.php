@@ -16,6 +16,7 @@ use App\Tests\Integration\IntegrationTestCase;
 use Closure;
 use PHPUnit\Framework\Attributes\DataProvider;
 use Yiisoft\Data\Paginator\OffsetPaginator;
+use Yiisoft\Translator\TranslatorInterface;
 
 use function PHPUnit\Framework\assertNotNull;
 use function PHPUnit\Framework\assertNull;
@@ -191,6 +192,6 @@ final class WorkItemServiceTest extends IntegrationTestCase
             }
         };
 
-        return new WorkItemService($workItems, $this->service(AccessChecker::class));
+        return new WorkItemService($workItems, $this->service(AccessChecker::class), $this->service(TranslatorInterface::class));
     }
 }

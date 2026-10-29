@@ -6,7 +6,7 @@
 {% do this.addJsVars(assetManager.getJsVars()) %}
 {% do this.beginPage() %}
 <!DOCTYPE html>
-<html lang="{{ applicationParams.locale }}">
+<html lang="{{ language.current().value }}">
 <head>
     <meta charset="{{ applicationParams.charset }}">
     <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -20,43 +20,48 @@
     <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
         <div class="container">
             <a class="navbar-brand" href="{{ aliases.get('@baseUrl') }}">{{ applicationParams.name }}</a>
+            <div class="d-flex align-items-center gap-2 ms-auto order-lg-last ms-lg-3">
+                {% include 'Web/Shared/Layout/Main/language-selector.twig' %}
+                {% if not currentUser.isGuest() %}
+                    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#main-navbar" aria-controls="main-navbar" aria-expanded="false" aria-label="{{ t('Toggle navigation') }}">
+                        <span class="navbar-toggler-icon"></span>
+                    </button>
+                {% endif %}
+            </div>
             {% if not currentUser.isGuest() %}
                 {% set routeName = currentRoute.getName() ?? '' %}
-                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#main-navbar" aria-controls="main-navbar" aria-expanded="false" aria-label="Toggle navigation">
-                    <span class="navbar-toggler-icon"></span>
-                </button>
                 <div class="collapse navbar-collapse" id="main-navbar">
                     <ul class="navbar-nav me-auto mb-2 mb-lg-0">
                         {% if access.can('assignment.read') %}
                             <li class="nav-item">
-                                <a class="nav-link{% if routeName == 'my-assignments' %} active{% endif %}" href="{{ urlGenerator.generate('my-assignments') }}">My assignments</a>
+                                <a class="nav-link{% if routeName == 'my-assignments' %} active{% endif %}" href="{{ urlGenerator.generate('my-assignments') }}">{{ t('My assignments') }}</a>
                             </li>
                         {% endif %}
                         {% if access.can('employee.update') %}
                             <li class="nav-item">
-                                <a class="nav-link{% if routeName starts with 'employee.' %} active{% endif %}" href="{{ urlGenerator.generate('employee.list') }}">Employees</a>
+                                <a class="nav-link{% if routeName starts with 'employee.' %} active{% endif %}" href="{{ urlGenerator.generate('employee.list') }}">{{ t('Employees') }}</a>
                             </li>
                         {% endif %}
                         {% if access.can('site.update') %}
                             <li class="nav-item">
-                                <a class="nav-link{% if routeName starts with 'site.' %} active{% endif %}" href="{{ urlGenerator.generate('site.list') }}">Construction sites</a>
+                                <a class="nav-link{% if routeName starts with 'site.' %} active{% endif %}" href="{{ urlGenerator.generate('site.list') }}">{{ t('Construction sites') }}</a>
                             </li>
                         {% endif %}
                         {% if access.can('workItem.update') %}
                             <li class="nav-item">
-                                <a class="nav-link{% if routeName starts with 'workItem.' %} active{% endif %}" href="{{ urlGenerator.generate('workItem.list') }}">Work items</a>
+                                <a class="nav-link{% if routeName starts with 'workItem.' %} active{% endif %}" href="{{ urlGenerator.generate('workItem.list') }}">{{ t('Work items') }}</a>
                             </li>
                         {% endif %}
                         {% if access.can('assignment.update') %}
                             <li class="nav-item">
-                                <a class="nav-link{% if routeName starts with 'assignment.' %} active{% endif %}" href="{{ urlGenerator.generate('assignment.list') }}">Assignments</a>
+                                <a class="nav-link{% if routeName starts with 'assignment.' %} active{% endif %}" href="{{ urlGenerator.generate('assignment.list') }}">{{ t('Assignments') }}</a>
                             </li>
                         {% endif %}
                     </ul>
                     <form class="d-flex flex-wrap align-items-center gap-2 gap-lg-3 pb-2 pb-lg-0" method="post" action="{{ urlGenerator.generate('logout') }}">
                         {{ csrf.hiddenInput()|raw }}
-                        <span class="navbar-text">{{ currentUser.getIdentity().fullName() }} ({{ currentUser.getIdentity().role.value }})</span>
-                        <button type="submit" class="btn btn-outline-light btn-sm">Log out</button>
+                        <span class="navbar-text">{{ currentUser.getIdentity().fullName() }} ({{ t(currentUser.getIdentity().role.value) }})</span>
+                        <button type="submit" class="btn btn-outline-light btn-sm">{{ t('Log out') }}</button>
                     </form>
                 </div>
             {% endif %}

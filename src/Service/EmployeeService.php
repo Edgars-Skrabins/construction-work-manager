@@ -22,11 +22,11 @@ use InvalidArgumentException;
 use Psr\Clock\ClockInterface;
 use Yiisoft\Data\Paginator\OffsetPaginator;
 use Yiisoft\Security\PasswordHasher;
+use Yiisoft\Translator\TranslatorInterface;
 
 final readonly class EmployeeService
 {
     private const string SETUP_CODE_LIFETIME = '+72 hours';
-    private const string EMAIL_TAKEN = 'This email is already used by another login.';
 
     public function __construct(
         private EmployeeRepositoryInterface $employees,
@@ -38,6 +38,7 @@ final readonly class EmployeeService
         private PasswordHasher $passwordHasher,
         private SetupCodeGenerator $setupCodes,
         private ClockInterface $clock,
+        private TranslatorInterface $translator,
     ) {}
 
     /**
@@ -111,7 +112,7 @@ final readonly class EmployeeService
         $this->accessChecker->ensure($actorId, Permission::EmployeeUpdate);
         $account = $this->accounts->findByEmployeeId($id);
         if ($account === null || $account->passwordHash !== null) {
-            throw ValidationException::forField('setupCode', 'This employee has no pending login.');
+            throw ValidationException::forField('setupCode', $this->translator->translate('This employee has no pending login.'));
         }
 
         [$code, $hash, $expiresAt] = $this->issueSetupCode();
@@ -124,15 +125,15 @@ final readonly class EmployeeService
     {
         $this->accessChecker->ensure($actorId, Permission::EmployeeDelete);
         if ($id === $actorId) {
-            throw new InUseException("You can't delete yourself.");
+            throw new InUseException($this->translator->translate("You can't delete yourself."));
         }
         if ($this->employees->hasSubordinates($id)) {
-            throw new InUseException("Reassign this manager's employees first.");
+            throw new InUseException($this->translator->translate("Reassign this manager's employees first."));
         }
 
         $this->transaction->run(function () use ($id): void {
             $this->accounts->delete($id);
-            InUseException::guard(fn() => $this->employees->delete($id), "This employee still has assignments and can't be deleted.");
+            InUseException::guard(fn() => $this->employees->delete($id), $this->translator->translate("This employee still has assignments and can't be deleted."));
         });
     }
 
@@ -144,31 +145,31 @@ final readonly class EmployeeService
         $birthDate = $input->birthDate->format('Y-m-d');
         $today = new DateTimeImmutable($this->clock->now()->format('Y-m-d'));
         if ($birthDate > $today->modify('-16 years')->format('Y-m-d')) {
-            $errors['birthDate'] = 'The employee must be at least 16 years old.';
+            $errors['birthDate'] = $this->translator->translate('The employee must be at least 16 years old.');
         } elseif ($birthDate <= $today->modify('-101 years')->format('Y-m-d')) {
-            $errors['birthDate'] = 'The employee must be at most 100 years old.';
+            $errors['birthDate'] = $this->translator->translate('The employee must be at most 100 years old.');
         }
         if (!$this->accessLevels->exists($input->accessLevelId)) {
-            $errors['accessLevelId'] = 'Choose an access level.';
+            $errors['accessLevelId'] = $this->translator->translate('Choose an access level.');
         }
         if ($managerId !== null && ($managerId === $employee?->id || $this->employees->find($managerId)?->role !== Role::Manager)) {
-            $errors['managerId'] = 'Choose a manager.';
+            $errors['managerId'] = $this->translator->translate('Choose a manager.');
         }
         if ($input->email !== null) {
             $owner = $this->accounts->findByEmail($input->email);
             if ($owner !== null && $owner->employeeId !== $employee?->id) {
-                $errors['email'] = self::EMAIL_TAKEN;
+                $errors['email'] = $this->emailTaken();
             }
         }
 
         if ($employee !== null && $employee->id === $actorId) {
             if ($input->role !== $employee->role) {
-                $errors['role'] = "You can't change your own role.";
+                $errors['role'] = $this->translator->translate("You can't change your own role.");
             }
             if ($employee->account !== null && $input->email === null) {
-                $errors['email'] = "You can't remove your own login.";
+                $errors['email'] = $this->translator->translate("You can't remove your own login.");
             } elseif (!$input->loginActive) {
-                $errors['loginActive'] = "You can't deactivate your own login.";
+                $errors['loginActive'] = $this->translator->translate("You can't deactivate your own login.");
             }
         }
         if (
@@ -177,7 +178,7 @@ final readonly class EmployeeService
             && $input->role !== Role::Manager
             && $this->employees->hasSubordinates($employee->id)
         ) {
-            $errors['role'] = "Reassign this manager's employees first.";
+            $errors['role'] = $this->translator->translate("Reassign this manager's employees first.");
         }
         if (
             !isset($errors['role'])
@@ -185,7 +186,7 @@ final readonly class EmployeeService
             && $input->role !== Role::Employee
             && $this->assignments->hasActiveForEmployee($employee->id)
         ) {
-            $errors['role'] = "Finish or cancel this employee's active assignments first.";
+            $errors['role'] = $this->translator->translate("Finish or cancel this employee's active assignments first.");
         }
 
         if ($errors !== []) {
@@ -207,7 +208,7 @@ final readonly class EmployeeService
      */
     private function guardEmail(Closure $save): SavedEmployee
     {
-        return ValidationException::guardUnique($save, 'UQ_ACCOUNT_EMAIL', 'email', self::EMAIL_TAKEN);
+        return ValidationException::guardUnique($save, 'UQ_ACCOUNT_EMAIL', 'email', $this->emailTaken());
     }
 
     private function updateAccount(Employee $employee, EmployeeInput $input): ?string
@@ -249,5 +250,10 @@ final readonly class EmployeeService
         $expiresAt = $this->clock->now()->modify(self::SETUP_CODE_LIFETIME);
 
         return [$this->setupCodes->format($code), $this->passwordHasher->hash($code), $expiresAt];
+    }
+
+    private function emailTaken(): string
+    {
+        return $this->translator->translate('This email is already used by another login.');
     }
 }

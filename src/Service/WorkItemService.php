@@ -11,14 +11,14 @@ use App\Repository\WorkItemData;
 use App\Repository\WorkItemRepositoryInterface;
 use Closure;
 use Yiisoft\Data\Paginator\OffsetPaginator;
+use Yiisoft\Translator\TranslatorInterface;
 
 final readonly class WorkItemService
 {
-    private const string NAME_TAKEN = 'A work item with this name already exists.';
-
     public function __construct(
         private WorkItemRepositoryInterface $workItems,
         private AccessChecker $accessChecker,
+        private TranslatorInterface $translator,
     ) {}
 
     /**
@@ -58,13 +58,13 @@ final readonly class WorkItemService
     {
         $this->accessChecker->ensure($actorId, Permission::WorkItemDelete);
 
-        InUseException::guard(fn() => $this->workItems->delete($id), "This work item is still in use and can't be deleted.");
+        InUseException::guard(fn() => $this->workItems->delete($id), $this->translator->translate("This work item is still in use and can't be deleted."));
     }
 
     private function ensureUniqueName(string $name, ?int $exceptId): void
     {
         if ($this->workItems->nameExists($name, $exceptId)) {
-            throw ValidationException::forField('name', self::NAME_TAKEN);
+            throw ValidationException::forField('name', $this->nameTaken());
         }
     }
 
@@ -75,6 +75,11 @@ final readonly class WorkItemService
      */
     private function guardName(Closure $write): mixed
     {
-        return ValidationException::guardUnique($write, 'UQ_WORK_ITEM_NAME', 'name', self::NAME_TAKEN);
+        return ValidationException::guardUnique($write, 'UQ_WORK_ITEM_NAME', 'name', $this->nameTaken());
+    }
+
+    private function nameTaken(): string
+    {
+        return $this->translator->translate('A work item with this name already exists.');
     }
 }

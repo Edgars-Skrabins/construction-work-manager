@@ -1,4 +1,4 @@
-{% set title = item ? 'Edit assignment' : 'New assignment' %}
+{% set title = item ? t('Edit assignment') : t('New assignment') %}
 {% do this.setTitle(title) %}
 {% do assetManager.register('App\\Web\\Shared\\Layout\\Main\\AssignmentAsset') %}
 <div class="row justify-content-center">
@@ -8,28 +8,28 @@
             {{ csrf.hiddenInput()|raw }}
             {% if item %}
                 <dl class="row">
-                    <dt class="col-sm-4">Employee</dt>
+                    <dt class="col-sm-4">{{ t('Employee') }}</dt>
                     <dd class="col-sm-8">{{ item.employeeName }}</dd>
-                    <dt class="col-sm-4">Work item</dt>
+                    <dt class="col-sm-4">{{ t('Work item') }}</dt>
                     <dd class="col-sm-8">{{ item.workItemName }}</dd>
-                    <dt class="col-sm-4">Construction site</dt>
+                    <dt class="col-sm-4">{{ t('Construction site') }}</dt>
                     <dd class="col-sm-8">{{ item.constructionSiteName }}</dd>
                 </dl>
             {% else %}
                 <div class="mb-3">
-                    <label for="employee" class="form-label">Employee</label>
+                    <label for="employee" class="form-label">{{ t('Employee') }}</label>
                     <select class="form-select{% if errors.employee is defined %} is-invalid{% endif %}" id="employee" name="employee" required>
-                        <option value="">Choose…</option>
+                        <option value="">{{ t('Choose…') }}</option>
                         {% for employee in options.employees %}
-                            <option value="{{ employee.id }}" data-access-level="{{ employee.accessLevelId }}"{% if form.employee == employee.id ~ '' %} selected{% endif %}>{{ employee.fullName() }} (access level {{ employee.accessLevelId }})</option>
+                            <option value="{{ employee.id }}" data-access-level="{{ employee.accessLevelId }}"{% if form.employee == employee.id ~ '' %} selected{% endif %}>{{ t('{name} (access level {level})', {name: employee.fullName(), level: employee.accessLevelId}) }}</option>
                         {% endfor %}
                     </select>
                     {% include 'Web/Shared/Form/field-errors.twig' with {errors: errors.employee ?? []} %}
                 </div>
                 <div class="mb-3">
-                    <label for="workItem" class="form-label">Work item</label>
+                    <label for="workItem" class="form-label">{{ t('Work item') }}</label>
                     <select class="form-select{% if errors.workItem is defined %} is-invalid{% endif %}" id="workItem" name="workItem" required>
-                        <option value="">Choose…</option>
+                        <option value="">{{ t('Choose…') }}</option>
                         {% for workItem in options.workItems %}
                             <option value="{{ workItem.id }}"{% if form.workItem == workItem.id ~ '' %} selected{% endif %}>{{ workItem.name }}</option>
                         {% endfor %}
@@ -37,11 +37,11 @@
                     {% include 'Web/Shared/Form/field-errors.twig' with {errors: errors.workItem ?? []} %}
                 </div>
                 <div class="mb-3">
-                    <label for="constructionSite" class="form-label">Construction site</label>
+                    <label for="constructionSite" class="form-label">{{ t('Construction site') }}</label>
                     <select class="form-select{% if errors.constructionSite is defined %} is-invalid{% endif %}" id="constructionSite" name="constructionSite" required>
-                        <option value="">Choose…</option>
+                        <option value="">{{ t('Choose…') }}</option>
                         {% for site in options.sites %}
-                            <option value="{{ site.id }}" data-required-level="{{ site.requiredAccessLevelId }}"{% if form.constructionSite == site.id ~ '' %} selected{% endif %}>{{ site.name }} (requires level {{ site.requiredAccessLevelId }})</option>
+                            <option value="{{ site.id }}" data-required-level="{{ site.requiredAccessLevelId }}"{% if form.constructionSite == site.id ~ '' %} selected{% endif %}>{{ t('{name} (requires level {level})', {name: site.name, level: site.requiredAccessLevelId}) }}</option>
                         {% endfor %}
                     </select>
                     {% include 'Web/Shared/Form/field-errors.twig' with {errors: errors.constructionSite ?? []} %}
@@ -49,29 +49,29 @@
             {% endif %}
             <div class="row">
                 <div class="col-sm-6 mb-3">
-                    <label for="startDate" class="form-label">Start date</label>
+                    <label for="startDate" class="form-label">{{ t('Start date') }}</label>
                     <input type="date" class="form-control{% if errors.startDate is defined %} is-invalid{% endif %}" id="startDate" name="startDate" value="{{ form.startDate }}" required>
                     {% include 'Web/Shared/Form/field-errors.twig' with {errors: errors.startDate ?? []} %}
                 </div>
                 <div class="col-sm-6 mb-3">
-                    <label for="endDate" class="form-label">End date</label>
+                    <label for="endDate" class="form-label">{{ t('End date') }}</label>
                     <input type="date" class="form-control{% if errors.endDate is defined %} is-invalid{% endif %}" id="endDate" name="endDate" value="{{ form.endDate }}" required>
                     {% include 'Web/Shared/Form/field-errors.twig' with {errors: errors.endDate ?? []} %}
                 </div>
             </div>
             {% if item %}
                 <div class="mb-3">
-                    <label for="status" class="form-label">Status</label>
+                    <label for="status" class="form-label">{{ t('Status') }}</label>
                     <select class="form-select{% if errors.status is defined %} is-invalid{% endif %}" id="status" name="status" required>
                         {% for status in statuses %}
-                            <option value="{{ status.value }}"{% if form.status == status.value %} selected{% endif %}>{{ status.label() }}</option>
+                            <option value="{{ status.value }}"{% if form.status == status.value %} selected{% endif %}>{{ t(status.label()) }}</option>
                         {% endfor %}
                     </select>
                     {% include 'Web/Shared/Form/field-errors.twig' with {errors: errors.status ?? []} %}
                 </div>
             {% endif %}
-            <button type="submit" class="btn btn-primary">Save</button>
-            <a class="btn btn-link" href="{{ urlGenerator.generate('assignment.list') }}">Cancel</a>
+            <button type="submit" class="btn btn-primary">{{ t('Save') }}</button>
+            <a class="btn btn-link" href="{{ urlGenerator.generate('assignment.list') }}">{{ t('Cancel') }}</a>
         </form>
     </div>
 </div>

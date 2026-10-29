@@ -17,6 +17,7 @@ use App\Tests\Integration\IntegrationTestCase;
 use Closure;
 use PHPUnit\Framework\Attributes\DataProvider;
 use Yiisoft\Data\Paginator\OffsetPaginator;
+use Yiisoft\Translator\TranslatorInterface;
 
 use function PHPUnit\Framework\assertNotNull;
 use function PHPUnit\Framework\assertNull;
@@ -209,6 +210,6 @@ final class ConstructionSiteServiceTest extends IntegrationTestCase
             }
         };
 
-        return new ConstructionSiteService($sites, $this->service(AccessLevelRepositoryInterface::class), $this->service(AccessChecker::class));
+        return new ConstructionSiteService($sites, $this->service(AccessLevelRepositoryInterface::class), $this->service(AccessChecker::class), $this->service(TranslatorInterface::class));
     }
 }

@@ -7,15 +7,18 @@ namespace App\Web\WorkItemForm;
 use App\Entity\WorkItem;
 use App\Repository\WorkItemData;
 use App\Web\Shared\Form\FormBody;
+use Yiisoft\Validator\Label;
 use Yiisoft\Validator\Rule\Length;
 use Yiisoft\Validator\Rule\Required;
 
 final class WorkItemForm
 {
+    #[Label('Name')]
     #[Required]
     #[Length(max: 150)]
     public string $name = '';
 
+    #[Label('Description')]
     #[Length(max: 1000)]
     public string $description = '';
 
