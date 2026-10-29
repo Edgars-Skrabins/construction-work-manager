@@ -319,8 +319,8 @@ Baseline before starting: unit 52 tests, integration 143 tests, all passing.
 - [x] C5. Add `PasswordSetupService` with its test, the `SetPassword` page and route, and the link on the login page. Add `SetPasswordTest`.
 
 ### D. Lists, page tests and documentation
-- [ ] D1. Add `ListingTest` and `AdminPagesTest`.
-- [ ] D2. Update `README.md` and `CLAUDE.md` as described in 2.2.
+- [x] D1. Add `ListingTest` and `AdminPagesTest`.
+- [x] D2. Update `README.md` and `CLAUDE.md` as described in 2.2.
 
 ### Z. Wrap-up
 - [ ] Z1. Run `make check`: code style, PHPStan at level max and all tests pass. CI is green on the pull request.
