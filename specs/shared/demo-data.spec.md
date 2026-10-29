@@ -1,7 +1,7 @@
 # Demo data — Spec
 
 **Type:** feature
-**Status:** in progress
+**Status:** done
 **Last updated:** 2026-10-29
 
 # Part 1 — Business logic and usage
@@ -126,5 +126,5 @@ Baseline before starting: `make check` on `main` at `6de8a4d` passes with 139 un
 - [x] B2. Run the integration suite and update every other test that assumed the old seed, with exact new values. `make check` passes. Done: 139 unit tests (470 assertions) and 539 integration tests (4430 assertions). Besides the seed tests, `ListingTest` (known orders on the first page, the reverse check over all rows, 3 pages), `AdminPagesTest` (employee rows checked on `?sort=-role` and `?sort=role` so they are on page 1, 12 work-item pages), `AssignmentPagesTest` (`LAST_SEED_ID` 167, so its tear-down no longer deletes the new rows; the admin sees one employee of each manager and 9 pages), `AssignmentServiceTest` (picker lists, plus the manager without subordinates), `ConstructionSiteServiceTest`, `EmployeeServiceTest`, `ReadOnlyAssignmentsStorageTest` and `WorkItemServiceTest` (its new name was now a seeded one).
 
 ### Z. Wrap-up
-- [ ] Z1. Update `README.md` as in 2.2. `make check` passes.
-- [ ] Z2. Manual check in the running app: log in as `admin@mail.test` (Employees has 4 pages, Assignments 9), `manager3@mail.test` (the flagged badges on Zane Pētersone's rows), `manager4@mail.test` (empty assignment list and picker), `employee6@mail.test` (three site cards), `employee9@mail.test` (today's work) and `employee8@mail.test` (empty My assignments), and call the API for site 3 with a new API key.
+- [x] Z1. Update `README.md` as in 2.2. `make check` passes.
+- [x] Z2. Manual check in the running app: log in as `admin@mail.test` (Employees has 4 pages, Assignments 9), `manager3@mail.test` (the flagged badges on Zane Pētersone's rows), `manager4@mail.test` (empty assignment list and picker), `employee6@mail.test` (three site cards), `employee9@mail.test` (today's work) and `employee8@mail.test` (empty My assignments), and call the API for sites 7 and 11 with a new API key. Done at http://127.0.0.1:8186: Employees has pages up to 4 and Assignments up to 9 for the admin; `manager3@mail.test` has 2 pages with both "Access level too low" badges on page 1; `manager4@mail.test` sees "No assignments yet." and no employee in the picker; `employee6@mail.test` has cards for Rīga Thermal Power Plant, Liepāja Port Terminal and Tallinn Data Centre, with the Ādaži welding under History; `employee9@mail.test` has 4 In progress and 1 Planned; `employee8@mail.test` sees the empty state. The API for site 7 (Valmiera) lists 6 employees and leaves out Zane Pētersone's flagged assignment, and site 11 (Kaunas) returns an empty list. The manual key was revoked afterwards.
