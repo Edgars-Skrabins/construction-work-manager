@@ -46,16 +46,16 @@ This runs `docker compose up -d --build`, `docker compose exec app composer inst
 - 80 employees: 3 admins, 7 managers and 70 employees with all four access levels, spread across six of the managers. Margus Tamm is a manager without subordinates, and a few employees have no assignments.
 - 11 construction sites in Latvia, Lithuania and Estonia with every required access level. Kaunas Logistics Hub has no assignments.
 - 25 work items, real construction trades. Elevator installation has no assignments.
-- 167 assignments, dated around the day of the migration so they show every status (Planned, In progress, Overdue, Done and Cancelled), work that starts or ends today, one-day and year-long periods, employees working at several sites at once and sites with many employees today. Two active assignments are flagged because the employee's access level is below the site's.
+- 174 assignments, dated around the day of the migration so they show every status (Planned, In progress, Overdue, Done and Cancelled), work that starts or ends today, one-day and year-long periods, employees working at several sites at once and sites with many employees today. Three active assignments are flagged because the employee's access level is below the site's.
 
-The lists have several pages: Employees 4, Assignments 9 for the admin and 2 for `manager@mail.test`.
+The lists have several pages: Employees 4, Assignments 9 for the admin and 3 for `manager@mail.test`.
 
 It also seeds these login accounts. All of them use the password `123123123`:
 
 - `admin@mail.test`: Jānis Bērziņš, admin
-- `manager@mail.test`: Ilze Kalniņa, manager
+- `manager@mail.test`: Ilze Kalniņa, manager of 15 employees with work at 10 sites in every status, including a flagged assignment
 - `manager2@mail.test`: Andris Ozoliņš, manager
-- `employee@mail.test`: Mārtiņš Liepiņš, employee reporting to Ilze Kalniņa
+- `employee@mail.test`: Mārtiņš Liepiņš, employee reporting to Ilze Kalniņa, with work at three sites in every status, work starting and ending today, and history
 - `employee2@mail.test`: Laura Krūmiņa, employee reporting to Ilze Kalniņa
 - `employee3@mail.test`: Kristaps Vītols, employee reporting to Ilze Kalniņa
 - `employee4@mail.test`: Anna Zariņa, employee reporting to Andris Ozoliņš
