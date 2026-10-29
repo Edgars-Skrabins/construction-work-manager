@@ -4,17 +4,15 @@ declare(strict_types=1);
 
 namespace App\Web\SiteForm;
 
-use App\Service\ValidationException;
 use App\Service\ConstructionSiteService;
+use App\Service\ValidationException;
 use App\Web\NotFound\NotFoundHandler;
 use App\Web\Shared\Flash\FlashMessages;
-use Psr\Http\Message\ResponseFactoryInterface;
+use App\Web\Shared\Redirect\Redirector;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Yiisoft\Http\Method;
-use Yiisoft\Http\Status;
 use Yiisoft\Router\CurrentRoute;
-use Yiisoft\Router\UrlGeneratorInterface;
 use Yiisoft\User\CurrentUser;
 use Yiisoft\Validator\ValidatorInterface;
 use Yiisoft\Yii\View\Renderer\WebViewRenderer;
@@ -22,9 +20,8 @@ use Yiisoft\Yii\View\Renderer\WebViewRenderer;
 final readonly class Action
 {
     public function __construct(
+        private Redirector $redirector,
         private WebViewRenderer $viewRenderer,
-        private ResponseFactoryInterface $responseFactory,
-        private UrlGeneratorInterface $urlGenerator,
         private CurrentRoute $currentRoute,
         private CurrentUser $currentUser,
         private ValidatorInterface $validator,
@@ -59,13 +56,9 @@ final readonly class Action
                     }
                     $this->flash->addSuccess('Construction site saved.');
 
-                    return $this->responseFactory
-                        ->createResponse(Status::FOUND)
-                        ->withHeader('Location', $this->urlGenerator->generate('site.list'));
+                    return $this->redirector->toRoute('site.list');
                 } catch (ValidationException $e) {
-                    foreach ($e->errors as $field => $message) {
-                        $errors[$field][] = $message;
-                    }
+                    $errors = $e->mergeInto($errors);
                 }
             }
         }

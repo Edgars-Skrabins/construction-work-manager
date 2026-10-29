@@ -8,13 +8,11 @@ use App\Service\EmployeeService;
 use App\Service\ValidationException;
 use App\Web\NotFound\NotFoundHandler;
 use App\Web\Shared\Flash\FlashMessages;
-use Psr\Http\Message\ResponseFactoryInterface;
+use App\Web\Shared\Redirect\Redirector;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Yiisoft\Http\Method;
-use Yiisoft\Http\Status;
 use Yiisoft\Router\CurrentRoute;
-use Yiisoft\Router\UrlGeneratorInterface;
 use Yiisoft\User\CurrentUser;
 use Yiisoft\Validator\ValidatorInterface;
 use Yiisoft\Yii\View\Renderer\WebViewRenderer;
@@ -22,9 +20,8 @@ use Yiisoft\Yii\View\Renderer\WebViewRenderer;
 final readonly class Action
 {
     public function __construct(
+        private Redirector $redirector,
         private WebViewRenderer $viewRenderer,
-        private ResponseFactoryInterface $responseFactory,
-        private UrlGeneratorInterface $urlGenerator,
         private CurrentRoute $currentRoute,
         private CurrentUser $currentUser,
         private ValidatorInterface $validator,
@@ -59,15 +56,13 @@ final readonly class Action
                     if ($saved->setupCode !== null) {
                         $this->flash->setSetupCode($saved->setupCode);
 
-                        return $this->redirect($this->urlGenerator->generate('employee.setupCode', ['id' => $saved->id]));
+                        return $this->redirector->toRoute('employee.setupCode', ['id' => $saved->id]);
                     }
                     $this->flash->addSuccess('Employee saved.');
 
-                    return $this->redirect($this->urlGenerator->generate('employee.list'));
+                    return $this->redirector->toRoute('employee.list');
                 } catch (ValidationException $e) {
-                    foreach ($e->errors as $field => $message) {
-                        $errors[$field][] = $message;
-                    }
+                    $errors = $e->mergeInto($errors);
                 }
             }
         }
@@ -80,10 +75,5 @@ final readonly class Action
             'managers' => $this->employees->managers($actorId, $employee?->id),
             'roles' => ['admin', 'manager', 'employee'],
         ]);
-    }
-
-    private function redirect(string $url): ResponseInterface
-    {
-        return $this->responseFactory->createResponse(Status::FOUND)->withHeader('Location', $url);
     }
 }

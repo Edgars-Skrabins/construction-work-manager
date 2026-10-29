@@ -10,7 +10,6 @@ use App\Entity\WorkItem;
 use App\Repository\WorkItemData;
 use App\Repository\WorkItemRepositoryInterface;
 use Yiisoft\Data\Paginator\OffsetPaginator;
-use Yiisoft\Db\Exception\IntegrityException;
 
 final readonly class WorkItemService
 {
@@ -56,15 +55,7 @@ final readonly class WorkItemService
     {
         $this->accessChecker->ensure($actorId, Permission::WorkItemDelete);
 
-        try {
-            $this->workItems->delete($id);
-        } catch (IntegrityException $e) {
-            if (!InUseException::isConstraintConflict($e)) {
-                throw $e;
-            }
-
-            throw new InUseException("This work item is still in use and can't be deleted.", 0, $e);
-        }
+        InUseException::guard(fn() => $this->workItems->delete($id), "This work item is still in use and can't be deleted.");
     }
 
     private function ensureUniqueName(string $name, ?int $exceptId): void

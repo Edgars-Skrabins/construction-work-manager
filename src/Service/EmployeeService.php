@@ -19,7 +19,6 @@ use DateTimeImmutable;
 use DateTimeZone;
 use InvalidArgumentException;
 use Yiisoft\Data\Paginator\OffsetPaginator;
-use Yiisoft\Db\Exception\IntegrityException;
 use Yiisoft\Security\PasswordHasher;
 
 final readonly class EmployeeService
@@ -128,15 +127,7 @@ final readonly class EmployeeService
 
         $this->transaction->run(function () use ($id): void {
             $this->accounts->delete($id);
-            try {
-                $this->employees->delete($id);
-            } catch (IntegrityException $e) {
-                if (!InUseException::isConstraintConflict($e)) {
-                    throw $e;
-                }
-
-                throw new InUseException("This employee is still in use and can't be deleted.", 0, $e);
-            }
+            InUseException::guard(fn() => $this->employees->delete($id), "This employee still has assignments and can't be deleted.");
         });
     }
 

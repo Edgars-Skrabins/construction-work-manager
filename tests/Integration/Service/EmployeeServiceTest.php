@@ -219,7 +219,7 @@ final class EmployeeServiceTest extends IntegrationTestCase
             $this->employees()->delete(1, 4);
             self::fail('Expected the delete to be refused.');
         } catch (InUseException $e) {
-            assertSame("This employee is still in use and can't be deleted.", $e->getMessage());
+            assertSame("This employee still has assignments and can't be deleted.", $e->getMessage());
         }
         assertNotNull($this->accounts()->findByEmployeeId(4));
     }

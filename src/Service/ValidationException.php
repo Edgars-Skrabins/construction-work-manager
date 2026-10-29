@@ -21,4 +21,17 @@ final class ValidationException extends RuntimeException
     {
         return new self([$field => $message]);
     }
+
+    /**
+     * @param array<string, list<string>> $errors
+     * @return array<string, list<string>>
+     */
+    public function mergeInto(array $errors): array
+    {
+        foreach ($this->errors as $field => $message) {
+            $errors[$field][] = $message;
+        }
+
+        return $errors;
+    }
 }

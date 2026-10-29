@@ -5,12 +5,10 @@ declare(strict_types=1);
 namespace App\Web\SetPassword;
 
 use App\Service\PasswordSetupService;
-use Psr\Http\Message\ResponseFactoryInterface;
+use App\Web\Shared\Redirect\Redirector;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Yiisoft\Http\Method;
-use Yiisoft\Http\Status;
-use Yiisoft\Router\UrlGeneratorInterface;
 use Yiisoft\User\CurrentUser;
 use Yiisoft\Validator\ValidatorInterface;
 use Yiisoft\Yii\View\Renderer\WebViewRenderer;
@@ -18,9 +16,8 @@ use Yiisoft\Yii\View\Renderer\WebViewRenderer;
 final readonly class Action
 {
     public function __construct(
+        private Redirector $redirector,
         private WebViewRenderer $viewRenderer,
-        private ResponseFactoryInterface $responseFactory,
-        private UrlGeneratorInterface $urlGenerator,
         private CurrentUser $currentUser,
         private ValidatorInterface $validator,
         private PasswordSetupService $passwordSetup,
@@ -29,7 +26,7 @@ final readonly class Action
     public function __invoke(ServerRequestInterface $request): ResponseInterface
     {
         if (!$this->currentUser->isGuest()) {
-            return $this->redirectHome();
+            return $this->redirector->toRoute('home');
         }
 
         $form = new SetPasswordForm();
@@ -42,7 +39,7 @@ final readonly class Action
 
             if ($errors === []) {
                 if ($this->passwordSetup->setPassword($form->email, $form->setupCode, $form->password)) {
-                    return $this->redirectHome();
+                    return $this->redirector->toRoute('home');
                 }
                 $error = 'Invalid email or setup code.';
             }
@@ -53,12 +50,5 @@ final readonly class Action
             'errors' => $errors,
             'error' => $error,
         ]);
-    }
-
-    private function redirectHome(): ResponseInterface
-    {
-        return $this->responseFactory
-            ->createResponse(Status::FOUND)
-            ->withHeader('Location', $this->urlGenerator->generate('home'));
     }
 }

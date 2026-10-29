@@ -12,7 +12,6 @@ use App\Repository\AccessLevelRepositoryInterface;
 use App\Repository\ConstructionSiteData;
 use App\Repository\ConstructionSiteRepositoryInterface;
 use Yiisoft\Data\Paginator\OffsetPaginator;
-use Yiisoft\Db\Exception\IntegrityException;
 
 final readonly class ConstructionSiteService
 {
@@ -69,15 +68,7 @@ final readonly class ConstructionSiteService
     {
         $this->accessChecker->ensure($actorId, Permission::SiteDelete);
 
-        try {
-            $this->sites->delete($id);
-        } catch (IntegrityException $e) {
-            if (!InUseException::isConstraintConflict($e)) {
-                throw $e;
-            }
-
-            throw new InUseException("This construction site is still in use and can't be deleted.", 0, $e);
-        }
+        InUseException::guard(fn() => $this->sites->delete($id), "This construction site is still in use and can't be deleted.");
     }
 
     private function validate(ConstructionSiteData $data, ?int $exceptId): void

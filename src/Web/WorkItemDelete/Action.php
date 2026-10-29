@@ -8,22 +8,20 @@ use App\Service\InUseException;
 use App\Service\WorkItemService;
 use App\Web\NotFound\NotFoundHandler;
 use App\Web\Shared\Flash\FlashMessages;
-use Psr\Http\Message\ResponseFactoryInterface;
+use App\Web\Shared\Redirect\Redirector;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Yiisoft\Http\Method;
 use Yiisoft\Http\Status;
 use Yiisoft\Router\CurrentRoute;
-use Yiisoft\Router\UrlGeneratorInterface;
 use Yiisoft\User\CurrentUser;
 use Yiisoft\Yii\View\Renderer\WebViewRenderer;
 
 final readonly class Action
 {
     public function __construct(
+        private Redirector $redirector,
         private WebViewRenderer $viewRenderer,
-        private ResponseFactoryInterface $responseFactory,
-        private UrlGeneratorInterface $urlGenerator,
         private CurrentRoute $currentRoute,
         private CurrentUser $currentUser,
         private WorkItemService $workItems,
@@ -45,9 +43,7 @@ final readonly class Action
                 $this->workItems->delete($actorId, $workItem->id);
                 $this->flash->addSuccess('Work item deleted.');
 
-                return $this->responseFactory
-                    ->createResponse(Status::FOUND)
-                    ->withHeader('Location', $this->urlGenerator->generate('workItem.list'));
+                return $this->redirector->toRoute('workItem.list');
             } catch (InUseException $e) {
                 return $this->viewRenderer
                     ->render(__DIR__ . '/template', ['workItem' => $workItem, 'error' => $e->getMessage()])
