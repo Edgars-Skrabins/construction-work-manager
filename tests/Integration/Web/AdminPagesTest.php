@@ -156,6 +156,32 @@ final class AdminPagesTest extends IntegrationTestCase
         assertStringContainsString('Work item deleted.', (string) $this->request('GET', '/work-items')->getBody());
     }
 
+    public function testEmployeeIsCreatedEditedAndDeleted(): void
+    {
+        $this->asAdmin();
+        $fields = [
+            'firstName' => 'Lapa', 'lastName' => 'Pārbaude', 'birthDate' => '1990-01-01', 'accessLevelId' => '1',
+            'role' => 'employee', 'managerId' => '3', 'email' => '', 'loginActive' => '1',
+        ];
+
+        $this->assertRedirectsTo('/employees', $this->submit('/employees/create', $fields));
+        $list = (string) $this->request('GET', '/employees')->getBody();
+        assertStringContainsString('Employee saved.', $list);
+        assertStringContainsString('<td>Pārbaude, Lapa</td>', $list);
+        $this->resetServices();
+        $id = (int) $this->db()->createCommand("SELECT ID FROM EMPLOYEE WHERE FIRST_NAME = N'Lapa' AND LAST_NAME = N'Pārbaude'")->queryScalar();
+
+        $this->assertRedirectsTo('/employees', $this->submit("/employees/$id/edit", [...$fields, 'accessLevelId' => '2', 'birthDate' => '1991-02-03']));
+        assertStringContainsString('<td>1991-02-03</td>', (string) $this->request('GET', '/employees')->getBody());
+        $this->resetServices();
+        assertSame(2, (int) $this->db()->createCommand('SELECT ACCESS_LEVEL_ID FROM EMPLOYEE WHERE ID = :id', [':id' => $id])->queryScalar());
+
+        $this->assertRedirectsTo('/employees', $this->submit("/employees/$id/delete", []));
+        $list = (string) $this->request('GET', '/employees')->getBody();
+        assertStringContainsString('Employee deleted.', $list);
+        assertStringNotContainsString('Pārbaude, Lapa', $list);
+    }
+
     public function testPaginationShowsAWindowAndNoLinksForDisabledItems(): void
     {
         for ($i = 1; $i <= 200; $i++) {
