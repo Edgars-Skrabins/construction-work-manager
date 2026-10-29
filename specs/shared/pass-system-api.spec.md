@@ -209,7 +209,7 @@ This spec adds:
 8. **Key format `cwm_<8 hex key ID>_<64 hex secret>`:** the key ID is the indexed lookup column and safe to show; the secret's hash is compared in PHP with `hash_equals`. The prefix makes leaked keys recognisable to scanners. Rejected: looking up by hash, which gives no explicit constant-time comparison and no safe identifier.
 9. **SHA-256:** the secret has 256 random bits, so a fast hash can't be brute-forced, and no extra secret is needed. Rejected: HMAC with a pepper env var (an extra secret per environment, rotating it invalidates every key), and bcrypt or Argon2 (latency on every request for no gain).
 10. **Optional expiry:** nullable `EXPIRES_AT`, set with `--expires`. Rejected: no expiry, and mandatory expiry.
-11. **`LAST_USED_AT`:** updated on every successful request and shown by `api-key:list`, so unused keys can be found. Rejected: no tracking.
+11. **`LAST_USED_AT`:** updated on every successful request and shown by `api-key:list`, so unused keys can be found. Rejected: no tracking. 2026-10-29: confirmed after the block A review that it is written on every request. Rejected: writing at most once a minute per key, which saves writes under frequent polling but leaves the value up to a minute stale.
 12. **Console commands only:** `api-key:create`, `api-key:list`, `api-key:revoke`. The key is shown once. Rejected: an admin UI in this spec (new permission, page and tests).
 13. **RFC 9457 problem details:** `application/problem+json`, a standard clients understand. Rejected: an own error object.
 14. **No scopes, so no 403:** every valid key reads every site, and all authentication failures are the same `401`. Rejected: per-key scopes, and per-key site restrictions.
@@ -243,8 +243,8 @@ Baseline before starting: unit 52 tests, integration 143 tests, all passing.
 - [x] A5. Add `ApiKeyService` and `ApiKeyServiceTest`. Run `make test`.
 
 ### B. Console commands
-- [ ] B1. Add `ApiKeyCreateCommand`, `ApiKeyListCommand` and `ApiKeyRevokeCommand`, and register them in `config/console/commands.php`.
-- [ ] B2. Add `ApiKeyCommandsTest`. Run `make test`.
+- [x] B1. Add `ApiKeyCreateCommand`, `ApiKeyListCommand` and `ApiKeyRevokeCommand`, and register them in `config/console/commands.php`.
+- [x] B2. Add `ApiKeyCommandsTest`. Run `make test`.
 
 ### C. API pipeline, authentication and JSON errors
 - [ ] C1. Add `JsonResponseFactory` and `JsonResponseFactoryTest`.
