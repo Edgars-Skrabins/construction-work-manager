@@ -155,10 +155,10 @@ final class EmployeeServiceTest extends IntegrationTestCase
 
     public function testEmployeeWithOnlyDoneOrCancelledAssignmentsCanBecomeAManager(): void
     {
-        $this->employees()->update(1, 8, self::input(role: Role::Manager, managerId: null, email: 'employee5@mail.test'));
+        $this->employees()->update(1, 5, self::input(role: Role::Manager, managerId: null, email: 'employee2@mail.test'));
 
-        assertSame(Role::Manager, $this->find(8)->role);
-        assertNull($this->find(8)->managerId);
+        assertSame(Role::Manager, $this->find(5)->role);
+        assertNull($this->find(5)->managerId);
     }
 
     public function testEmployeeWithActiveAssignmentsCanStillBeEdited(): void
@@ -289,8 +289,8 @@ final class EmployeeServiceTest extends IntegrationTestCase
      */
     public static function listers(): iterable
     {
-        yield 'admin' => [1, [1, 8, 2, 5, 4, 3, 6, 7]];
-        yield 'manager' => [2, [5, 4, 6]];
+        yield 'admin' => [1, [9, 23, 45, 54, 27, 75, 37, 1, 48, 31, 61, 69, 32, 34, 14, 46, 35, 22, 67, 70]];
+        yield 'manager' => [2, [61, 69, 67, 70, 64, 5, 4, 68, 65, 60, 66, 63, 62, 6, 59]];
         yield 'employee' => [4, null];
         yield 'missing employee' => [999999, null];
     }
@@ -314,7 +314,7 @@ final class EmployeeServiceTest extends IntegrationTestCase
     {
         $names = array_map(static fn(Employee $e): string => $e->fullName(), $this->employees()->managers(1, 3));
 
-        assertSame(['Ilze Kalniņa'], $names);
+        assertSame(['Kaspars Eglītis', 'Ilze Kalniņa', 'Gatis Lācis', 'Rūta Petrauskienė', 'Inga Sproģe', 'Margus Tamm'], $names);
     }
 
     /**

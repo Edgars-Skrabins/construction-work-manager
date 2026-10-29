@@ -66,7 +66,7 @@ final class ReadOnlyAssignmentsStorageTest extends IntegrationTestCase
             $this->storage()->getByItemNames(['manager']),
         );
 
-        assertSame(['2', '3'], $userIds);
+        assertSame(['2', '3', '11', '12', '13', '14', '15'], $userIds);
         assertSame([], $this->storage()->getByItemNames([]));
     }
 
@@ -96,10 +96,16 @@ final class ReadOnlyAssignmentsStorageTest extends IntegrationTestCase
             $this->storage()->getAll(),
         );
 
-        assertSame(
-            [1 => ['admin'], 2 => ['manager'], 3 => ['manager'], 4 => ['employee'], 5 => ['employee'], 6 => ['employee'], 7 => ['employee'], 8 => ['employee']],
-            $roles,
-        );
+        $expected = [];
+        foreach (range(1, 80) as $id) {
+            $expected[$id] = [match (true) {
+                in_array($id, [1, 9, 10], true) => 'admin',
+                in_array($id, [2, 3, 11, 12, 13, 14, 15], true) => 'manager',
+                default => 'employee',
+            }];
+        }
+
+        assertSame($expected, $roles);
     }
 
     #[DataProvider('writes')]
