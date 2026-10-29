@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Tests\Integration\Repository;
 
+use App\Access\Scope;
 use App\Entity\ConstructionSite;
 use App\Entity\EmployeeListItem;
 use App\Entity\WorkItem;
@@ -86,6 +87,28 @@ final class ListingTest extends IntegrationTestCase
         }
     }
 
+    /**
+     * @return iterable<string, array{int, Scope, list<int>}>
+     */
+    public static function employeeScopes(): iterable
+    {
+        yield 'admin sees everyone' => [1, Scope::All, [1, 8, 2, 5, 4, 3, 6, 7]];
+        yield 'manager sees their subordinates' => [2, Scope::Subordinates, [5, 4, 6]];
+        yield 'other manager sees their subordinates' => [3, Scope::Subordinates, [8, 7]];
+        yield 'own scope sees only the viewer' => [4, Scope::Own, [4]];
+    }
+
+    /**
+     * @param list<int> $expected
+     */
+    #[DataProvider('employeeScopes')]
+    public function testEmployeeListIsScoped(int $viewerId, Scope $scope, array $expected): void
+    {
+        $paginator = $this->service(EmployeeRepositoryInterface::class)->listPaginator($viewerId, $scope, 'name');
+
+        assertSame($expected, $this->ids($paginator));
+    }
+
     public function testPagesHoldTwentyRowsAndAPagePastTheEndShowsTheLastOne(): void
     {
         for ($i = 1; $i <= 25; $i++) {
@@ -107,7 +130,7 @@ final class ListingTest extends IntegrationTestCase
     private function paginator(string $list, string $sort): OffsetPaginator
     {
         return match ($list) {
-            'employees' => $this->service(EmployeeRepositoryInterface::class)->listPaginator($sort),
+            'employees' => $this->service(EmployeeRepositoryInterface::class)->listPaginator(1, Scope::All, $sort),
             'sites' => $this->service(ConstructionSiteRepositoryInterface::class)->listPaginator($sort),
             default => $this->service(WorkItemRepositoryInterface::class)->listPaginator($sort),
         };

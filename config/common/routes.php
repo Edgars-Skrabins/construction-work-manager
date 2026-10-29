@@ -36,7 +36,7 @@ return [
                         ->action(Web\MyAssignments\Action::class)
                         ->name('my-assignments'),
                     Route::get('/employees')
-                        ->middleware(RequirePermission::for(Permission::EmployeeUpdate))
+                        ->middleware(RequirePermission::for(Permission::EmployeeRead))
                         ->action(Web\EmployeeList\Action::class)
                         ->name('employee.list'),
                     Route::methods([Method::GET, Method::POST], '/employees/create')

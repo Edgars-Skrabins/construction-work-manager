@@ -5,8 +5,12 @@ declare(strict_types=1);
 namespace App\Service;
 
 use App\Access\AccessChecker;
+use App\Access\AccessScope;
+use App\Access\Entity;
+use App\Access\ForbiddenException;
 use App\Access\Permission;
 use App\Access\Role;
+use App\Access\Scope;
 use App\Entity\AccessLevel;
 use App\Entity\Employee;
 use App\Entity\EmployeeListItem;
@@ -35,6 +39,7 @@ final readonly class EmployeeService
         private AssignmentRepositoryInterface $assignments,
         private TransactionRunnerInterface $transaction,
         private AccessChecker $accessChecker,
+        private AccessScope $accessScope,
         private PasswordHasher $passwordHasher,
         private SetupCodeGenerator $setupCodes,
         private ClockInterface $clock,
@@ -45,9 +50,15 @@ final readonly class EmployeeService
      */
     public function listPaginator(int $actorId, string $sort): OffsetPaginator
     {
-        $this->accessChecker->ensure($actorId, Permission::EmployeeUpdate);
+        $scope = $this->listScope($actorId)
+            ?? throw new ForbiddenException(sprintf('Employee %d may not list employees.', $actorId));
 
-        return $this->employees->listPaginator($sort);
+        return $this->employees->listPaginator($actorId, $scope, $sort);
+    }
+
+    public function canList(int $actorId): bool
+    {
+        return $this->listScope($actorId) !== null;
     }
 
     public function find(int $actorId, int $id): ?Employee
@@ -134,6 +145,17 @@ final readonly class EmployeeService
             $this->accounts->delete($id);
             InUseException::guard(fn() => $this->employees->delete($id), "This employee still has assignments and can't be deleted.");
         });
+    }
+
+    private function listScope(int $actorId): ?Scope
+    {
+        $role = $this->employees->roleOf($actorId);
+        if ($role === null || !$this->accessChecker->can($actorId, Permission::EmployeeRead)) {
+            return null;
+        }
+        $scope = $this->accessScope->forRole($role, Entity::Employee);
+
+        return $scope === Scope::Own ? null : $scope;
     }
 
     private function validate(EmployeeInput $input, ?Employee $employee, ?int $actorId = null): EmployeeData

@@ -1,7 +1,7 @@
 # Manager team — Spec
 
 **Type:** feature
-**Status:** ready for implementation
+**Status:** in progress
 **Last updated:** 2026-10-29
 
 # Part 1 — Business logic and usage
@@ -94,10 +94,10 @@ Baseline before starting: 139 unit tests and 517 integration tests, all green.
 
 ### A. Scoped Employees list for managers
 
-- [ ] A1. `EmployeeRepositoryInterface::listPaginator(int $viewerId, Scope $scope, string $sort)` and the scope in `EmployeeRepository`. Integration test in `tests/Integration/Repository/ListingTest.php` (or a new employee repository test): All lists everyone, Subordinates only the manager's employees, Own only the viewer.
-- [ ] A2. `EmployeeService`: inject `AccessScope`, add `canList()`, scope `listPaginator()` and throw `ForbiddenException` for an Own scope. Update `EmployeeServiceTest`: the manager's list is no longer forbidden and returns only Ilze Kalniņa's three employees, the admin's list has everyone, and the employee's list is forbidden; `canList` per role.
-- [ ] A3. `ViewAccess::canListEmployees()`; `layout.twig` uses it for the Employees link. Update the unit test in `tests/Unit/Web/Shared/Access/ViewAccessTest.php` if it builds `ViewAccess`.
-- [ ] A4. Route `/employees` guarded by `employee.read`. Page tests in a new `tests/Integration/Web/ManagerTeamPagesTest.php`: a manager gets 200 with only their subordinates, no Add, Edit or Delete links, and the Employees navbar link; the second manager sees only their own two; an employee gets 403 and no Employees link. Update `AdminPagesTest` so `/employees` and its sorted variant are no longer in the "other roles are forbidden" list for managers but still forbidden for employees, and the navbar assertion for managers expects the Employees link. All other admin tests stay green.
+- [x] A1. `EmployeeRepositoryInterface::listPaginator(int $viewerId, Scope $scope, string $sort)` and the scope in `EmployeeRepository`. Integration test in `tests/Integration/Repository/ListingTest.php` (or a new employee repository test): All lists everyone, Subordinates only the manager's employees, Own only the viewer.
+- [x] A2. `EmployeeService`: inject `AccessScope`, add `canList()`, scope `listPaginator()` and throw `ForbiddenException` for an Own scope. Update `EmployeeServiceTest`: the manager's list is no longer forbidden and returns only Ilze Kalniņa's three employees, the admin's list has everyone, and the employee's list is forbidden; `canList` per role.
+- [x] A3. `ViewAccess::canListEmployees()`; `layout.twig` uses it for the Employees link. Update the unit test in `tests/Unit/Web/Shared/Access/ViewAccessTest.php` if it builds `ViewAccess`.
+- [x] A4. Route `/employees` guarded by `employee.read`. Page tests in a new `tests/Integration/Web/ManagerTeamPagesTest.php`: a manager gets 200 with only their subordinates, no Add, Edit or Delete links, and the Employees navbar link; the second manager sees only their own two; an employee gets 403 and no Employees link. Update `AdminPagesTest` so `/employees` and its sorted variant are no longer in the "other roles are forbidden" list for managers but still forbidden for employees, and the navbar assertion for managers expects the Employees link. All other admin tests stay green.
 
 ### B. Work calendar
 

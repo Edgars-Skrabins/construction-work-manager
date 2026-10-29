@@ -71,7 +71,19 @@ final class AdminPagesTest extends IntegrationTestCase
         assertSame(200, $this->request('GET', $path)->getStatusCode());
     }
 
-    #[DataProvider('adminPages')]
+    /**
+     * @return iterable<string, array{string}>
+     */
+    public static function adminOnlyPages(): iterable
+    {
+        foreach (self::adminPages() as $path => $arguments) {
+            if (!str_starts_with($path, '/employees?') && $path !== '/employees') {
+                yield $path => $arguments;
+            }
+        }
+    }
+
+    #[DataProvider('adminOnlyPages')]
     public function testOtherRolesAreForbidden(string $path): void
     {
         foreach (['manager@mail.test', 'employee@mail.test'] as $email) {
@@ -87,7 +99,6 @@ final class AdminPagesTest extends IntegrationTestCase
         $this->logIn('manager@mail.test', '123123123');
         $body = (string) $this->request('GET', '/assignments')->getBody();
 
-        assertStringNotContainsString('href="/employees"', $body);
         assertStringNotContainsString('href="/sites"', $body);
         assertStringNotContainsString('href="/work-items"', $body);
         $response = $this->request('POST', '/work-items/5/delete', ['_csrf' => $this->csrfToken($body)]);

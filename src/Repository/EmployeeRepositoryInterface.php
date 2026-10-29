@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Repository;
 
 use App\Access\Role;
+use App\Access\Scope;
 use App\Entity\Employee;
 use App\Entity\EmployeeListItem;
 use Yiisoft\Data\Paginator\OffsetPaginator;
@@ -14,7 +15,7 @@ interface EmployeeRepositoryInterface
     /**
      * @return OffsetPaginator<int, EmployeeListItem>
      */
-    public function listPaginator(string $sort): OffsetPaginator;
+    public function listPaginator(int $viewerId, Scope $scope, string $sort): OffsetPaginator;
 
     public function find(int $id): ?Employee;
 
