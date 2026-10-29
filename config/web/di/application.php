@@ -10,12 +10,7 @@ use Yiisoft\Csrf\CsrfTokenMiddleware;
 use Yiisoft\Definitions\DynamicReference;
 use Yiisoft\Definitions\Reference;
 use Yiisoft\ErrorHandler\Middleware\ErrorCatcher;
-use Yiisoft\Input\Http\HydratorAttributeParametersResolver;
-use Yiisoft\Input\Http\RequestInputParametersResolver;
-use Yiisoft\Middleware\Dispatcher\CompositeParametersResolver;
 use Yiisoft\Middleware\Dispatcher\MiddlewareDispatcher;
-use Yiisoft\Middleware\Dispatcher\ParametersResolverInterface;
-use Yiisoft\RequestProvider\RequestCatcherMiddleware;
 use Yiisoft\Router\Middleware\Router;
 use Yiisoft\Session\SessionMiddleware;
 use Yiisoft\Yii\Http\Application;
@@ -33,7 +28,6 @@ return [
                         ErrorCatcher::class,
                         SessionMiddleware::class,
                         CsrfTokenMiddleware::class,
-                        RequestCatcherMiddleware::class,
                         RenderBeforeSessionClose::class,
                         ForbiddenMiddleware::class,
                         Router::class,
@@ -41,14 +35,6 @@ return [
                 ],
             ]),
             'fallbackHandler' => Reference::to(NotFoundHandler::class),
-        ],
-    ],
-
-    ParametersResolverInterface::class => [
-        'class' => CompositeParametersResolver::class,
-        '__construct()' => [
-            Reference::to(HydratorAttributeParametersResolver::class),
-            Reference::to(RequestInputParametersResolver::class),
         ],
     ],
 ];

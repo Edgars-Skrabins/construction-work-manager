@@ -20,7 +20,6 @@ use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Yiisoft\Csrf\CsrfTokenMiddleware;
 use Yiisoft\ErrorHandler\Middleware\ErrorCatcher;
-use Yiisoft\RequestProvider\RequestCatcherMiddleware;
 use Yiisoft\Router\Middleware\Router;
 use Yiisoft\Session\SessionMiddleware;
 use Yiisoft\Yii\Http\Application;
@@ -216,7 +215,6 @@ final class ApiPipelineTest extends IntegrationTestCase
             ErrorCatcher::class,
             SessionMiddleware::class,
             CsrfTokenMiddleware::class,
-            RequestCatcherMiddleware::class,
             RenderBeforeSessionClose::class,
             ForbiddenMiddleware::class,
             Router::class,
