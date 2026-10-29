@@ -132,7 +132,7 @@ Baseline before starting: `make check` green on `main`.
 - [x] B3. Clear `AUTH_THROTTLE` in `setUp()` and `tearDown()` of `AuthenticationTest` and `SetPasswordTest`.
 
 ### C. API
-- [ ] C1. Throttle `ApiKeyAuthentication` per IP and add the 429 test to `ApiPipelineTest`.
+- [x] C1. Throttle `ApiKeyAuthentication` per IP and add the 429 test to `ApiPipelineTest`.
 
 ### Z. Wrap-up
 - [ ] Z1. `make check` green.
