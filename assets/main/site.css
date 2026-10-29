@@ -107,3 +107,54 @@ body {
 .table {
     --bs-table-bg: var(--app-surface);
 }
+
+.status-planned {
+    --app-status-color: #9b958a;
+}
+
+.status-in-progress {
+    --app-status-color: #e09a1c;
+}
+
+.status-overdue {
+    --app-status-color: #e5534b;
+}
+
+.status-done {
+    --app-status-color: #3fb950;
+}
+
+.status-cancelled {
+    --app-status-color: #5c5850;
+}
+
+.assignment-block {
+    background-color: var(--app-surface);
+    border-left: 3px solid var(--app-status-color);
+    border-radius: 0 var(--bs-border-radius) var(--bs-border-radius) 0;
+    padding: 0.75rem 1rem;
+    margin-bottom: 0.5rem;
+}
+
+.assignment-table {
+    border-collapse: separate;
+    border-spacing: 0 0.5rem;
+    margin-top: -0.5rem;
+}
+
+.assignment-table > thead > tr > th {
+    --bs-table-bg: var(--bs-body-bg);
+}
+
+.assignment-table > tbody > tr > td {
+    border-bottom-width: 0;
+}
+
+.assignment-table > tbody > tr > td:first-child {
+    border-left: 3px solid var(--app-status-color);
+    border-radius: 0;
+}
+
+.assignment-table > tbody > tr > td:last-child {
+    border-radius: 0 var(--bs-border-radius) var(--bs-border-radius) 0;
+}

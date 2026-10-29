@@ -5,38 +5,35 @@
 {% endif %}
 {% for site in myAssignments.sites %}
     {% set first = site.first() %}
-    <div class="card mb-4">
-        <div class="card-header fw-semibold">{{ first.item.constructionSiteName }}</div>
-        <div class="card-body">
-            <p class="mb-1">{{ first.address() }}</p>
-            <p class="mb-1 text-secondary">Required access level: {{ first.requiredAccessLevelName }}</p>
+    <section class="mb-4">
+        <h2 class="h6 text-secondary text-uppercase mb-1">{{ first.item.constructionSiteName }}</h2>
+        <p class="small text-secondary mb-2">
+            {{ first.address() }} · Required access level: {{ first.requiredAccessLevelName }} ·
             <a href="https://www.google.com/maps/search/?api=1&amp;query={{ first.address()|url_encode }}" target="_blank" rel="noopener noreferrer">Open in Google Maps</a>
-        </div>
-        <ul class="list-group list-group-flush">
-            {% for row in site.rows %}
-                <li class="list-group-item">
-                    <div class="d-flex flex-wrap justify-content-between align-items-center column-gap-3 row-gap-1">
-                        <span class="fw-semibold">{{ row.work.item.workItemName }}</span>
-                        {% include 'Web/MyAssignments/period-status.twig' with {work: row.work, status: row.status} %}
-                    </div>
-                    {% if row.work.workItemDescription is not null %}
-                        <div class="small text-secondary">{{ row.work.workItemDescription }}</div>
-                    {% endif %}
-                </li>
-            {% endfor %}
-        </ul>
-    </div>
+        </p>
+        {% for row in site.rows %}
+            <div class="assignment-block {{ row.status.stripeClass() }}">
+                <div class="d-flex flex-wrap justify-content-between align-items-center column-gap-3 row-gap-1">
+                    <span class="fw-semibold">{{ row.work.item.workItemName }}</span>
+                    {% include 'Web/MyAssignments/period-status.twig' with {work: row.work, status: row.status} %}
+                </div>
+                {% if row.work.workItemDescription is not null %}
+                    <div class="small text-secondary">{{ row.work.workItemDescription }}</div>
+                {% endif %}
+            </div>
+        {% endfor %}
+    </section>
 {% endfor %}
 {% if myAssignments.history is not empty %}
     <details class="mt-4">
         <summary>History ({{ myAssignments.history|length }})</summary>
-        <ul class="list-group mt-2">
+        <div class="mt-2">
             {% for row in myAssignments.history %}
-                <li class="list-group-item d-flex flex-wrap justify-content-between align-items-center column-gap-3 row-gap-1">
+                <div class="assignment-block {{ row.status.stripeClass() }} d-flex flex-wrap justify-content-between align-items-center column-gap-3 row-gap-1">
                     <span>{{ row.work.item.constructionSiteName }}: {{ row.work.item.workItemName }}</span>
                     {% include 'Web/MyAssignments/period-status.twig' with {work: row.work, status: row.status} %}
-                </li>
+                </div>
             {% endfor %}
-        </ul>
+        </div>
     </details>
 {% endif %}

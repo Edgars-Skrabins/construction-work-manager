@@ -1,7 +1,7 @@
 # Dark theme — Spec
 
 **Type:** feature
-**Status:** ready for implementation
+**Status:** in progress
 **Last updated:** 2026-10-29
 
 # Part 1 — Business logic and usage
@@ -115,20 +115,20 @@ No new dependencies. It builds on Bootstrap 5.3's own dark color mode (`data-bs-
 
 Read Part 1 and Part 2 before starting. Work through the tasks in order and tick each one when it is done. All commands run inside Docker, on an own local stack (own Compose project name, ports, subnet and `MSSQL_MEMORY_LIMIT_MB=1024`, in an override that is never committed).
 
-Baseline before starting: record the test counts from `make check` in A0.
+Baseline before starting: `make check` passes with 139 unit tests (470 assertions) and 517 integration tests (4353 assertions).
 
 ### A. Theme
-- [ ] A0. Start the stack, run `make check`, and record the test counts here.
-- [ ] A1. Change `layout.twig` as in 2.2 (`data-bs-theme="dark"`, no `bg-light`, `site-navbar`, `btn-outline-secondary`), and remove `bg-white` from the employee, site and work item list tables.
-- [ ] A2. Write the palette, the Bootstrap variable overrides, the component overrides and `.site-navbar` in `assets/main/site.css` as in 2.2.
-- [ ] A3. Update `LayoutTest` as in 2.2. `make check` passes.
+- [x] A0. Start the stack, run `make check`, and record the test counts here. Recorded above.
+- [x] A1. Change `layout.twig` as in 2.2 (`data-bs-theme="dark"`, no `bg-light`, `site-navbar`, `btn-outline-secondary`), and remove `bg-white` from the employee, site and work item list tables.
+- [x] A2. Write the palette, the Bootstrap variable overrides, the component overrides and `.site-navbar` in `assets/main/site.css` as in 2.2.
+- [x] A3. Update `LayoutTest` as in 2.2. `make check` passes.
 
 ### B. Assignment separation
-- [ ] B1. Add `stripeClass()` and the Overdue badge change to `AssignmentDisplayStatus`, with `tests/Unit/Entity/AssignmentDisplayStatusTest.php`.
-- [ ] B2. Add the status classes, `.assignment-block` and `.assignment-table` to `site.css`.
-- [ ] B3. Rework `src/Web/AssignmentList/template.twig` as in 2.2 and update `AssignmentPagesTest`.
-- [ ] B4. Rework `src/Web/MyAssignments/template.twig` as in 2.2 and update `MyAssignmentsPageTest`.
-- [ ] B5. Update `README.md` and `CLAUDE.md` if they describe the look or the markup changed here.
+- [x] B1. Add `stripeClass()` and the Overdue badge change to `AssignmentDisplayStatus`, with `tests/Unit/Entity/AssignmentDisplayStatusTest.php`.
+- [x] B2. Add the status classes, `.assignment-block` and `.assignment-table` to `site.css`.
+- [x] B3. Rework `src/Web/AssignmentList/template.twig` as in 2.2 and update `AssignmentPagesTest`.
+- [x] B4. Rework `src/Web/MyAssignments/template.twig` as in 2.2 and update `MyAssignmentsPageTest`.
+- [x] B5. Update `README.md` and `CLAUDE.md` if they describe the look or the markup changed here.
 
 ### Z. Wrap-up
 - [ ] Z1. `make check` passes.
