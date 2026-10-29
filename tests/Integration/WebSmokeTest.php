@@ -13,13 +13,13 @@ use function PHPUnit\Framework\assertStringContainsString;
 
 final class WebSmokeTest extends IntegrationTestCase
 {
-    public function testHomePageIsRendered(): void
+    public function testLoginPageIsRenderedWithLayout(): void
     {
-        $response = $this->request('/');
+        $response = $this->request('/login');
         $body = (string) $response->getBody();
 
         assertSame(200, $response->getStatusCode());
-        assertStringContainsString('<title>Construction Work Manager</title>', $body);
+        assertStringContainsString('<title>Log in</title>', $body);
         assertStringContainsString('class="navbar-brand"', $body);
     }
 

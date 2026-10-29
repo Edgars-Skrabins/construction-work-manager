@@ -32,6 +32,11 @@ abstract class IntegrationTestCase extends TestCase
         return $service;
     }
 
+    final protected function resetServices(): void
+    {
+        $this->container = null;
+    }
+
     final protected function db(): ConnectionInterface
     {
         return $this->service(ConnectionInterface::class);
