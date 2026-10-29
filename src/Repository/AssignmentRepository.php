@@ -79,6 +79,21 @@ final readonly class AssignmentRepository implements AssignmentRepositoryInterfa
         return (new OffsetPaginator($reader))->withPageSize(20);
     }
 
+    public function listInPeriod(int $viewerId, Scope $scope, DateTimeImmutable $from, DateTimeImmutable $to, ?int $employeeId): array
+    {
+        $query = $this->listQuery($viewerId, $scope)
+            ->andWhere(['<=', 'a.START_DATE', $to->format(self::DATE_FORMAT)])
+            ->andWhere(['>=', 'a.END_DATE', $from->format(self::DATE_FORMAT)])
+            ->andWhere(['a.STATUS' => [AssignmentStatus::Active->value, AssignmentStatus::Done->value]])
+            ->orderBy(['e.LAST_NAME' => SORT_ASC, 'e.FIRST_NAME' => SORT_ASC, 'w.NAME' => SORT_ASC, 'a.ID' => SORT_ASC]);
+        if ($employeeId !== null) {
+            $query->andWhere(['a.EMPLOYEE_ID' => $employeeId]);
+        }
+
+        /** @var list<AssignmentListItem> */
+        return $query->all();
+    }
+
     public function findAssignedWork(int $employeeId): array
     {
         /** @var list<AssignedWork> */

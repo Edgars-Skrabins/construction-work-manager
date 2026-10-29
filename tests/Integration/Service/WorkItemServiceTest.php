@@ -35,13 +35,13 @@ final class WorkItemServiceTest extends IntegrationTestCase
 
     public function testCreateAndUpdate(): void
     {
-        $id = $this->workItems()->create(1, new WorkItemData('Plastering', null));
-        $this->workItems()->update(1, $id, new WorkItemData('Plastering works', 'Walls and ceilings.'));
+        $id = $this->workItems()->create(1, new WorkItemData('Chimney repair', null));
+        $this->workItems()->update(1, $id, new WorkItemData('Chimney repair works', 'Flue lining and brickwork.'));
 
         $workItem = $this->workItems()->find(1, $id);
         assertNotNull($workItem);
-        assertSame('Plastering works', $workItem->name);
-        assertSame('Walls and ceilings.', $workItem->description);
+        assertSame('Chimney repair works', $workItem->name);
+        assertSame('Flue lining and brickwork.', $workItem->description);
     }
 
     public function testDuplicateNameIgnoringCaseIsRejected(): void

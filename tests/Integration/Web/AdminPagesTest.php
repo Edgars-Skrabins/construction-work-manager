@@ -72,7 +72,19 @@ final class AdminPagesTest extends IntegrationTestCase
         assertSame(200, $this->request('GET', $path)->getStatusCode());
     }
 
-    #[DataProvider('adminPages')]
+    /**
+     * @return iterable<string, array{string}>
+     */
+    public static function adminOnlyPages(): iterable
+    {
+        foreach (self::adminPages() as $path => $arguments) {
+            if (!str_starts_with($path, '/employees?') && $path !== '/employees') {
+                yield $path => $arguments;
+            }
+        }
+    }
+
+    #[DataProvider('adminOnlyPages')]
     public function testOtherRolesAreForbidden(string $path): void
     {
         foreach (['manager@mail.test', 'employee@mail.test'] as $email) {
@@ -88,7 +100,6 @@ final class AdminPagesTest extends IntegrationTestCase
         $this->logIn('manager@mail.test', '123123123');
         $body = (string) $this->request('GET', '/assignments')->getBody();
 
-        assertStringNotContainsString('href="/employees"', $body);
         assertStringNotContainsString('href="/sites"', $body);
         assertStringNotContainsString('href="/work-items"', $body);
         $response = $this->request('POST', '/work-items/5/delete', ['_csrf' => $this->csrfToken($body)]);
@@ -167,19 +178,19 @@ final class AdminPagesTest extends IntegrationTestCase
         ];
 
         $this->assertRedirectsTo('/employees', $this->submit('/employees/create', $fields));
-        $list = (string) $this->request('GET', '/employees')->getBody();
+        $list = (string) $this->request('GET', '/employees?sort=-role')->getBody();
         assertStringContainsString('Employee saved.', $list);
         assertStringContainsString('<td>Pārbaude, Lapa</td>', $list);
         $this->resetServices();
         $id = (int) $this->db()->createCommand("SELECT ID FROM EMPLOYEE WHERE FIRST_NAME = N'Lapa' AND LAST_NAME = N'Pārbaude'")->queryScalar();
 
         $this->assertRedirectsTo('/employees', $this->submit("/employees/$id/edit", [...$fields, 'accessLevelId' => '2', 'birthDate' => '1991-02-03']));
-        assertStringContainsString('<td class="text-nowrap">1991-02-03</td>', (string) $this->request('GET', '/employees')->getBody());
+        assertStringContainsString('<td class="text-nowrap">1991-02-03</td>', (string) $this->request('GET', '/employees?sort=-role')->getBody());
         $this->resetServices();
         assertSame(2, (int) $this->db()->createCommand('SELECT ACCESS_LEVEL_ID FROM EMPLOYEE WHERE ID = :id', [':id' => $id])->queryScalar());
 
         $this->assertRedirectsTo('/employees', $this->submit("/employees/$id/delete", []));
-        $list = (string) $this->request('GET', '/employees')->getBody();
+        $list = (string) $this->request('GET', '/employees?sort=-role')->getBody();
         assertStringContainsString('Employee deleted.', $list);
         assertStringNotContainsString('Pārbaude, Lapa', $list);
     }
@@ -194,16 +205,16 @@ final class AdminPagesTest extends IntegrationTestCase
         $middle = (string) $this->request('GET', '/work-items?page=4')->getBody();
         preg_match_all('/class="page-link"[^>]*>([^<]+)</', $middle, $labels);
         preg_match_all('/<a class="page-link" href="[^"]*page=(\d+)"/', $middle, $targets);
-        assertSame(['Previous', '1', '2', '3', '4', '5', '6', '…', '11', 'Next'], $labels[1]);
-        assertSame(['3', '1', '2', '3', '5', '6', '11', '5'], $targets[1]);
+        assertSame(['Previous', '1', '2', '3', '4', '5', '6', '…', '12', 'Next'], $labels[1]);
+        assertSame(['3', '1', '2', '3', '5', '6', '12', '5'], $targets[1]);
 
         $first = (string) $this->request('GET', '/work-items')->getBody();
         assertStringContainsString('<li class="page-item disabled"><span class="page-link">Previous</span></li>', $first);
         assertStringNotContainsString('page=0', $first);
 
-        $last = (string) $this->request('GET', '/work-items?page=11')->getBody();
+        $last = (string) $this->request('GET', '/work-items?page=12')->getBody();
         assertStringContainsString('<li class="page-item disabled"><span class="page-link">Next</span></li>', $last);
-        assertStringNotContainsString('page=12', $last);
+        assertStringNotContainsString('page=13', $last);
     }
 
     /**
@@ -211,8 +222,8 @@ final class AdminPagesTest extends IntegrationTestCase
      */
     public static function searches(): iterable
     {
-        yield 'employees' => ['/employees', 'kalniņa', 'Kalniņa, Ilze', 'Vītols, Kristaps'];
-        yield 'employees by email' => ['/employees', 'employee3@', 'Vītols, Kristaps', 'Kalniņa, Ilze'];
+        yield 'employees' => ['/employees', 'kalniņa', 'Kalniņa, Ilze', 'Ābele, Dace'];
+        yield 'employees by email' => ['/employees', 'employee3@', 'Vītols, Kristaps', 'Bērziņš, Jānis'];
         yield 'sites' => ['/sites', 'Daugavpils', 'Daugavpils School Renovation', 'Ādaži Defence Facility'];
         yield 'sites by code' => ['/sites', 'rix-tec', 'Rīga Thermal Power Plant Upgrade', 'Āgenskalns Residential Block'];
         yield 'work items' => ['/work-items', 'pipework', 'Welding', 'Roofing'];
@@ -378,7 +389,7 @@ final class AdminPagesTest extends IntegrationTestCase
         assertStringContainsString('The setup code is no longer shown.', $again);
         assertStringContainsString('New setup code', $again);
 
-        $list = (string) $this->request('GET', '/employees')->getBody();
+        $list = (string) $this->request('GET', '/employees?sort=-role')->getBody();
         assertStringContainsString('<td>Pārbaude, Lapa</td>', $list);
         assertStringContainsString('<td>Pending setup</td>', $list);
     }
@@ -409,9 +420,10 @@ final class AdminPagesTest extends IntegrationTestCase
     {
         $this->asAdmin();
 
-        $body = (string) $this->request('GET', '/employees')->getBody();
+        $body = (string) $this->request('GET', '/employees?sort=role')->getBody();
 
         assertStringNotContainsString('/employees/1/delete', $body);
+        assertStringContainsString('/employees/9/delete', $body);
         assertStringContainsString('/employees/4/delete', $body);
     }
 

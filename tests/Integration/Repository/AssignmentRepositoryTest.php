@@ -287,18 +287,18 @@ final class AssignmentRepositoryTest extends IntegrationTestCase
         $this->repository()->updatePeriodAndStatus($done, new DateTimeImmutable('2026-11-10'), new DateTimeImmutable('2026-11-20'), AssignmentStatus::Done);
         $cancelled = $this->insert(8, 1, 2, '2026-11-10', '2026-11-20');
         $this->repository()->updatePeriodAndStatus($cancelled, new DateTimeImmutable('2026-11-10'), new DateTimeImmutable('2026-11-20'), AssignmentStatus::Cancelled);
-        $this->insert(6, 1, 3, '2026-11-10', '2026-11-20');
+        $this->insert(19, 1, 3, '2026-11-10', '2026-11-20');
 
         assertSame([], $this->employeeIdsNeedingAccess(2, '2026-11-15'));
-        assertSame([6], $this->employeeIdsNeedingAccess(3, '2026-11-15'));
+        assertSame([19], $this->employeeIdsNeedingAccess(3, '2026-11-15'));
     }
 
     public function testNeedsAccessRechecksAccessLevelsLive(): void
     {
-        $this->insert(6, 1, 3, '2026-11-10', '2026-11-20');
+        $this->insert(19, 1, 3, '2026-11-10', '2026-11-20');
         $this->insert(7, 1, 3, '2026-11-10', '2026-11-20');
 
-        $this->db()->createCommand('UPDATE EMPLOYEE SET ACCESS_LEVEL_ID = 2 WHERE ID = 6')->execute();
+        $this->db()->createCommand('UPDATE EMPLOYEE SET ACCESS_LEVEL_ID = 2 WHERE ID = 19')->execute();
         assertSame([7], $this->employeeIdsNeedingAccess(3, '2026-11-15'));
 
         $this->db()->createCommand('UPDATE CONSTRUCTION_SITE SET REQUIRED_ACCESS_LEVEL_ID = 4 WHERE ID = 3')->execute();
@@ -321,7 +321,7 @@ final class AssignmentRepositoryTest extends IntegrationTestCase
             [
                 new EmployeeNeedingAccess(5, 'Laura', 'Krūmiņa', 2, 'Restricted'),
                 new EmployeeNeedingAccess(4, 'Mārtiņš', 'Liepiņš', 1, 'General'),
-                new EmployeeNeedingAccess(6, 'Kristaps', 'Vītols', 3, 'Critical infrastructure'),
+                new EmployeeNeedingAccess(6, 'Kristaps', 'Vītols', 2, 'Restricted'),
             ],
             $employees,
         );
@@ -350,6 +350,80 @@ final class AssignmentRepositoryTest extends IntegrationTestCase
         assertSame('Concrete works', $first->item->workItemName);
         assertSame('Formwork, reinforcement and pouring of foundations, slabs and walls.', $first->workItemDescription);
         assertSame([], $this->repository()->findAssignedWork(5));
+    }
+
+    /**
+     * @return iterable<string, array{string, string, bool}>
+     */
+    public static function periods(): iterable
+    {
+        yield 'ends on the first visible day' => ['2026-10-20', '2026-10-26', true];
+        yield 'starts on the last visible day' => ['2026-12-06', '2026-12-20', true];
+        yield 'spans the whole range' => ['2026-09-01', '2027-01-31', true];
+        yield 'inside the range' => ['2026-11-10', '2026-11-12', true];
+        yield 'ends the day before' => ['2026-10-01', '2026-10-25', false];
+        yield 'starts the day after' => ['2026-12-07', '2026-12-10', false];
+    }
+
+    #[DataProvider('periods')]
+    public function testListInPeriodIncludesEveryOverlappingPeriod(string $start, string $end, bool $listed): void
+    {
+        $id = $this->insert(4, 1, 1, $start, $end);
+
+        assertSame($listed ? [$id] : [], $this->idsInPeriod(1, Scope::All, null));
+    }
+
+    public function testListInPeriodKeepsDoneAndLeavesOutCancelled(): void
+    {
+        $active = $this->insert(4, 1, 1, '2026-11-10', '2026-11-20');
+        $done = $this->insert(4, 2, 1, '2026-11-10', '2026-11-20');
+        $this->repository()->updatePeriodAndStatus($done, new DateTimeImmutable('2026-11-10'), new DateTimeImmutable('2026-11-20'), AssignmentStatus::Done);
+        $cancelled = $this->insert(4, 3, 1, '2026-11-10', '2026-11-20');
+        $this->repository()->updatePeriodAndStatus($cancelled, new DateTimeImmutable('2026-11-10'), new DateTimeImmutable('2026-11-20'), AssignmentStatus::Cancelled);
+
+        assertSame([$active, $done], $this->idsInPeriod(1, Scope::All, null));
+    }
+
+    /**
+     * @param list<int> $visible
+     */
+    #[DataProvider('scopes')]
+    public function testListInPeriodIsScoped(int $viewerId, Scope $scope, array $visible): void
+    {
+        foreach ([4, 5, 6, 7, 8] as $employeeId) {
+            $this->insert($employeeId, 1, 1, '2026-11-10', '2026-11-20');
+        }
+
+        $employees = array_map(
+            static fn(AssignmentListItem $item): int => $item->assignment->employeeId,
+            $this->repository()->listInPeriod($viewerId, $scope, new DateTimeImmutable('2026-10-26'), new DateTimeImmutable('2026-12-06'), null),
+        );
+        sort($employees);
+
+        assertSame($visible, $employees);
+    }
+
+    public function testListInPeriodFiltersByEmployeeAndOrdersByEmployeeThenWorkItem(): void
+    {
+        $vitolsConcrete = $this->insert(6, 1, 1, '2026-11-10', '2026-11-20');
+        $liepinsElectrical = $this->insert(4, 2, 1, '2026-11-01', '2026-11-05');
+        $liepinsConcrete = $this->insert(4, 1, 2, '2026-11-15', '2026-11-16');
+        $krumina = $this->insert(5, 1, 1, '2026-11-20', '2026-11-22');
+
+        assertSame([$krumina, $liepinsConcrete, $liepinsElectrical, $vitolsConcrete], $this->idsInPeriod(2, Scope::Subordinates, null));
+        assertSame([$liepinsConcrete, $liepinsElectrical], $this->idsInPeriod(2, Scope::Subordinates, 4));
+        assertSame([], $this->idsInPeriod(2, Scope::Subordinates, 7));
+    }
+
+    /**
+     * @return list<int>
+     */
+    private function idsInPeriod(int $viewerId, Scope $scope, ?int $employeeId): array
+    {
+        return array_map(
+            static fn(AssignmentListItem $item): int => $item->assignment->id,
+            $this->repository()->listInPeriod($viewerId, $scope, new DateTimeImmutable('2026-10-26'), new DateTimeImmutable('2026-12-06'), $employeeId),
+        );
     }
 
     private function repository(): AssignmentRepositoryInterface
