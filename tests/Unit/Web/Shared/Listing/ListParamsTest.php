@@ -21,6 +21,42 @@ final class ListParamsTest extends TestCase
 
         assertSame('', $params->sort);
         assertSame(1, $params->page);
+        assertSame('', $params->q);
+    }
+
+    public function testSearchIsReadAndTrimmed(): void
+    {
+        assertSame('Bērziņš', ListParams::fromRequest((new ServerRequest())->withQueryParams(['q' => "  Bērziņš \t"]))->q);
+    }
+
+    #[DataProvider('emptySearches')]
+    public function testEmptyOrInvalidSearchBecomesEmpty(mixed $q): void
+    {
+        assertSame('', ListParams::fromRequest((new ServerRequest())->withQueryParams(['q' => $q]))->q);
+    }
+
+    /**
+     * @return iterable<string, array{mixed}>
+     */
+    public static function emptySearches(): iterable
+    {
+        yield 'empty' => [''];
+        yield 'whitespace' => ['   '];
+        yield 'array' => [['Anna']];
+    }
+
+    public function testSearchIsCutToItsMaximumLengthInCharacters(): void
+    {
+        $q = ListParams::fromRequest((new ServerRequest())->withQueryParams(['q' => str_repeat('ā', 150)]))->q;
+
+        assertSame(str_repeat('ā', ListParams::SEARCH_MAX_LENGTH), $q);
+    }
+
+    public function testSearchCutDoesNotLeaveTrailingSpaces(): void
+    {
+        $q = ListParams::fromRequest((new ServerRequest())->withQueryParams(['q' => str_repeat('a', 99) . '   tail']))->q;
+
+        assertSame(str_repeat('a', 99), $q);
     }
 
     public function testSortAndPageAreRead(): void

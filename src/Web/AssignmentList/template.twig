@@ -6,7 +6,10 @@
         <a class="btn btn-primary" href="{{ urlGenerator.generate('assignment.create') }}">New assignment</a>
     {% endif %}
 </div>
-{% if paginator.getTotalItems() == 0 %}
+{% include 'Web/Shared/Listing/search-form.twig' with {route: 'assignment.list', placeholder: 'Employee, work item or site'} %}
+{% if paginator.getTotalItems() == 0 and q != '' %}
+    <p class="text-secondary">No results for “{{ q }}”.</p>
+{% elseif paginator.getTotalItems() == 0 %}
     <p class="text-secondary">No assignments yet.</p>
 {% else %}
     <div class="table-responsive">

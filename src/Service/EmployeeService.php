@@ -43,11 +43,11 @@ final readonly class EmployeeService
     /**
      * @return OffsetPaginator<int, EmployeeListItem>
      */
-    public function listPaginator(int $actorId, string $sort): OffsetPaginator
+    public function listPaginator(int $actorId, string $sort, string $search): OffsetPaginator
     {
         $this->accessChecker->ensure($actorId, Permission::EmployeeUpdate);
 
-        return $this->employees->listPaginator($sort);
+        return $this->employees->listPaginator($sort, $search);
     }
 
     public function find(int $actorId, int $id): ?Employee
