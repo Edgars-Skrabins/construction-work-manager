@@ -162,9 +162,10 @@ final readonly class ViewLanguage
 
 - Route in `config/common/routes.php`, in the outer `NoStore` group next to `/logout`, outside `Authentication`: `Route::post('/language')->action(Web\Language\Action::class)->name('language')`. CSRF is checked by the global `CsrfTokenMiddleware`.
 - The action reads `locale` and `returnUrl` with `FormBody::string()`.
-  - When `Language::tryFrom($locale)` is a language, the response gets the cookie: `new Cookie(LanguageMiddleware::COOKIE, $language->value)` with path `/`, `httpOnly`, `SameSite=Lax`, `secure` off like the session cookie, and an expiry one year from `ClockInterface::now()`.
+  - When `Language::tryFrom($locale)` is a language, the response gets the cookie: `new Cookie(LanguageMiddleware::COOKIE, $language->value)` with path `/`, `httpOnly`, `SameSite=Lax`, an expiry one year from `ClockInterface::now()`, and `secure` from the environment like the session cookie.
+  - `secure` comes from a param `'app/language' => ['cookieSecure' => false]` in `config/common/params.php`, set to `true` in `config/environments/prod/params.php` next to the session's `cookie_secure`. Dev and test keep it off. It reaches the action through `src/Web/Language/LanguageCookie.php` (new), a `final readonly class LanguageCookie` with `public function __construct(public bool $secure) {}` and a `withCookie(ResponseInterface $response, Language $language): ResponseInterface` that builds and adds the cookie. It is defined in `config/web/di/language.php` (new) from that param.
   - An unknown `locale` sets no cookie and keeps the current one.
-  - The redirect target is `returnUrl` when it starts with `/`, its second character is neither `/` nor `\`, and it has no control characters; otherwise the `home` route. It goes through `Redirector`.
+  - The redirect target is `returnUrl` only when it is a local path: it starts with exactly one `/` (not `//`), has no backslash anywhere, no control characters or whitespace, and `parse_url()` finds no scheme and no host in it. Anything else, empty included, goes to the `home` route. The check is a static `LocalPath::isLocal(string $url): bool` in `src/Web/Language/LocalPath.php` (new), so it can be unit tested on its own. The redirect goes through `Redirector`.
 
 ### Selector: `src/Web/Shared/Layout/Main/language-selector.twig` (new)
 
@@ -220,6 +221,8 @@ Status badges agree with their noun where the language needs it (Lithuanian "už
 
 - `tests/Unit/Web/Shared/Language/LanguageTest.php`: `fromCode()` returns the case for each of the seven codes, and English for `null`, `''`, `'LV'`, `'de'`, `'en-US'`, an array and an int; the case order and native names are as in Part 1.
 - `tests/Unit/Web/Shared/Language/LanguageMiddlewareTest.php` (with `CallableRequestHandler` and a real `Translator`): a `locale=lv` cookie sets `lv` before the handler runs; no cookie, `locale=xx` and `locale[]=lv` set `en`.
+- `tests/Unit/Web/Language/LocalPathTest.php`: accepted: `/`, `/login`, `/employees?sort=-name&page=2`, `/sites/3/edit`. Rejected: `''`, `employees`, `//evil.test`, `///evil.test`, `/\evil.test`, `\\evil.test`, `/login\..\x`, `https://evil.test/`, `http:/evil.test`, `javascript:alert(1)`, `"/login\r\nLocation: x"` (raw CR LF), `" /login"` (leading space) and `"/\tlogin"` (tab).
+- `tests/Unit/Web/Language/LanguageCookieTest.php`: the cookie's name, value, path, `HttpOnly`, `SameSite=Lax` and one-year expiry from a `FixedClock`, with `Secure` present only when `secure` is true.
 - `tests/Unit/Web/Shared/Language/MessageCatalogTest.php`, no database:
   - every file in `messages/*/app.php` exists for exactly `lv`, `lt`, `et`, `ru`, `fi`, `sv` and returns an array of non-empty strings;
   - all six files have the same keys in the same order;
@@ -227,7 +230,7 @@ Status badges agree with their noun where the language needs it (Lithuanian "už
   - every ID used in the code is in the files: the first string argument of `t('...')` / `t("...")` in every `src/**/*.twig` (regex), of `->translate('...')` in every `src/**/*.php` (yiisoft/translator's `ContentParser`), every `label()` of `AssignmentStatus`, `AssignmentDisplayStatus` and the role labels, and for every class in `src/` with `Yiisoft\Validator` rule attributes, each `#[Label]` and each `get*Message()` of each rule instance (reflection);
   - no file has an ID that the code no longer uses (the same extraction, the other way round).
 - `tests/Integration/Web/LanguageTest.php` (uses `WebClient`):
-  - `POST /language` with `locale=lv` and `returnUrl=/login` redirects to `/login` and sets `locale=lv` with `Path=/`, `HttpOnly`, `SameSite=Lax` and an expiry a year ahead; `locale=xx` sets no cookie; `returnUrl` values `https://evil.test/`, `//evil.test`, `/\evil.test`, `''` and `employees` redirect to `/`; a POST without the CSRF token gets 422.
+  - `POST /language` with `locale=lv` and `returnUrl=/login` redirects to `/login` and sets `locale=lv` with `Path=/`, `HttpOnly`, `SameSite=Lax` and an expiry a year ahead; `locale=xx` sets no cookie; `returnUrl` values `https://evil.test/`, `//evil.test`, `/\evil.test`, `/login\x`, `''` and `employees` redirect to `/`; the cookie has no `Secure` in the test environment; a POST without the CSRF token gets 422.
   - Without a cookie `/login` has `<html lang="en">`, "Log in"; with `locale=lv` it has `<html lang="lv">`, "Pieteikties" and `<title>` translated; with `locale=xx` it falls back to English.
   - The selector renders on `/login` and `/set-password` for a guest and on a logged-in page for each role: the form posting to `/language`, seven buttons in the Part 1 order with their native names and `lang`, the current one `active`, and the `returnUrl` of the page (with its query).
   - A logged-in page renders in two languages (for example `/assignments` as the manager in `lv` and `ru`): headings, table headers, status badges and the flash after a save are translated, and site, work item and employee names are unchanged.
@@ -251,19 +254,19 @@ Status badges agree with their noun where the language needs it (Lithuanian "už
 6. **The validator uses the `app` category.** One set of message files holds every UI string, including the validator's rule messages and labels, so the catalog test sees everything. Rejected: keeping `yii-validator` (its bundled messages cover only `ru` of our languages and would mix two sources).
 7. **English text as the message ID, no `en` file.** It is Yii's convention, keeps templates readable and makes the English UI work without a file. Rejected: dotted keys like `login.title` (an extra file to keep in sync and unreadable templates).
 8. **Translate where the text is produced** (templates, actions, `FlashMessages`, services, validator), not in a late render step. Each message is translated once, in the locale of the request that shows it. Rejected: carrying message IDs and parameters through `ValidationException` and translating in templates (changes every service's exception shape and the field-errors partial for no user-visible gain).
-9. **POST `/language` with CSRF and a local `returnUrl`, redirect back.** A GET that sets a cookie could be triggered from other sites. The local-path check prevents an open redirect.
-10. **Cookie `locale`, a year, `HttpOnly`, `SameSite=Lax`, path `/`.** No JavaScript needs it, and it should outlive sessions and logout.
+9. **POST `/language` with CSRF and a local `returnUrl`, redirect back.** A GET that sets a cookie could be triggered from other sites. The local-path check prevents an open redirect: only a path starting with a single `/`, no backslash anywhere, no scheme or host (tightened at the coordinator's review, 2026-10-29).
+10. **Cookie `locale`, a year, `HttpOnly`, `SameSite=Lax`, path `/`, `Secure` per environment.** No JavaScript needs it, and it should outlive sessions and logout. `Secure` follows the session cookie: on in prod, off in dev and test, which run on plain HTTP (added at the coordinator's review, 2026-10-29).
 11. **Calendar month and day names from ICU,** capitalized for headings. Native data for all seven languages, no hand-written lists to keep in sync.
 12. **Dates stay `Y-m-d`; the API and console stay English.** Decided by the user and the existing architecture.
-13. **Implementation waits until demo data, dark theme, manager team view and calendar, list search, and the role-aware UI have merged,** so every final string is translated once.
+13. **Implemented in parallel against current `main`, merged last.** Five branches are built at the same time and add or change UI text: demo data, the dark theme, the manager team view and calendar, list search, and the role-aware employee form and navigation. This branch is implemented against `main` as it is now. Its pull request merges after those five. Just before it merges, `origin/main` is merged into it (never rebased), and every string those branches added or changed is put through `t()` and translated into all six languages. `MessageCatalogTest` and the untranslated-text sweep catch any gaps. Rejected: waiting for the five branches to merge first (serializes the work; changed by the coordinator on the user's behalf, 2026-10-29).
 
 # Part 3 — Implementation TODO
 
 Read Part 1 and Part 2 before starting. Work through the tasks in order and tick each one when it is done. All commands run inside Docker. Use your own Compose project name (`COMPOSE_PROJECT_NAME=cwm-languages`), your own `APP_PORT` and host SQL Server port, an explicit Docker network subnet and `MSSQL_MEMORY_LIMIT_MB=1024`, in the shell or an uncommitted override, never committed.
 
-Before starting, merge `origin/main` into `feature/languages` (never rebase), with the five feature branches named in decision 13 merged into `main`. Then record the baseline here: `make check` unit and integration test and assertion counts.
+Implement against current `main` without waiting for the five branches in decision 13. Block Y brings in their strings before this branch merges. Where 2.2 names code from those branches (the manager team pages and calendar, role labels, the dark-theme navbar classes), do that part in Y once it is on `main`.
 
-Baseline before starting: to be recorded at the start of implementation.
+Baseline before starting: to be recorded at the start of implementation (`make check` unit and integration test and assertion counts).
 
 ### A. Translation infrastructure
 - [ ] A1. `make composer require yiisoft/translator:^3.2.1 yiisoft/translator-message-php:^1.1.2 yiisoft/cookies:^1.2.4`. `composer.lock` updated.
@@ -273,7 +276,7 @@ Baseline before starting: to be recorded at the start of implementation.
 - [ ] A5. Add `TranslatorExtension`, register it in `config/common/di/twig.php`, add `ViewLanguage` and the `language` view parameter, and set `<html lang="{{ language.current().value }}">` in `layout.twig`. `make check` passes.
 
 ### B. Switching and selector
-- [ ] B1. Add `src/Web/Language/Action.php` and the `language` route as in 2.2.
+- [ ] B1. Add `LocalPath` and `LanguageCookie` with their unit tests, the `app/language` param (prod: secure), `config/web/di/language.php`, then `src/Web/Language/Action.php` and the `language` route as in 2.2.
 - [ ] B2. Add `language-selector.twig`, include it in `layout.twig`, and check its placement for guests and logged-in users at phone and desktop widths. Update `LayoutTest` for the new navbar markup if its regexes no longer match.
 - [ ] B3. Add the switching, cookie, redirect and selector parts of `tests/Integration/Web/LanguageTest.php`. `make check` passes.
 
@@ -297,6 +300,13 @@ Baseline before starting: to be recorded at the start of implementation.
 - [ ] E1. Add the two-language page test, the translated validation and service error tests and the untranslated-text sweep to `tests/Integration/Web/LanguageTest.php`, and the English API test.
 - [ ] E2. Update existing tests broken by the changes (constructor arguments of services and `FlashMessages`, `ApplicationParams`). `make check` passes.
 
+### Y. Last-merge catch-up (after the five other branches have merged into `main`)
+- [ ] Y1. Merge `origin/main` into `feature/languages` (never rebase or force-push) and resolve the conflicts. Templates, services and the layout will conflict with C1 and C2: keep the other branches' markup and behaviour, and put their text through `t()`.
+- [ ] Y2. Find every UI string the five branches added or changed (`git diff <previous merge base>..origin/main -- src assets`), including the manager team pages and calendar (C4's ICU month and day names), role labels, list search labels, placeholders and empty states, and the dark-theme navbar classes for the selector. Put each through `t()` or the translator as in 2.2.
+- [ ] Y3. Add every new ID to all six `messages/*/app.php` files, in the same position, following the glossary. Remove IDs whose text the branches changed or dropped. `MessageCatalogTest` passes.
+- [ ] Y4. Extend the untranslated-text sweep's page list with the new pages (team view, calendar, search results and empty search) and run it. `make check` passes.
+- [ ] Y5. Repeat Y1 to Y4 if `main` moves again before this branch merges.
+
 ### Z. Wrap-up
-- [ ] Z1. Update `CLAUDE.md` and `README.md` as in 2.2. `make check` passes; record the test counts here.
+- [ ] Z1. Update `CLAUDE.md` and `README.md` as in 2.2, merging with the other branches' doc changes. `make check` passes; record the test counts here.
 - [ ] Z2. Manual check in the running app: on `/login` switch to Latviešu, log in as `manager@mail.test`, see the assignments list, the team view and calendar in Latvian, save an assignment and see the translated flash, switch to Русский on the same page, log out and see the login page still in Russian, then switch back to English. Call the API with a `locale=lv` cookie and see English problem details.
