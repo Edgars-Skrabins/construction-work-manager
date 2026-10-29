@@ -1,7 +1,7 @@
 # Assignment races — Spec
 
 **Type:** bug fix
-**Status:** ready for implementation
+**Status:** done
 **Last updated:** 2026-10-29
 
 # Part 1 — Business logic and usage
@@ -82,18 +82,18 @@ Tests:
 
 Read Part 1 and Part 2 before starting. Work through the tasks in order and tick each one when it is done.
 
-Baseline before starting: 180 unit tests and 608 integration tests.
+Baseline before starting: 180 unit tests and 608 integration tests. After: 180 unit and 612 integration.
 
 ### A. Locking reads
-- [ ] A1. Add `findForUpdate()` to `EmployeeRepositoryInterface` and `EmployeeRepository`, and to `ConstructionSiteRepositoryInterface` and `ConstructionSiteRepository`, as in 2.2.
-- [ ] A2. Read `ASSIGNMENT` in `findOverlappingActive()` with `UPDLOCK, HOLDLOCK, INDEX(IX_ASSIGNMENT_EMPLOYEE_ID)`. The existing repository tests stay green.
+- [x] A1. Add `findForUpdate()` to `EmployeeRepositoryInterface` and `EmployeeRepository`, and to `ConstructionSiteRepositoryInterface` and `ConstructionSiteRepository`, as in 2.2.
+- [x] A2. Read `ASSIGNMENT` in `findOverlappingActive()` with `UPDLOCK, HOLDLOCK, INDEX(IX_ASSIGNMENT_EMPLOYEE_ID)`. The existing repository tests stay green.
 
 ### B. Atomic save
-- [ ] B1. Inject `TransactionRunnerInterface` into `AssignmentService` and run `create()` and `update()` through `save()` with `findForUpdate()` in the order employee, site, overlap, as in 2.2. Update `assignmentsAt()` in `AssignmentServiceTest`.
-- [ ] B2. Map `SerializationFailureException` to the `CONCURRENT_CHANGE` error in `save()` and add the stub-runner test for `create()` and `update()`.
-- [ ] B3. Add `AssignmentLockingTest` with the lock-timeout tests from 2.2.
-- [ ] B4. Add the sentence to `CLAUDE.md` and run `make check`.
+- [x] B1. Inject `TransactionRunnerInterface` into `AssignmentService` and run `create()` and `update()` through `save()` with `findForUpdate()` in the order employee, site, overlap, as in 2.2. Update `assignmentsAt()` in `AssignmentServiceTest`.
+- [x] B2. Map `SerializationFailureException` to the `CONCURRENT_CHANGE` error in `save()` and add the stub-runner test for `create()` and `update()`.
+- [x] B3. Add `AssignmentLockingTest` with the lock-timeout tests from 2.2.
+- [x] B4. Add the sentence to `CLAUDE.md` and run `make check`.
 
 ### Z. Wrap-up
-- [ ] Z1. `make check` green: code style, PHPStan, unit and integration tests.
-- [ ] Z2. Manual check in the running app: as `manager@mail.test`, create an assignment, then try the same employee, work item and site for an overlapping period and see the overlap error; edit an assignment to Done and back to Active.
+- [x] Z1. `make check` green: code style, PHPStan, unit and integration tests.
+- [x] Z2. Manual check in the running app: as `manager@mail.test`, create an assignment, then try the same employee, work item and site for an overlapping period and see the overlap error; edit an assignment to Done and back to Active.
