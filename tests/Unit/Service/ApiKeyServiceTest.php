@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Tests\Unit\Service;
 
 use App\Entity\ApiKey;
+use App\Entity\ApiKeyStatus;
 use App\Service\ApiKeyService;
 use DateTimeImmutable;
 use InvalidArgumentException;
@@ -142,5 +143,16 @@ final class ApiKeyServiceTest extends TestCase
         assertTrue($this->service->revoke($issued->apiKey->keyId));
         assertFalse($this->service->revoke($issued->apiKey->keyId));
         assertNotNull($this->service->list()[0]->revokedAt);
+    }
+
+    public function testStatus(): void
+    {
+        $active = $this->service->issue('North Gate', null)->apiKey;
+        $expired = new ApiKey(2, '0000000e', 'Old', str_repeat('0', 64), new DateTimeImmutable('-2 days'), new DateTimeImmutable('-1 day'), null, null);
+        $revoked = new ApiKey(3, '0000000f', 'Gone', str_repeat('0', 64), new DateTimeImmutable('-2 days'), new DateTimeImmutable('-1 day'), null, new DateTimeImmutable('-1 day'));
+
+        assertSame(ApiKeyStatus::Active, $this->service->status($active));
+        assertSame(ApiKeyStatus::Expired, $this->service->status($expired));
+        assertSame(ApiKeyStatus::Revoked, $this->service->status($revoked));
     }
 }

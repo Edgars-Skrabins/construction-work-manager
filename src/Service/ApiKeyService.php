@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Service;
 
 use App\Entity\ApiKey;
+use App\Entity\ApiKeyStatus;
 use App\Entity\IssuedApiKey;
 use App\Repository\ApiKeyRepositoryInterface;
 use DateTimeImmutable;
@@ -75,6 +76,15 @@ final readonly class ApiKeyService
     public function list(): array
     {
         return $this->repository->findAll();
+    }
+
+    public function status(ApiKey $apiKey): ApiKeyStatus
+    {
+        return match (true) {
+            $apiKey->revokedAt !== null => ApiKeyStatus::Revoked,
+            !$apiKey->isValidAt($this->now()) => ApiKeyStatus::Expired,
+            default => ApiKeyStatus::Active,
+        };
     }
 
     private function now(): DateTimeImmutable

@@ -4,10 +4,8 @@ declare(strict_types=1);
 
 namespace App\Console;
 
-use App\Entity\ApiKey;
 use App\Service\ApiKeyService;
 use DateTimeImmutable;
-use DateTimeZone;
 use Symfony\Component\Console\Attribute\AsCommand;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Helper\Table;
@@ -35,7 +33,6 @@ final class ApiKeyListCommand extends Command
             return ExitCode::OK;
         }
 
-        $now = new DateTimeImmutable('now', new DateTimeZone('UTC'));
         $table = new Table($output);
         $table->setHeaders(['Key ID', 'Client', 'Created (UTC)', 'Expires (UTC)', 'Last used (UTC)', 'Revoked (UTC)', 'Status']);
         foreach ($apiKeys as $apiKey) {
@@ -46,7 +43,7 @@ final class ApiKeyListCommand extends Command
                 $this->format($apiKey->expiresAt),
                 $this->format($apiKey->lastUsedAt),
                 $this->format($apiKey->revokedAt),
-                $this->status($apiKey, $now),
+                $this->apiKeyService->status($apiKey)->value,
             ]);
         }
         $table->render();
@@ -57,14 +54,5 @@ final class ApiKeyListCommand extends Command
     private function format(?DateTimeImmutable $time): string
     {
         return $time === null ? '-' : $time->format('Y-m-d H:i');
-    }
-
-    private function status(ApiKey $apiKey, DateTimeImmutable $now): string
-    {
-        return match (true) {
-            $apiKey->revokedAt !== null => 'revoked',
-            !$apiKey->isValidAt($now) => 'expired',
-            default => 'active',
-        };
     }
 }
