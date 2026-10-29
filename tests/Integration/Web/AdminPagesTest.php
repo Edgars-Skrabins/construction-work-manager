@@ -165,19 +165,19 @@ final class AdminPagesTest extends IntegrationTestCase
         ];
 
         $this->assertRedirectsTo('/employees', $this->submit('/employees/create', $fields));
-        $list = (string) $this->request('GET', '/employees')->getBody();
+        $list = (string) $this->request('GET', '/employees?sort=-role')->getBody();
         assertStringContainsString('Employee saved.', $list);
         assertStringContainsString('<td>Pārbaude, Lapa</td>', $list);
         $this->resetServices();
         $id = (int) $this->db()->createCommand("SELECT ID FROM EMPLOYEE WHERE FIRST_NAME = N'Lapa' AND LAST_NAME = N'Pārbaude'")->queryScalar();
 
         $this->assertRedirectsTo('/employees', $this->submit("/employees/$id/edit", [...$fields, 'accessLevelId' => '2', 'birthDate' => '1991-02-03']));
-        assertStringContainsString('<td class="text-nowrap">1991-02-03</td>', (string) $this->request('GET', '/employees')->getBody());
+        assertStringContainsString('<td class="text-nowrap">1991-02-03</td>', (string) $this->request('GET', '/employees?sort=-role')->getBody());
         $this->resetServices();
         assertSame(2, (int) $this->db()->createCommand('SELECT ACCESS_LEVEL_ID FROM EMPLOYEE WHERE ID = :id', [':id' => $id])->queryScalar());
 
         $this->assertRedirectsTo('/employees', $this->submit("/employees/$id/delete", []));
-        $list = (string) $this->request('GET', '/employees')->getBody();
+        $list = (string) $this->request('GET', '/employees?sort=-role')->getBody();
         assertStringContainsString('Employee deleted.', $list);
         assertStringNotContainsString('Pārbaude, Lapa', $list);
     }
@@ -192,16 +192,16 @@ final class AdminPagesTest extends IntegrationTestCase
         $middle = (string) $this->request('GET', '/work-items?page=4')->getBody();
         preg_match_all('/class="page-link"[^>]*>([^<]+)</', $middle, $labels);
         preg_match_all('/<a class="page-link" href="[^"]*page=(\d+)"/', $middle, $targets);
-        assertSame(['Previous', '1', '2', '3', '4', '5', '6', '…', '11', 'Next'], $labels[1]);
-        assertSame(['3', '1', '2', '3', '5', '6', '11', '5'], $targets[1]);
+        assertSame(['Previous', '1', '2', '3', '4', '5', '6', '…', '12', 'Next'], $labels[1]);
+        assertSame(['3', '1', '2', '3', '5', '6', '12', '5'], $targets[1]);
 
         $first = (string) $this->request('GET', '/work-items')->getBody();
         assertStringContainsString('<li class="page-item disabled"><span class="page-link">Previous</span></li>', $first);
         assertStringNotContainsString('page=0', $first);
 
-        $last = (string) $this->request('GET', '/work-items?page=11')->getBody();
+        $last = (string) $this->request('GET', '/work-items?page=12')->getBody();
         assertStringContainsString('<li class="page-item disabled"><span class="page-link">Next</span></li>', $last);
-        assertStringNotContainsString('page=12', $last);
+        assertStringNotContainsString('page=13', $last);
     }
 
     public function testValidationErrorsAreShownUnderTheirFields(): void
@@ -262,7 +262,7 @@ final class AdminPagesTest extends IntegrationTestCase
         assertStringContainsString('The setup code is no longer shown.', $again);
         assertStringContainsString('New setup code', $again);
 
-        $list = (string) $this->request('GET', '/employees')->getBody();
+        $list = (string) $this->request('GET', '/employees?sort=-role')->getBody();
         assertStringContainsString('<td>Pārbaude, Lapa</td>', $list);
         assertStringContainsString('<td>Pending setup</td>', $list);
     }
@@ -293,9 +293,10 @@ final class AdminPagesTest extends IntegrationTestCase
     {
         $this->asAdmin();
 
-        $body = (string) $this->request('GET', '/employees')->getBody();
+        $body = (string) $this->request('GET', '/employees?sort=role')->getBody();
 
         assertStringNotContainsString('/employees/1/delete', $body);
+        assertStringContainsString('/employees/9/delete', $body);
         assertStringContainsString('/employees/4/delete', $body);
     }
 

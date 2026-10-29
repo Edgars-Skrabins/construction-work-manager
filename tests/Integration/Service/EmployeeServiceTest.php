@@ -286,7 +286,7 @@ final class EmployeeServiceTest extends IntegrationTestCase
     {
         $names = array_map(static fn(Employee $e): string => $e->fullName(), $this->employees()->managers(1, 3));
 
-        assertSame(['Ilze Kalniņa'], $names);
+        assertSame(['Kaspars Eglītis', 'Ilze Kalniņa', 'Gatis Lācis', 'Rūta Petrauskienė', 'Inga Sproģe', 'Margus Tamm'], $names);
     }
 
     /**

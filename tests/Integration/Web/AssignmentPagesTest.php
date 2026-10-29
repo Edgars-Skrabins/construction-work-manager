@@ -20,7 +20,7 @@ final class AssignmentPagesTest extends IntegrationTestCase
 {
     use WebClient;
 
-    private const int LAST_SEED_ID = 6;
+    private const int LAST_SEED_ID = 167;
 
     protected function tearDown(): void
     {
@@ -180,9 +180,11 @@ final class AssignmentPagesTest extends IntegrationTestCase
 
         $body = (string) $this->request('GET', '/assignments')->getBody();
 
-        foreach (['Mārtiņš Liepiņš', 'Anna Zariņa', 'Roberts Kalējs'] as $name) {
+        foreach (['Liis Rebane', 'Olga Smirnova', 'Ieva Vanaga', 'Ivars Dambītis', 'Viesturs Mežulis', 'Daiga Riekstiņa'] as $name) {
             assertStringContainsString($name, $body);
         }
+        assertStringContainsString('page=9"', $body);
+        assertStringNotContainsString('page=10"', $body);
     }
 
     public function testFlaggedAssignmentShowsTheAccessLevelBadge(): void

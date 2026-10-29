@@ -38,6 +38,13 @@ final class AccountSchemaTest extends IntegrationTestCase
             'employee3@mail.test',
             'employee4@mail.test',
             'employee5@mail.test',
+            'admin2@mail.test',
+            'manager3@mail.test',
+            'manager4@mail.test',
+            'employee6@mail.test',
+            'employee7@mail.test',
+            'employee8@mail.test',
+            'employee9@mail.test',
         ], $emails);
     }
 

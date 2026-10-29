@@ -1,7 +1,7 @@
 # Demo data — Spec
 
 **Type:** feature
-**Status:** ready for implementation
+**Status:** in progress
 **Last updated:** 2026-10-29
 
 # Part 1 — Business logic and usage
@@ -116,14 +116,14 @@ Made by this session without asking the user (the session was told to send quest
 
 Read Part 1 and Part 2 before starting. Work through the tasks in order and tick each one when it is done. All commands run inside Docker, with an uncommitted `compose.override.yaml` giving this stack its own project name, ports and subnet.
 
-Baseline before starting: `make check` on `main` at `6de8a4d`.
+Baseline before starting: `make check` on `main` at `6de8a4d` passes with 139 unit tests (470 assertions) and 517 integration tests (4353 assertions).
 
 ### A. Seed script
-- [ ] A1. Add `SQL/016_seed_demo_data.sql`, `SQL/down/016_seed_demo_data.sql` and `src/Migration/M261029000016SeedDemoData.php` as in 2.2. `./yii migrate:up` applies it, `migrate:down` and `migrate:up` again work, and the counts in Part 1 match.
+- [x] A1. Add `SQL/016_seed_demo_data.sql`, `SQL/down/016_seed_demo_data.sql` and `src/Migration/M261029000016SeedDemoData.php` as in 2.2. `./yii migrate:up` applies it, `migrate:down` and `migrate:up` again work, and the counts in Part 1 match.
 
 ### B. Tests
-- [ ] B1. Update and add the seed tests in `SchemaTest`, `AccountSchemaTest` and `MigrationRoundTripTest` as in 2.2.
-- [ ] B2. Run the integration suite and update every other test that assumed the old seed, with exact new values. `make check` passes.
+- [x] B1. Update and add the seed tests in `SchemaTest`, `AccountSchemaTest` and `MigrationRoundTripTest` as in 2.2.
+- [x] B2. Run the integration suite and update every other test that assumed the old seed, with exact new values. `make check` passes. Done: 139 unit tests (470 assertions) and 539 integration tests (4430 assertions). Besides the seed tests, `ListingTest` (known orders on the first page, the reverse check over all rows, 3 pages), `AdminPagesTest` (employee rows checked on `?sort=-role` and `?sort=role` so they are on page 1, 12 work-item pages), `AssignmentPagesTest` (`LAST_SEED_ID` 167, so its tear-down no longer deletes the new rows; the admin sees one employee of each manager and 9 pages), `AssignmentServiceTest` (picker lists, plus the manager without subordinates), `ConstructionSiteServiceTest`, `EmployeeServiceTest`, `ReadOnlyAssignmentsStorageTest` and `WorkItemServiceTest` (its new name was now a seeded one).
 
 ### Z. Wrap-up
 - [ ] Z1. Update `README.md` as in 2.2. `make check` passes.
