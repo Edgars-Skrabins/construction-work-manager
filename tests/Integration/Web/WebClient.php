@@ -5,8 +5,6 @@ declare(strict_types=1);
 namespace App\Tests\Integration\Web;
 
 use Psr\Http\Message\ResponseInterface;
-use Psr\Http\Message\ServerRequestFactoryInterface;
-use Yiisoft\Yii\Http\Application;
 
 trait WebClient
 {
@@ -34,19 +32,7 @@ trait WebClient
     {
         $this->resetServices();
 
-        $request = $this->service(ServerRequestFactoryInterface::class)
-            ->createServerRequest($method, 'http://localhost' . $path)
-            ->withCookieParams($this->cookies);
-        if ($method === 'POST') {
-            $request = $request->withParsedBody($body);
-        }
-        $query = parse_url($path, PHP_URL_QUERY);
-        if (is_string($query)) {
-            parse_str($query, $params);
-            $request = $request->withQueryParams($params);
-        }
-
-        $response = $this->service(Application::class)->handle($request);
+        $response = $this->handleRequest($method, $path, [], $this->cookies, $body);
 
         foreach ($response->getHeader('Set-Cookie') as $cookie) {
             [$pair] = explode(';', $cookie, 2);

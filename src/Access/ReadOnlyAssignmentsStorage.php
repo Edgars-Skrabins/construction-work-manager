@@ -4,8 +4,7 @@ declare(strict_types=1);
 
 namespace App\Access;
 
-use DateTimeImmutable;
-use DateTimeZone;
+use App\Repository\DbTime;
 use LogicException;
 use Yiisoft\Db\Connection\ConnectionInterface;
 use Yiisoft\Db\Query\Query;
@@ -132,13 +131,12 @@ final readonly class ReadOnlyAssignmentsStorage implements AssignmentsStorageInt
             ->orderBy(['ID' => SORT_ASC])
             ->all();
 
-        $utc = new DateTimeZone('UTC');
         $assignments = [];
         foreach ($rows as $row) {
             $assignments[] = new Assignment(
                 (string) $row['ID'],
                 $row['ROLE'],
-                (new DateTimeImmutable($row['ROLE_ASSIGNED_AT'], $utc))->getTimestamp(),
+                DbTime::fromUtc($row['ROLE_ASSIGNED_AT'])->getTimestamp(),
             );
         }
 

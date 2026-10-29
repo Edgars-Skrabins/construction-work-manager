@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use App\Access\Permission;
+use App\Api;
 use App\Web;
 use App\Web\Shared\Access\RequirePermission;
 use Yiisoft\Auth\Middleware\Authentication;
@@ -97,5 +98,11 @@ return [
                         ->action(Web\AssignmentDelete\Action::class)
                         ->name('assignment.delete'),
                 ),
+        ),
+    Group::create('/api/v1')
+        ->routes(
+            Route::get('/construction-sites/{id}/employees')
+                ->action(Api\V1\SiteEmployees\Action::class)
+                ->name('api.v1.site-employees'),
         ),
 ];
