@@ -1,7 +1,7 @@
 # Role permissions — Spec
 
 **Type:** feature
-**Status:** ready for implementation
+**Status:** in progress
 **Last updated:** 2026-10-29
 
 # Part 1 — Business logic and usage
@@ -62,7 +62,7 @@ Everything else is already in the stack: `yiisoft/db-mssql`, the `SQL/` migratio
 
 ### Database
 
-`SQL/007_create_rbac_items.sql` (migration `M261029000007CreateRbacItems`)
+`SQL/008_create_rbac_items.sql` (migration `M261029000008CreateRbacItems`)
 
 `RBAC_ITEM`
 - `name` NVARCHAR(126) NOT NULL: primary key `PK_RBAC_ITEM`.
@@ -92,16 +92,16 @@ The same script inserts the reference data, with `created_at` and `updated_at` s
 
 The down script drops `RBAC_ITEM_CHILD`, then `RBAC_ITEM`.
 
-`SQL/008_link_employee_role.sql` (migration `M261029000008LinkEmployeeRole`)
+`SQL/009_link_employee_role.sql` (migration `M261029000009LinkEmployeeRole`)
 
 1. Drop `CK_EMPLOYEE_ROLE`.
 2. Widen `EMPLOYEE.ROLE` to NVARCHAR(126) NOT NULL. A foreign key needs the same length as `RBAC_ITEM.name`.
-3. Add `ROLE_ITEM_TYPE AS CAST(N'role' AS NVARCHAR(10)) PERSISTED NOT NULL`.
+3. Add `ROLE_ITEM_TYPE NVARCHAR(10) NOT NULL` with `DF_EMPLOYEE_ROLE_ITEM_TYPE DEFAULT N'role'` and `CK_EMPLOYEE_ROLE_ITEM_TYPE CHECK (ROLE_ITEM_TYPE = N'role')`.
 4. Add `ROLE_ASSIGNED_AT DATETIME2(0) NOT NULL CONSTRAINT DF_EMPLOYEE_ROLE_ASSIGNED_AT DEFAULT SYSUTCDATETIME()`.
 5. In a new batch, backfill `UPDATE EMPLOYEE SET ROLE_ASSIGNED_AT = CREATED_AT`.
 6. Add `FK_EMPLOYEE_ROLE FOREIGN KEY (ROLE, ROLE_ITEM_TYPE) REFERENCES RBAC_ITEM (name, type)`. The `NO ACTION` default means a role still held by an employee can't be deleted or renamed.
 
-The down script reverses these steps in reverse order: it drops the FK, drops `ROLE_ASSIGNED_AT` and its default, drops `ROLE_ITEM_TYPE`, narrows `ROLE` back to NVARCHAR(20) and re-adds `CK_EMPLOYEE_ROLE`.
+The down script reverses these steps in reverse order: it drops the FK, drops `ROLE_ASSIGNED_AT` and its default, drops `ROLE_ITEM_TYPE` with its check and default, narrows `ROLE` back to NVARCHAR(20) and re-adds `CK_EMPLOYEE_ROLE`.
 
 `EmployeeService` (admin management spec) sets `ROLE_ASSIGNED_AT` to the current UTC time whenever it changes an employee's role.
 
@@ -140,7 +140,7 @@ The down script reverses these steps in reverse order: it drops the FK, drops `R
   - `ItemsStorageInterface` → `Yiisoft\Rbac\Db\ItemsStorage` with `tableName: 'RBAC_ITEM'` and `childrenTableName: 'RBAC_ITEM_CHILD'`.
   - `AssignmentsStorageInterface` → `App\Access\ReadOnlyAssignmentsStorage`.
   - `ManagerInterface` keeps the package's binding to `Manager` (direct permissions off, roles not included in access checks).
-- `config/web/di/application.php`: `ForbiddenMiddleware` goes into the middleware list right after `ErrorCatcher`.
+- `config/web/di/application.php`: `ForbiddenMiddleware` goes into the middleware list right before `Router`, after `SessionMiddleware`, `CsrfTokenMiddleware` and `RequestCatcherMiddleware` (decision 21).
 - Run `composer yii-config-rebuild` after adding the config file.
 
 ### Tests
@@ -168,11 +168,14 @@ The down script reverses these steps in reverse order: it drops the FK, drops `R
 - `tests/Integration/Web/ForbiddenMiddlewareTest.php`:
   - A handler that throws `ForbiddenException` gives a 403 response with `<title>403</title>` and the navbar.
   - A normal handler's response passes through unchanged.
+  - Wrapped in `SessionMiddleware` with a recording session, a 403 still commits the session and never discards it.
+  - In the configured web middleware list, it comes right before `Router` and after `SessionMiddleware` and `CsrfTokenMiddleware`.
 - Changes to existing tests:
   - `ConstraintsTest`: the `unknown role` case now expects `FK_EMPLOYEE_ROLE`. New cases, each expecting `FK_EMPLOYEE_ROLE` unless noted:
     - a permission name as a role (`N'site.read'`)
     - deleting a role still in use (`DELETE FROM RBAC_ITEM WHERE name = N'manager'`)
     - an unknown item type (expects `CK_RBAC_ITEM_TYPE`)
+    - a `ROLE_ITEM_TYPE` other than `role` (expects `CK_EMPLOYEE_ROLE_ITEM_TYPE`)
   - `SchemaTest`: `RBAC_ITEM` and `RBAC_ITEM_CHILD` exist, and every seed employee's `ROLE_ASSIGNED_AT` equals `CREATED_AT`.
   - `MigrationRoundTripTest`: `RBAC_ITEM` and `RBAC_ITEM_CHILD` are added to its table list.
 
@@ -206,7 +209,8 @@ The down script reverses these steps in reverse order: it drops the FK, drops `R
 12. **`ROLE_ASSIGNED_AT` backfilled from `CREATED_AT`:** every existing employee got their role when they were created. It is NOT NULL with a default, and `EmployeeService` sets it on role changes. Rejected: the migration time, which is less truthful. Rejected: a nullable column, which every reader would have to handle.
 13. **`RBAC_ITEM` and `RBAC_ITEM_CHILD` with the package's lowercase columns:** the table names follow the schema convention and are passed to `ItemsStorage`. The columns must keep rbac-db's names because it reads rows by those keys. Rejected: the package's default `yii_rbac_*` table names.
 14. **Composite FK for roles only:**
-    - `(ROLE, ROLE_ITEM_TYPE)` references `RBAC_ITEM(name, type)`, with `ROLE_ITEM_TYPE` a persisted computed `N'role'`, so a permission name can never be stored as a role.
+    - `(ROLE, ROLE_ITEM_TYPE)` references `RBAC_ITEM(name, type)`, with `ROLE_ITEM_TYPE` a plain column fixed to `N'role'` by a default and a CHECK, so a permission name can never be stored as a role.
+    - 2026-10-29: first built as a persisted computed column. That made every write to `EMPLOYEE` require `QUOTED_IDENTIFIER ON`, which plain `sqlcmd` doesn't set, so it was replaced by the plain column, which gives the same guarantee.
     - `ROLE` is widened to NVARCHAR(126) because SQL Server requires the same length.
     - Rejected: a plain FK on the name, which accepts permission names.
 15. **Core now, middleware later:**
@@ -219,45 +223,47 @@ The down script reverses these steps in reverse order: it drops the FK, drops `R
     - Rejected: injecting `ManagerInterface` directly.
 17. **Backed enums for names:** `Role` and `Permission` are string-backed enums, so they are type-safe and work with exhaustive `match`. A test keeps them equal to the database rows. Rejected: class constants.
 18. **Two scripts:**
-    - `007` holds the RBAC tables and their reference data (like access levels in `001`).
-    - `008` holds the `EMPLOYEE` changes.
+    - `008` holds the RBAC tables and their reference data (like access levels in `001`).
+    - `009` holds the `EMPLOYEE` changes.
     - Rejected: three scripts (separating reference data from its tables). Rejected: one script (the `EMPLOYEE` change couldn't be reviewed or reverted on its own).
 19. **`App\Access` namespace:** named after what it does (who may do what), separate from authentication (who you are). Rejected: `App\Rbac`, because the scope matrix isn't RBAC. Rejected: `App\Auth\Permission`, which would couple it to a parallel spec's layout.
 20. **`ReadOnlyAssignmentsStorage`:** the name stresses the adapter's contract. Rejected: `EmployeeRoleAssignmentsStorage`.
 21. **Own `ForbiddenMiddleware`:** it renders the 403 page like `NotFoundHandler` renders the 404 page, which is explicit and easy to test. Rejected: `ExceptionResponder` with a callable in DI config.
+    - 2026-10-29: moved from right after `ErrorCatcher` to right before `Router`. Outside `SessionMiddleware`, a `ForbiddenException` unwound through it, and it calls `discard()` on any exception, so a refused request would lose its session changes, and the 403 page rendered outside the session and CSRF context. Inside, the exception becomes a normal 403 response and the session is committed.
 22. **`LogicException` for writes:** calling a write on a read-only storage is a programming error, not a runtime condition, so the adapter throws `LogicException`.
+23. **Scripts 008 and 009 (2026-10-29):** the authentication spec, which merges first, owns `006_create_account` and `007_seed_demo_accounts`, so this spec's scripts are `008` and `009`. Neither depends on the account table. Any further script number is agreed with the coordinating session first.
 
 # Part 3 — Implementation TODO
 
 Read Part 1 and Part 2 before starting. Work through the tasks in order and tick each one when it is done.
 
-Baseline before starting: record the unit and integration test counts from `make test` in A0.
+Baseline before starting: unit 25 tests, integration 29 tests, all passing.
 
 ### A. Dependencies and RBAC items
-- [ ] A0. Run `make up` and `make test`, and record the baseline test counts on the line above.
-- [ ] A1. Run `make composer require yiisoft/rbac:^2.1.2 yiisoft/rbac-db:^2.1`, then check that `composer.json` and `composer.lock` changed and that no rbac-db migrations are picked up by `./yii migrate:up`.
-- [ ] A2. Add `SQL/007_create_rbac_items.sql`, `SQL/down/007_create_rbac_items.sql` and `src/Migration/M261029000007CreateRbacItems.php`, with the tables, constraints, roles, permissions and links from 2.2.
-- [ ] A3. Add `SQL/008_link_employee_role.sql`, `SQL/down/008_link_employee_role.sql` and `src/Migration/M261029000008LinkEmployeeRole.php`.
-- [ ] A4. Run `make migrate`, then `./yii migrate:down --limit=2` and `make migrate` again, and check the tables, the FK and the backfilled `ROLE_ASSIGNED_AT` in the dev database.
-- [ ] A5. Update `ConstraintsTest`, `SchemaTest` and `MigrationRoundTripTest` as listed in 2.2, and run `make test`.
+- [x] A0. Run `make up` and `make test`, and record the baseline test counts on the line above.
+- [x] A1. Run `make composer require yiisoft/rbac:^2.1.2 yiisoft/rbac-db:^2.1`, then check that `composer.json` and `composer.lock` changed and that no rbac-db migrations are picked up by `./yii migrate:up`.
+- [x] A2. Add `SQL/008_create_rbac_items.sql`, `SQL/down/008_create_rbac_items.sql` and `src/Migration/M261029000008CreateRbacItems.php`, with the tables, constraints, roles, permissions and links from 2.2.
+- [x] A3. Add `SQL/009_link_employee_role.sql`, `SQL/down/009_link_employee_role.sql` and `src/Migration/M261029000009LinkEmployeeRole.php`.
+- [x] A4. Run `make migrate`, then `./yii migrate:down --limit=2` and `make migrate` again, and check the tables, the FK and the backfilled `ROLE_ASSIGNED_AT` in the dev database.
+- [x] A5. Update `ConstraintsTest`, `SchemaTest` and `MigrationRoundTripTest` as listed in 2.2, and run `make test`.
 
 ### B. Names, scope and assignments adapter
-- [ ] B1. Add the `Role`, `Permission`, `Entity` and `Scope` enums in `src/Access/`.
-- [ ] B2. Add `AccessScope` and `tests/Unit/Access/AccessScopeTest.php`.
-- [ ] B3. Add `ReadOnlyAssignmentsStorage`.
-- [ ] B4. Add `config/common/di/rbac.php`, and run `composer yii-config-rebuild`.
-- [ ] B5. Add `RbacItemsTest` and `ReadOnlyAssignmentsStorageTest`, including the #10 role-change test, and run `make test`.
+- [x] B1. Add the `Role`, `Permission`, `Entity` and `Scope` enums in `src/Access/`.
+- [x] B2. Add `AccessScope` and `tests/Unit/Access/AccessScopeTest.php`.
+- [x] B3. Add `ReadOnlyAssignmentsStorage`.
+- [x] B4. Add `config/common/di/rbac.php`, and run `composer yii-config-rebuild`.
+- [x] B5. Add `RbacItemsTest` and `ReadOnlyAssignmentsStorageTest`, including the #10 role-change test, and run `make test`.
 
 ### C. Guard and 403 page
-- [ ] C1. Add `ForbiddenException` and `AccessChecker`.
-- [ ] C2. Add `PermissionMatrixTest` (48 cases) and `AccessCheckerTest`.
-- [ ] C3. Add `src/Web/Forbidden/ForbiddenMiddleware.php` and `template.twig`, and register the middleware in `config/web/di/application.php` right after `ErrorCatcher`.
-- [ ] C4. Add `tests/Integration/Web/ForbiddenMiddlewareTest.php`, and run `make test`.
+- [x] C1. Add `ForbiddenException` and `AccessChecker`.
+- [x] C2. Add `PermissionMatrixTest` (48 cases) and `AccessCheckerTest`.
+- [x] C3. Add `src/Web/Forbidden/ForbiddenMiddleware.php` and `template.twig`, and register the middleware in `config/web/di/application.php` right before `Router` (moved from right after `ErrorCatcher` on 2026-10-29, see decision 21).
+- [x] C4. Add `tests/Integration/Web/ForbiddenMiddlewareTest.php`, and run `make test`.
 
 ### D. Documentation
-- [ ] D1. In `README.md` Project structure, mention `src/Access/` and the RBAC tables in `SQL/`.
-- [ ] D2. In `CLAUDE.md` Layout and Architecture, describe `src/Access/`, `RBAC_ITEM` and `RBAC_ITEM_CHILD` with their lowercase columns, the read-only `ReadOnlyAssignmentsStorage`, `AccessChecker`, and `AccessScope` for query scope.
+- [x] D1. In `README.md` Project structure, mention `src/Access/` and the RBAC tables in `SQL/`.
+- [x] D2. In `CLAUDE.md` Layout and Architecture, describe `src/Access/`, `RBAC_ITEM` and `RBAC_ITEM_CHILD` with their lowercase columns, the read-only `ReadOnlyAssignmentsStorage`, `AccessChecker`, and `AccessScope` for query scope.
 
 ### Z. Wrap-up
 - [ ] Z1. Run `make check`: code style, PHPStan at level max and all tests pass. CI is green on the pull request.
-- [ ] Z2. Manual check: after `docker compose down -v` and `make up`, the dev database has the 3 roles, the 16 permissions and the links, an insert of an employee with role `site.read` is rejected, and `./yii migrate:down --limit=2` followed by `make migrate` round-trips cleanly.
+- [x] Z2. Manual check (2026-10-29: run on the freshly recreated test database instead of `docker compose down -v`, because the dev database volume is shared with the parallel authentication worktree): after `docker compose down -v` and `make up`, the dev database has the 3 roles, the 16 permissions and the links, an insert of an employee with role `site.read` is rejected, and `./yii migrate:down --limit=2` followed by `make migrate` round-trips cleanly.

@@ -15,8 +15,8 @@ Construction Work Manager is a work management module for construction sites. Ad
 This repository contains the whole app, which runs in Docker Compose:
 
 - `config/`: application configuration, split into `common`, `web`, `console` and per-environment parameters.
-- `src/`: application code. `src/Web/` holds the pages, each with its action and Twig template. `src/Migration/` holds the migrations and the runner that executes the SQL scripts.
-- `SQL/`: T-SQL scripts that define the schema and seed data, run in numbered order by the migrations. `SQL/down/` holds the matching rollback scripts. They also run unchanged in SSMS or sqlcmd.
+- `src/`: application code. `src/Web/` holds the pages, each with its action and Twig template. `src/Migration/` holds the migrations and the runner that executes the SQL scripts. `src/Access/` holds the role permissions: the role and permission names, the permission check used by services, and which rows each role may reach.
+- `SQL/`: T-SQL scripts that define the schema and seed data, run in numbered order by the migrations. `SQL/down/` holds the matching rollback scripts. The roles, permissions and which role has which permission are reference data in `SQL/008_create_rbac_items.sql`. The scripts also run unchanged in SSMS or sqlcmd.
 - `public/`: web root with the front controller `index.php`. The app is served at `http://localhost:8080`.
 - `assets/`: CSS published by the asset manager.
 - `tests/`: `Unit/` tests without a database and `Integration/` tests against SQL Server.
