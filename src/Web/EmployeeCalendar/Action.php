@@ -7,6 +7,7 @@ namespace App\Web\EmployeeCalendar;
 use App\Entity\AssignmentDisplayStatus;
 use App\Entity\Employee;
 use App\Service\AssignmentService;
+use App\Web\Shared\Calendar\MonthCalendar;
 use Psr\Clock\ClockInterface;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;

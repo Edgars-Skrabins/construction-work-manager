@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace App\Web\EmployeeCalendar;
+namespace App\Web\Shared\Calendar;
 
 use DateTimeImmutable;
 

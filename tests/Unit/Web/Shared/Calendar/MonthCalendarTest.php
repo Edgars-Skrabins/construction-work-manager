@@ -2,15 +2,15 @@
 
 declare(strict_types=1);
 
-namespace App\Tests\Unit\Web\EmployeeCalendar;
+namespace App\Tests\Unit\Web\Shared\Calendar;
 
 use App\Entity\Assignment;
 use App\Entity\AssignmentListItem;
 use App\Entity\AssignmentStatus;
 use App\Tests\FixedClock;
-use App\Web\EmployeeCalendar\CalendarDay;
-use App\Web\EmployeeCalendar\CalendarEntry;
-use App\Web\EmployeeCalendar\MonthCalendar;
+use App\Web\Shared\Calendar\CalendarDay;
+use App\Web\Shared\Calendar\CalendarEntry;
+use App\Web\Shared\Calendar\MonthCalendar;
 use DateTimeImmutable;
 use DateTimeZone;
 use PHPUnit\Framework\Attributes\DataProvider;
