@@ -14,7 +14,7 @@
     </select>
     <label class="visually-hidden" for="calendar-year">{{ t('Year') }}</label>
     <select class="form-select form-select-sm w-auto" id="calendar-year" name="year" data-select-plain>
-        {% for year in calendar.years() %}
+        {% for year in years %}
             <option value="{{ year }}"{% if year == calendar.month()|date('Y') %} selected{% endif %}>{{ year }}</option>
         {% endfor %}
     </select>

@@ -114,6 +114,25 @@ final readonly class AssignmentRepository implements AssignmentRepositoryInterfa
         return $query->all();
     }
 
+    public function yearRange(int $viewerId, Scope $scope, ?int $employeeId): ?array
+    {
+        $query = $this->scoped($viewerId, $scope)
+            ->select([
+                'FIRST_YEAR' => new Expression('MIN(YEAR(a.START_DATE))'),
+                'LAST_YEAR' => new Expression('MAX(YEAR(a.END_DATE))'),
+            ])
+            ->andWhere(['a.STATUS' => [AssignmentStatus::Active->value, AssignmentStatus::Done->value]]);
+        if ($employeeId !== null) {
+            $query->andWhere(['a.EMPLOYEE_ID' => $employeeId]);
+        }
+        /** @var array{FIRST_YEAR: int|string|null, LAST_YEAR: int|string|null} $row */
+        $row = $query->one();
+
+        return $row['FIRST_YEAR'] !== null && $row['LAST_YEAR'] !== null
+            ? [(int) $row['FIRST_YEAR'], (int) $row['LAST_YEAR']]
+            : null;
+    }
+
     public function findAssignedWork(int $employeeId): array
     {
         /** @var list<AssignedWork> */

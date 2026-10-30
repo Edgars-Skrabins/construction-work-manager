@@ -272,6 +272,11 @@ final class AssignmentLockingTest extends IntegrationTestCase
                 return $this->assignments->listInPeriod($viewerId, $scope, $from, $to, $employeeId);
             }
 
+            public function yearRange(int $viewerId, Scope $scope, ?int $employeeId): ?array
+            {
+                return $this->assignments->yearRange($viewerId, $scope, $employeeId);
+            }
+
             public function findAssignedWork(int $employeeId): array
             {
                 return $this->assignments->findAssignedWork($employeeId);

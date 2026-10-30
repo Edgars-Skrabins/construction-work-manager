@@ -448,6 +448,31 @@ final class AssignmentRepositoryTest extends IntegrationTestCase
         assertSame([], $this->idsInPeriod(2, Scope::Subordinates, 7));
     }
 
+    public function testYearRangeRunsFromTheFirstStartToTheLastEndOfTheViewersOwnWork(): void
+    {
+        $this->insert(4, 1, 1, '2040-12-20', '2041-01-05');
+        $cancelled = $this->insert(4, 2, 1, '2045-01-01', '2045-01-02');
+        $this->repository()->update($cancelled, 4, new DateTimeImmutable('2045-01-01'), new DateTimeImmutable('2045-01-02'), AssignmentStatus::Cancelled);
+
+        assertSame([2040, 2041], $this->repository()->yearRange(4, Scope::Own, null));
+    }
+
+    public function testYearRangeIsScopedAndFollowsTheEmployeeFilter(): void
+    {
+        $this->insert(4, 1, 1, '2041-03-01', '2041-03-02');
+        $this->insert(7, 1, 1, '2043-03-01', '2043-03-02');
+
+        assertSame(2041, $this->repository()->yearRange(2, Scope::Subordinates, null)[1] ?? null);
+        assertSame(2043, $this->repository()->yearRange(1, Scope::All, null)[1] ?? null);
+        assertSame(2041, $this->repository()->yearRange(2, Scope::Subordinates, 4)[1] ?? null);
+        assertNull($this->repository()->yearRange(2, Scope::Subordinates, 7));
+    }
+
+    public function testYearRangeIsEmptyWithoutVisibleAssignments(): void
+    {
+        assertNull($this->repository()->yearRange(1, Scope::Own, null));
+    }
+
     /**
      * @return list<int>
      */

@@ -128,23 +128,30 @@ final class MonthCalendarTest extends TestCase
         }
     }
 
-    public function testYearsRunFiveYearsAroundTheCurrentYear(): void
+    public function testYearsWithoutAssignmentsAreTheCurrentYearAndOneEachSide(): void
     {
-        assertSame(range(2021, 2031), $this->calendar('2026-03')->years());
-        assertSame(range(2021, 2031), $this->calendar('2021-01')->years());
+        assertSame([2025, 2026, 2027], $this->calendar('2026-03')->years(null));
+    }
+
+    public function testYearsSpanTheAssignedYearsAndAlwaysTheCurrentYearAndOneEachSide(): void
+    {
+        assertSame(range(2022, 2027), $this->calendar('2026-03')->years([2022, 2024]));
+        assertSame(range(2025, 2030), $this->calendar('2026-03')->years([2026, 2030]));
+        assertSame([2025, 2026, 2027], $this->calendar('2026-03')->years([2026, 2026]));
     }
 
     public function testYearsIncludeTheShownYearOutsideTheRange(): void
     {
-        assertSame([...range(2021, 2031), 2040], $this->calendar('2040-05')->years());
-        assertSame([2000, ...range(2021, 2031)], $this->calendar('2000-01')->years());
+        assertSame([2025, 2026, 2027, 2040], $this->calendar('2040-05')->years(null));
+        assertSame([2000, ...range(2023, 2027)], $this->calendar('2000-01')->years([2023, 2025]));
     }
 
     public function testYearsStayWithinTheAcceptedRange(): void
     {
-        $nearEnd = MonthCalendar::create(null, new DateTimeImmutable('2098-06-01 12:00:00', new DateTimeZone('Europe/Riga')));
+        $nearEnd = MonthCalendar::create(null, new DateTimeImmutable('2100-06-01 12:00:00', new DateTimeZone('Europe/Riga')));
 
-        assertSame(range(2093, 2100), $nearEnd->years());
+        assertSame([2099, 2100], $nearEnd->years(null));
+        assertSame(range(2000, 2027), $this->calendar('2026-03')->years([1990, 2026]));
     }
 
     /**

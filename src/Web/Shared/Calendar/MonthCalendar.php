@@ -13,7 +13,7 @@ final readonly class MonthCalendar
     private const string MONTH_FORMAT = 'Y-m';
     private const int FIRST_YEAR = 2000;
     private const int LAST_YEAR = 2100;
-    private const int YEARS_AROUND = 5;
+    private const int YEARS_AROUND = 1;
 
     private function __construct(
         private DateTimeImmutable $month,
@@ -61,12 +61,15 @@ final readonly class MonthCalendar
     }
 
     /**
+     * @param array{int, int}|null $assignedYears
      * @return list<int>
      */
-    public function years(): array
+    public function years(?array $assignedYears): array
     {
         $current = (int) $this->today->format('Y');
-        $years = range(max(self::FIRST_YEAR, $current - self::YEARS_AROUND), min(self::LAST_YEAR, $current + self::YEARS_AROUND));
+        $first = min($assignedYears[0] ?? $current, $current - self::YEARS_AROUND);
+        $last = max($assignedYears[1] ?? $current, $current + self::YEARS_AROUND);
+        $years = range(max(self::FIRST_YEAR, $first), min(self::LAST_YEAR, $last));
         $years[] = (int) $this->month->format('Y');
         $years = array_values(array_unique($years));
         sort($years);
