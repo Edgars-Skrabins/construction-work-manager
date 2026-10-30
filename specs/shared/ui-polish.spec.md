@@ -1,7 +1,7 @@
 # UI polish — Spec
 
 **Type:** feature
-**Status:** in progress
+**Status:** done
 **Last updated:** 2026-10-30
 
 # Part 1 — Business logic and usage
@@ -17,7 +17,8 @@ After the UI shell, calendar and modal work, a review of every web page (screens
 7. **Hierarchy on My assignments is upside down.** The construction site, the "where" an employee most needs, is a small grey uppercase label above bold work item names, so it reads like a caption rather than the section heading it is. The History disclosure is an unstyled native `<summary>`.
 8. **Two palette values fail WCAG.** Form field borders (`--bs-border-color`, `#34322e` dark, `#d9d4cb` light) are about 1.5:1 against the page and card, below the 3:1 that WCAG 1.4.11 asks of a component's boundary, so an empty input on a card is barely visible. In the dark theme Bootstrap's red `#dc3545`, used as text by the Delete row buttons and the "Access level too low" badge, is 3.76:1 on the card surface, below AA's 4.5:1.
 9. **The calendar month navigation is cluttered** (raised by the user after the first review): "‹ Previous", the month and year as a heading, "Next ›", "Today", then a month select, a year number field and a "Go" button. The month and year appear twice, there are three ways to move, and the year is a free number field with spinner arrows. On the Work calendar the employee filter needs its own "Show" button too.
-10. **Small inconsistencies:** the login and set-password titles are weight 500 while every other page title is 600; the "Login pending" alert on the employee form doesn't wrap, so on phones its text is squeezed beside the button; table numbers (dates, areas) use proportional digits, so columns of dates don't line up; text selection and native checkboxes/radios use the browser's blue.
+10. **Row actions crowd every list** (raised by the user after the first review): each row shows Edit, Reassign and Delete buttons, so a page of 20 rows shows up to 60 buttons and the actions column outweighs the data.
+11. **Small inconsistencies:** the login and set-password titles are weight 500 while every other page title is 600; the "Login pending" alert on the employee form doesn't wrap, so on phones its text is squeezed beside the button; table numbers (dates, areas) use proportional digits, so columns of dates don't line up; text selection and native checkboxes/radios use the browser's blue.
 
 What should happen instead:
 
@@ -34,7 +35,9 @@ What should happen instead:
   9. Inputs, selects and checkboxes have a border of at least 3:1 against both the page and the card in both themes; cards, tables and dividers keep their quiet borders. Red text (outline Delete buttons, `text-danger`, the access badge, the Overdue status) is at least 4.5:1 in both themes; filled red buttons keep `#dc3545` with white text (4.53:1).
   10. The auth card titles use the same 600 weight as the other page titles. The "Login pending" alert wraps so its button drops below the text on phones. Numbers in tables use tabular digits. Text selection is amber-tinted, and native checkboxes, radios and range controls use the amber accent.
   11. The Work calendar and My work calendar show one month picker: a month select with all twelve months and a year select listing five years back to five years ahead of the current year (plus the shown year if it lies outside that range). Choosing a month or a year opens that month at once, keeping the employee filter. Without a month in the address the current month is shown and selected. There is no Previous, Next, Today or Go control and no separate month heading. On the Work calendar choosing an employee also applies at once, without the "Show" button. Without JavaScript the Go and Show buttons are shown so the forms still submit.
-  12. No page scrolls sideways at 375, 768, 1024 or 1280 px.
+  12. On phones and small tablets (below 992 px) the Actions column is hidden. Tapping a row, or focusing it with Tab and pressing Enter or Space, opens a small dialog titled "Actions for …" with that row's actions as full-width 44 px buttons; choosing one opens the same edit, reassign or delete modal as the row buttons. Closing returns focus to the row. Without JavaScript the Actions column stays visible.
+  13. On devices with a mouse, a list row's action buttons are hidden until the pointer is over that row, and the row gets a subtle highlight; they also appear while one of them has keyboard focus, so Tab still reaches and shows them. On touch devices (no hover) they stay visible.
+  14. No page scrolls sideways at 375, 768, 1024 or 1280 px.
 - **Rules:**
   - Refinement only: Bootstrap 5.3, the amber/stone identity, the layout of every page and all behaviour stay as they are.
   - Colours are CSS custom properties defined per theme in `assets/main/site.css`; no hard-coded colours in templates.
@@ -96,6 +99,13 @@ No new dependencies. Bootstrap 5.3.8 utilities, colour modes and CSS variables, 
 - `assets/calendar/calendar.js` adds `calendar-picker-enhanced` to each `form[data-calendar-picker]` (its existing change handler already submits on a select change); `calendar.css` hides `.calendar-picker-enhanced .calendar-picker-submit` and drops `.calendar-year`.
 - The `Months` message (the old nav's label) is unused and removed from all six message files.
 
+### Row actions on hover
+
+- `src/Web/Shared/Listing/row-actions.twig`: the group gets class `list-row-actions`.
+- `assets/listing/listing.css`: inside `@media (hover: hover) and (pointer: fine)`, `.list-row-actions` is `opacity: 0` and becomes `1` on `tr:hover` and `tr:focus-within`, with a short fade (none under `prefers-reduced-motion`); a row with actions gets `--bs-table-bg-state` from the secondary background on hover. Opacity, not `visibility` or `display`, keeps the buttons in the tab order.
+- Below 992 px: `src/Web/Shared/Listing/row-actions-sheet.twig` (new) is a small Bootstrap modal (`#row-actions-sheet`, `data-row-actions-sheet`) included once by each list template after `modal.twig`. `assets/listing/row-actions.js` (new, in `ListingAsset`) adds `list-compact` to list tables while `(max-width: 991.98px)` matches, makes each row with actions focusable (`tabindex="0"`) and the hidden action links `tabindex="-1"`, opens the sheet on a row click or Enter/Space with the row's actions as full-width buttons, and on choosing one hides the sheet and then clicks the original link so `modal.js` handles it as before. Focus that lands on a hidden action link (as `modal.js` returns focus) moves to its row. A `MutationObserver` on `[data-list-results]` reapplies this after instant search swaps the rows. `listing.css` visually hides `.list-compact .list-actions` (the links stay in the accessibility tree), shows a pointer cursor and an amber focus outline on rows.
+- `tests/Integration/Web/ListDesignTest.php`: the row-actions markup with the new class, and the sheet markup and script on every list.
+
 ### Translations
 
 - New messages `sorted ascending` and `sorted descending` in all six `messages/*/app.php` files: lv `kārtots augošā secībā` / `kārtots dilstošā secībā`, lt `surikiuota didėjančia tvarka` / `surikiuota mažėjančia tvarka`, et `sorditud kasvavalt` / `sorditud kahanevalt`, ru `отсортировано по возрастанию` / `отсортировано по убыванию`, fi `lajiteltu nousevasti` / `lajiteltu laskevasti`, sv `sorterad stigande` / `sorterad fallande`.
@@ -124,7 +134,9 @@ All decided by this session on the coordinator's instruction not to interview th
 9. **The 403 and 404 pages, the footer, the calendar grid and the modal frame stay as they are**: the review found them consistent with the rest; they pick up the shared focus, touch-target and token changes.
 10. **The colour scheme stays; only measured failures change** (asked by the user mid-review: suggest a different scheme only with an objective reason). Every text pair in both palettes was measured: body, secondary, accent and link text all pass AA (secondary text 5.2–6.8:1, accent text 6.6–7.9:1). The two failures were field borders (1.5:1, WCAG 1.4.11) and dark-theme red text (3.76:1), fixed through tokens. Rejected: warming the dark page background from neutral `#121212` to match the warm surfaces, which changes no measured value and is taste; and raising the card/page separation in dark (1.10:1), because cards also carry borders or stripes.
 11. **Calendar navigation is two selects only** (user request, 2026-10-30): month and year, applied on change, current month by default. Previous, Next and Today are removed as the user suggested, accepting that crossing a year boundary takes two picks. The year is a select (scrollable through the searchable select) of current −5 to +5, wide enough for history and planning while staying short; a shown year outside it, from an old link, is added so the select never lies. The employee filter on the Work calendar applies on change too, for the same reason. Rejected: icon-only arrows beside the selects, which bring back the duplicated navigation the user called out.
-12. **No PRODUCT.md or DESIGN.md** is added; `CLAUDE.md` and the specs already describe the design system.
+12. **Row actions show on hover** (user request, 2026-10-30), but only where hover exists: on touch screens they stay visible because there is no hover to reveal them, and keyboard focus reveals them too, so no one loses access. Hidden with opacity so screen readers and Tab still reach them. Rejected: a "⋯" overflow menu per row, which adds a click to every action.
+13. **Tap a row for actions below 992 px** (user request, 2026-10-30): the three buttons don't fit beside the data on phones and small tablets, so the row itself becomes the trigger and its actions open in a small dialog. 992 px (Bootstrap `lg`) is where the tables start needing horizontal scroll for the actions column. The dialog reuses the existing "Actions for {name}" and "Close" texts, so no new strings. Rejected: a per-row "⋯" button (still a control in every row) and swipe gestures (not discoverable, no keyboard path).
+14. **No PRODUCT.md or DESIGN.md** is added; `CLAUDE.md` and the specs already describe the design system.
 
 # Part 3 — Implementation TODO
 
@@ -133,25 +145,29 @@ Read Part 1 and Part 2 before starting. Work through the tasks in order and tick
 Baseline before starting: record the test counts from `make check` in A0.
 
 ### A. Navbar
-- [ ] A0. Start the stack, run `make check`, and record the test counts here.
-- [ ] A1. Reorder the navbar in `layout.twig` as in 2.2 (logout form last in the control group from `xl`, second `form="logout-form"` button in the collapsed account row, truncated name with `title`) and adjust the navbar styles in `site.css`.
-- [ ] A2. Update `LayoutTest` for the new order and the single logout form.
+- [x] A0. Start the stack, run `make check`, and record the test counts here. Baseline: `main` at `81f2da3` was green in CI; the first local run already included this branch's first edits, so no separate count was recorded.
+- [x] A1. Reorder the navbar in `layout.twig` as in 2.2 (logout form last in the control group from `xl`, second `form="logout-form"` button in the collapsed account row, truncated name with `title`) and adjust the navbar styles in `site.css`.
+- [x] A2. Update `LayoutTest` for the new order and the single logout form.
 
 ### B. Tokens, states and touch targets
-- [ ] B1. Add the per-theme status, info, focus, field border and danger tokens, `.btn-outline-danger`, `.status-badge`, the selection, accent and tabular-digit rules, and the focus-visible rules to `site.css`.
-- [ ] B2. Change `AssignmentDisplayStatus::badgeClass()` and update `AssignmentDisplayStatusTest`, `MyAssignmentsPageTest` and `LanguageTest`.
-- [ ] B3. Add the phone touch-target rules to `site.css`.
+- [x] B1. Add the per-theme status, info, focus, field border and danger tokens, `.btn-outline-danger`, `.status-badge`, the selection, accent and tabular-digit rules, and the focus-visible rules to `site.css`.
+- [x] B2. Change `AssignmentDisplayStatus::badgeClass()` and update `AssignmentDisplayStatusTest`, `MyAssignmentsPageTest` and `LanguageTest`.
+- [x] B3. Add the phone touch-target rules to `site.css`.
 
 ### C. Page details
-- [ ] C1. Sort link icons and the visually hidden sort state in `sort-link.twig`, its styles, the two new messages in all six files, and the `AdminPagesTest` update.
-- [ ] C2. My assignments site heading and History toggle, with their styles and the `MyAssignmentsPageTest` update.
-- [ ] C3. Auth title weight, and the wrapping "Login pending" alert in `EmployeeForm/template.twig`.
+- [x] C1. Sort link icons and the visually hidden sort state in `sort-link.twig`, its styles, the two new messages in all six files, and the `AdminPagesTest` update.
+- [x] C2. My assignments site heading and History toggle, with their styles and the `MyAssignmentsPageTest` update.
+- [x] C3. Auth title weight, and the wrapping "Login pending" alert in `EmployeeForm/template.twig`.
 
 ### D. Calendar month picker
-- [ ] D1. `MonthCalendar::years()` and removal of `previousMonth()`, `nextMonth()`, `currentMonth()`, with `MonthCalendarTest` updated.
-- [ ] D2. Rewrite `month-nav.twig`, auto-apply the employee filter on the Work calendar, the enhanced class in `calendar.js` and its CSS, remove the `Months` message, and update `ManagerTeamPagesTest` and `MyAssignmentsCalendarPageTest`.
+- [x] D1. `MonthCalendar::years()` and removal of `previousMonth()`, `nextMonth()`, `currentMonth()`, with `MonthCalendarTest` updated.
+- [x] D2. Rewrite `month-nav.twig`, auto-apply the employee filter on the Work calendar, the enhanced class in `calendar.js` and its CSS, remove the `Months` message, and update `ManagerTeamPagesTest` and `MyAssignmentsCalendarPageTest`.
+
+### E. Row actions on hover
+- [x] E1. Add `list-row-actions` to `row-actions.twig`, the hover, focus and touch rules and the row highlight to `listing.css`, and update `ListDesignTest`.
+- [x] E2. Add `row-actions-sheet.twig` to the four lists, `row-actions.js` to `ListingAsset`, the compact styles to `listing.css`, and the `ListDesignTest` sheet test.
 
 ### Z. Wrap-up
-- [ ] Z1. `make check` passes; record the counts.
-- [ ] Z2. Re-screenshot every page at 375, 768, 1024 and 1280 px in both themes for guest, admin, manager and employee, including the modals, and compare with the before set: navbar order, badges, focus, no sideways scroll, 44 px targets at 375 px.
-- [ ] Z3. Update `CLAUDE.md` if it describes anything changed here (the navbar order, status colours).
+- [x] Z1. `make check` passes: 307 unit tests (4243 assertions) and 883 integration tests (9025 assertions).
+- [x] Z2. Re-screenshot every page at 375, 768, 1024 and 1280 px in both themes for guest, admin, manager and employee, including the modals, and compare with the before set: navbar order, badges, focus, no sideways scroll, 44 px targets at 375 px.
+- [x] Z3. Update `CLAUDE.md` if it describes anything changed here (the navbar order, status colours).
