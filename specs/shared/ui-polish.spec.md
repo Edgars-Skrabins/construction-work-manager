@@ -18,7 +18,8 @@ After the UI shell, calendar and modal work, a review of every web page (screens
 8. **Two palette values fail WCAG.** Form field borders (`--bs-border-color`, `#34322e` dark, `#d9d4cb` light) are about 1.5:1 against the page and card, below the 3:1 that WCAG 1.4.11 asks of a component's boundary, so an empty input on a card is barely visible. In the dark theme Bootstrap's red `#dc3545`, used as text by the Delete row buttons and the "Access level too low" badge, is 3.76:1 on the card surface, below AA's 4.5:1.
 9. **The calendar month navigation is cluttered** (raised by the user after the first review): "‹ Previous", the month and year as a heading, "Next ›", "Today", then a month select, a year number field and a "Go" button. The month and year appear twice, there are three ways to move, and the year is a free number field with spinner arrows. On the Work calendar the employee filter needs its own "Show" button too.
 10. **Row actions crowd every list** (raised by the user after the first review): each row shows Edit, Reassign and Delete buttons, so a page of 20 rows shows up to 60 buttons and the actions column outweighs the data.
-11. **Small inconsistencies:** the login and set-password titles are weight 500 while every other page title is 600; the "Login pending" alert on the employee form doesn't wrap, so on phones its text is squeezed beside the button; table numbers (dates, areas) use proportional digits, so columns of dates don't line up; text selection and native checkboxes/radios use the browser's blue.
+11. **No quick way to see one employee's assignments** (raised by the user): the Assignments list has exact `employee`, `workItem` and `site` filters, but they are only reachable from other pages. The user's first idea was typing the name into the search box. The searchable year and month menus also open with a Search box that is noise for 11 or 12 short options.
+12. **Small inconsistencies:** the login and set-password titles are weight 500 while every other page title is 600; the "Login pending" alert on the employee form doesn't wrap, so on phones its text is squeezed beside the button; table numbers (dates, areas) use proportional digits, so columns of dates don't line up; text selection and native checkboxes/radios use the browser's blue.
 
 What should happen instead:
 
@@ -37,7 +38,9 @@ What should happen instead:
   11. The Work calendar and My work calendar show one month picker: a month select with all twelve months and a year select listing five years back to five years ahead of the current year (plus the shown year if it lies outside that range). Choosing a month or a year opens that month at once, keeping the employee filter. Without a month in the address the current month is shown and selected. There is no Previous, Next, Today or Go control and no separate month heading. On the Work calendar choosing an employee also applies at once, without the "Show" button. Without JavaScript the Go and Show buttons are shown so the forms still submit.
   12. On phones and small tablets (below 992 px) the Actions column is hidden. Tapping a row, or focusing it with Tab and pressing Enter or Space, opens a small dialog titled "Actions for …" with that row's actions as full-width 44 px buttons; choosing one opens the same edit, reassign or delete modal as the row buttons. Closing returns focus to the row. Without JavaScript the Actions column stays visible.
   13. On devices with a mouse, a list row's action buttons are hidden until the pointer is over that row, and the row gets a subtle highlight; they also appear while one of them has keyboard focus, so Tab still reaches and shows them. On touch devices (no hover) they stay visible.
-  14. No page scrolls sideways at 375, 768, 1024 or 1280 px.
+  14. On the Assignments list each row's employee, work item and construction site name links to the list filtered to it (the existing exact filters, shown as a removable chip), keeping the current sort, search text and other filters, from page 1. The links are calm: body-coloured text with a faint dotted underline that turns solid and accent-coloured on hover or keyboard focus. Screen readers hear the name followed by "Filter assignments by this". Below 992 px, where tapping a row opens its actions, the dialog also lists the three filters as "Employee: …", "Work item: …" and "Construction site: …".
+  15. The calendar's month and year menus open without a Search box.
+  16. No page scrolls sideways at 375, 768, 1024 or 1280 px.
 - **Rules:**
   - Refinement only: Bootstrap 5.3, the amber/stone identity, the layout of every page and all behaviour stay as they are.
   - Colours are CSS custom properties defined per theme in `assets/main/site.css`; no hard-coded colours in templates.
@@ -106,6 +109,16 @@ No new dependencies. Bootstrap 5.3.8 utilities, colour modes and CSS variables, 
 - Below 992 px: `src/Web/Shared/Listing/row-actions-sheet.twig` (new) is a small Bootstrap modal (`#row-actions-sheet`, `data-row-actions-sheet`) included once by each list template after `modal.twig`. `assets/listing/row-actions.js` (new, in `ListingAsset`) adds `list-compact` to list tables while `(max-width: 991.98px)` matches, makes each row with actions focusable (`tabindex="0"`) and the hidden action links `tabindex="-1"`, opens the sheet on a row click or Enter/Space with the row's actions as full-width buttons, and on choosing one hides the sheet and then clicks the original link so `modal.js` handles it as before. Focus that lands on a hidden action link (as `modal.js` returns focus) moves to its row. A `MutationObserver` on `[data-list-results]` reapplies this after instant search swaps the rows. `listing.css` visually hides `.list-compact .list-actions` (the links stay in the accessibility tree), shows a pointer cursor and an amber focus outline on rows.
 - `tests/Integration/Web/ListDesignTest.php`: the row-actions markup with the new class, and the sheet markup and script on every list.
 
+### Filter links on the Assignments list
+
+- `src/Web/AssignmentList/filter-link.twig` (new, page-local like `MyAssignments/period-status.twig`): `<a class="list-filter-link" href="…" data-filter-label="{label}: {name}">` around the truncated name, plus a visually hidden " Filter assignments by this". The URL is the list with the current `sort`, `q` and `filters` merged with the row's filter id (`assignment.employeeId`, `workItemId`, `constructionSiteId`), no `page`.
+- `src/Web/AssignmentList/template.twig`: `filterLabels` moves above the chips so both use it; the three name cells include `filter-link.twig`.
+- `assets/listing/listing.css`: `.list-filter-link` (inherit colour, dotted underline from the secondary colour at 60%, solid in the link-hover colour on hover and focus-visible); in compact mode rows with actions get `pointer-events: none` on their filter links so a tap opens the dialog.
+- `assets/listing/row-actions.js`: the dialog lists the row's filter links after a divider, labelled by `data-filter-label`; compact mode also gives them `tabindex="-1"` and moves focus that lands on them to the row.
+- New message `Filter assignments by this` in all six files, after `No assignments match the filter.`: lv `Filtrēt uzdevumus pēc šī`, lt `Filtruoti užduotis pagal tai`, et `Filtreeri tööülesandeid selle järgi`, ru `Отфильтровать задания по этому значению`, fi `Suodata työtehtävät tämän mukaan`, sv `Filtrera uppdrag efter detta`.
+- `assets/select/select.js`: a select with `data-select-plain` gets no search box; `month-nav.twig` sets it on the month and year selects.
+- `tests/Integration/Web/AssignmentPagesTest.php`: the three links keep sort, `q` and the other filters, and point at the row's own ids; the invalid-filter test checks for no chip instead of no "Employee: " text.
+
 ### Translations
 
 - New messages `sorted ascending` and `sorted descending` in all six `messages/*/app.php` files: lv `kārtots augošā secībā` / `kārtots dilstošā secībā`, lt `surikiuota didėjančia tvarka` / `surikiuota mažėjančia tvarka`, et `sorditud kasvavalt` / `sorditud kahanevalt`, ru `отсортировано по возрастанию` / `отсортировано по убыванию`, fi `lajiteltu nousevasti` / `lajiteltu laskevasti`, sv `sorterad stigande` / `sorterad fallande`.
@@ -136,7 +149,9 @@ All decided by this session on the coordinator's instruction not to interview th
 11. **Calendar navigation is two selects only** (user request, 2026-10-30): month and year, applied on change, current month by default. Previous, Next and Today are removed as the user suggested, accepting that crossing a year boundary takes two picks. The year is a select (scrollable through the searchable select) of current −5 to +5, wide enough for history and planning while staying short; a shown year outside it, from an old link, is added so the select never lies. The employee filter on the Work calendar applies on change too, for the same reason. Rejected: icon-only arrows beside the selects, which bring back the duplicated navigation the user called out.
 12. **Row actions show on hover** (user request, 2026-10-30), but only where hover exists: on touch screens they stay visible because there is no hover to reveal them, and keyboard focus reveals them too, so no one loses access. Hidden with opacity so screen readers and Tab still reach them. Rejected: a "⋯" overflow menu per row, which adds a click to every action.
 13. **Tap a row for actions below 992 px** (user request, 2026-10-30): the three buttons don't fit beside the data on phones and small tablets, so the row itself becomes the trigger and its actions open in a small dialog. 992 px (Bootstrap `lg`) is where the tables start needing horizontal scroll for the actions column. The dialog reuses the existing "Actions for {name}" and "Close" texts, so no new strings. Rejected: a per-row "⋯" button (still a control in every row) and swipe gestures (not discoverable, no keyboard path).
-14. **No PRODUCT.md or DESIGN.md** is added; `CLAUDE.md` and the specs already describe the design system.
+14. **Names link to the exact filters, not to a search** (user request via the coordinator, 2026-10-30): a filter is exact, so two people with the same name don't mix and the name doesn't also match site or work item text, and the chip shows what is filtered and clears it. All three columns get links for consistency. Links keep `q` because filter and search combine. Rejected: putting the name into the search box, the user's first idea, for the reasons above.
+15. **Below 992 px the row actions stay behind a row tap** even though the coordinator suggested always-visible buttons below 768 px: the user asked directly for the row tap on phones and small tablets after seeing the buttons there.
+16. **No PRODUCT.md or DESIGN.md** is added; `CLAUDE.md` and the specs already describe the design system.
 
 # Part 3 — Implementation TODO
 
@@ -167,7 +182,10 @@ Baseline before starting: record the test counts from `make check` in A0.
 - [x] E1. Add `list-row-actions` to `row-actions.twig`, the hover, focus and touch rules and the row highlight to `listing.css`, and update `ListDesignTest`.
 - [x] E2. Add `row-actions-sheet.twig` to the four lists, `row-actions.js` to `ListingAsset`, the compact styles to `listing.css`, and the `ListDesignTest` sheet test.
 
+### F. Filter links
+- [x] F1. Add `filter-link.twig` to the three name columns, its styles, the dialog's filter items, the new message in all six files, `data-select-plain` for the calendar selects, and the `AssignmentPagesTest` link tests.
+
 ### Z. Wrap-up
-- [x] Z1. `make check` passes: 307 unit tests (4243 assertions) and 883 integration tests (9025 assertions).
+- [x] Z1. `make check` passes: 307 unit tests (4261 assertions) and 885 integration tests (9044 assertions).
 - [x] Z2. Re-screenshot every page at 375, 768, 1024 and 1280 px in both themes for guest, admin, manager and employee, including the modals, and compare with the before set: navbar order, badges, focus, no sideways scroll, 44 px targets at 375 px.
 - [x] Z3. Update `CLAUDE.md` if it describes anything changed here (the navbar order, status colours).
