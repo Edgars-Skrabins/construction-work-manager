@@ -1,5 +1,6 @@
 (() => {
     const visibleRows = 8;
+    const pageSize = 20;
     const enhanced = new WeakSet();
     const pickers = new Map();
     let generatedId = 0;
@@ -112,18 +113,17 @@
             }
         };
 
-        const render = () => {
-            const query = normalize((search?.value ?? '').trim());
-            list.replaceChildren();
-            highlighted = null;
-            [...select.options].forEach((option, index) => {
-                if (option.hidden || (query !== '' && (option.value === '' || !normalize(option.text).includes(query)))) {
-                    return;
-                }
+        let pending = [];
+        let total = 0;
+
+        const appendItems = (count) => {
+            for (const [option, index] of pending.splice(0, count)) {
                 const item = element('li', 'dropdown-item select-picker-option', {
                     role: 'option',
                     id: `${id}-picker-option-${index}`,
                     'aria-selected': option.selected ? 'true' : 'false',
+                    'aria-posinset': String(list.children.length + 1),
+                    'aria-setsize': String(total),
                 });
                 if (option.value === '') {
                     item.classList.add('select-picker-placeholder');
@@ -134,9 +134,22 @@
                 item.textContent = option.text;
                 optionOf.set(item, option);
                 list.append(item);
-            });
-            empty.textContent = list.children.length === 0 ? (texts.selectNoMatches ?? 'No matches') : '';
-            const selected = query === '' ? list.querySelector('[aria-selected="true"]:not([aria-disabled="true"])') : null;
+            }
+        };
+
+        const render = () => {
+            const query = normalize((search?.value ?? '').trim());
+            list.replaceChildren();
+            list.scrollTop = 0;
+            highlighted = null;
+            pending = [...select.options]
+                .map((option, index) => [option, index])
+                .filter(([option]) => !option.hidden && (query === '' || (option.value !== '' && normalize(option.text).includes(query))));
+            total = pending.length;
+            const chosen = query === '' ? pending.findIndex(([option]) => option.selected && !option.disabled) : -1;
+            appendItems(Math.max(pageSize, chosen + 1));
+            empty.textContent = total === 0 ? (texts.selectNoMatches ?? 'No matches') : '';
+            const selected = chosen === -1 ? null : list.querySelector('[aria-selected="true"]:not([aria-disabled="true"])');
             highlight(selected ?? enabledItems()[0] ?? null);
         };
 
@@ -217,7 +230,11 @@
         };
 
         const move = (step) => {
-            const enabled = enabledItems();
+            let enabled = enabledItems();
+            while (step > 0 && pending.length > 0 && enabled.indexOf(highlighted) >= enabled.length - 1) {
+                appendItems(pageSize);
+                enabled = enabledItems();
+            }
             if (enabled.length === 0) {
                 return;
             }
@@ -254,6 +271,7 @@
                 case 'End':
                     if (search === null) {
                         event.preventDefault();
+                        appendItems(pending.length);
                         const enabled = enabledItems();
                         highlight((event.key === 'Home' ? enabled[0] : enabled[enabled.length - 1]) ?? null);
                     }
@@ -289,6 +307,11 @@
             const item = event.target.closest('[role="option"]');
             if (item !== null && item !== highlighted && item.getAttribute('aria-disabled') !== 'true') {
                 highlight(item, false);
+            }
+        });
+        list.addEventListener('scroll', () => {
+            if (pending.length > 0 && list.scrollTop + 2 * list.clientHeight >= list.scrollHeight) {
+                appendItems(pageSize);
             }
         });
         search?.addEventListener('input', render);
