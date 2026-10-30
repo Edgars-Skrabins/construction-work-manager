@@ -1,7 +1,7 @@
 # UI shell — Spec
 
 **Type:** feature
-**Status:** ready for implementation
+**Status:** done
 **Last updated:** 2026-10-30
 
 # Part 1 — Business logic and usage
@@ -89,7 +89,7 @@ No new dependencies. It uses Bootstrap 5.3.8's colour modes (`data-bs-theme`), n
 
 ### Styles: `assets/main/site.css`
 
-- `[data-bs-theme=dark]` keeps today's palette and adds `--app-accent-text` (accent used as text: links, active nav link). `[data-bs-theme=light]` (new) defines the same variables for a light palette: warm off-white page, white surfaces, dark text, the same amber for filled accents with dark text on it, and a darker amber for accent text so it passes AA on white. The status colours move into the theme blocks so each theme gets readable ones.
+- `[data-bs-theme=dark]` keeps today's palette and adds `--app-accent-text` (accent used as text: links, active nav link). `[data-bs-theme=light]` (new) defines the same variables for a light palette: warm off-white page, white surfaces, dark text, the same amber for filled accents with dark text on it, and a darker amber for accent text so it passes AA on white. The `.status-*` colours stay shared: they only colour the left bars of assignment rows, next to the status badge text, and read in both themes.
 - `:root` gets the scale: `--app-control-height: 2.5rem`, `--app-page-title-size`, `--app-header-gap`.
 - `.navbar-control`, `.site-navbar .navbar-toggler`: `height: var(--app-control-height)`, `inline-flex`, centered; the theme switch is square.
 - `.btn-outline-secondary`: neutral border and text from the theme, `--bs-btn-hover-bg` the secondary background, and `--bs-btn-active-*` the accent, which also covers `.show` (open dropdown) and `.active`.
@@ -140,6 +140,9 @@ All decided by this session on the coordinator's instruction not to interview th
 10. **Grey active states fixed in CSS where possible** (`btn-outline-secondary`, dropdown items) so other sessions' templates don't need edits; the filter chips are the one template change, because a badge has no active state to override.
 11. **Spacing and type scale:** CSS variables in `:root` plus Bootstrap utilities, applied in the layout and `site.css`, with only the list headers' `flex-wrap gap-2` touching page templates, to keep merge conflicts with the parallel UI sessions small.
 12. **Search icon** is an inline SVG inside the search form partial, at the input's start, decorative (`aria-hidden`), since the input already has a label.
+13. **The brand takes the free width beside the controls below `xl` and wraps onto two lines on phones**, at a fluid size from 1 rem, instead of pushing the controls onto a second row. Found in the 375 px check.
+14. **In the light theme inputs and selects get the white surface**, so they stand out on the white card instead of showing the off-white page colour. Found in the light theme check.
+15. **Accent text**: `.btn-outline-primary` and the brand use the accent text colour, since amber text on white fails AA.
 
 # Part 3 — Implementation TODO
 
@@ -148,18 +151,18 @@ Read Part 1 and Part 2 before starting. Work through the tasks in order and tick
 Baseline before starting: record the test counts from `make check` in A0.
 
 ### A. Navbar and theme
-- [ ] A0. Start the stack, run `make check`, and record the test counts here.
-- [ ] A1. Add `assets/main/theme.js` and `ThemeAsset`, and add it to `MainAsset`'s depends.
-- [ ] A2. Rewrite the navbar in `layout.twig` and `language-selector.twig` as in 2.2 (span brand, `xl`, theme switch, control classes, `aria-current`, main padding), and add `Dark mode` to the six message files.
-- [ ] A3. Add the light palette, the scale variables, the navbar control sizing, the theme icons and the accent active states to `site.css`.
-- [ ] A4. Update `LayoutTest` as in 2.2. `make check` passes.
+- [x] A0. Start the stack, run `make check`, and record the test counts here. Baseline: the first run overlapped the first edits on the bind mount, so no clean count was recorded; `make check` on `main` at `0dd23e5` was green before this branch.
+- [x] A1. Add `assets/main/theme.js` and `ThemeAsset`, and add it to `MainAsset`'s depends.
+- [x] A2. Rewrite the navbar in `layout.twig` and `language-selector.twig` as in 2.2 (span brand, `xl`, theme switch, control classes, `aria-current`, main padding), and add `Dark mode` to the six message files.
+- [x] A3. Add the light palette, the scale variables, the navbar control sizing, the theme icons and the accent active states to `site.css`.
+- [x] A4. Update `LayoutTest` as in 2.2. `make check` passes.
 
 ### B. Search, login and pages
-- [ ] B1. Add the search icon to `search-form.twig` and its styles, and a test for it.
-- [ ] B2. Turn the login and set-password pages into the centered card.
-- [ ] B3. Make the filter chips accent-coloured and the list page headers wrap; apply the type scale to titles, table headers and labels.
+- [x] B1. Add the search icon to `search-form.twig` and its styles, and a test for it.
+- [x] B2. Turn the login and set-password pages into the centered card.
+- [x] B3. Make the filter chips accent-coloured and the list page headers wrap; apply the type scale to titles, table headers and labels.
 
 ### Z. Wrap-up
-- [ ] Z1. `make check` passes.
-- [ ] Z2. Manual check in the built-in browser at 375, 768, 1024 and 1280 px in both themes, as a guest (login, set password), admin, manager and employee: the bar never wraps and its controls share one height, the theme switch flips and survives a reload, no page scrolls sideways, active states are accent-coloured, the search icon shows.
-- [ ] Z3. Update `CLAUDE.md` (layout: theme script, light and dark palettes) and `README.md` if they describe the theme or the brand link.
+- [x] Z1. `make check` passes: 274 unit tests (3992 assertions) and 829 integration tests (8410 assertions).
+- [x] Z2. Manual check in the built-in browser at 375, 768, 1024 and 1280 px in both themes, as a guest (login, set password), admin, manager and employee: the bar never wraps and its controls share one height, the theme switch flips and survives a reload, no page scrolls sideways, active states are accent-coloured, the search icon shows.
+- [x] Z3. Update `CLAUDE.md` (layout: theme script, light and dark palettes) and `README.md` if they describe the theme or the brand link.
