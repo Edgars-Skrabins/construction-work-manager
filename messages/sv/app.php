@@ -63,6 +63,8 @@ return [
     'You have no assigned work yet. Your manager will assign work to you.' => 'Du har inga tilldelade uppdrag ännu. Din chef tilldelar dig uppdrag.',
     'Required access level: {level}' => 'Krävd behörighetsnivå: {level}',
     'Open in Google Maps' => 'Öppna i Google Maps',
+    'Your manager: {name}' => 'Din chef: {name}',
+    "You don't have a manager yet." => 'Du har ingen chef än.',
     'History ({count})' => 'Historik ({count})',
     'Planned' => 'Planerat',
     'In progress' => 'Pågår',

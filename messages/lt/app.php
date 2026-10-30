@@ -63,6 +63,8 @@ return [
     'You have no assigned work yet. Your manager will assign work to you.' => 'Jums dar nepriskirta jokių užduočių. Jas priskirs jūsų vadovas.',
     'Required access level: {level}' => 'Reikalingas prieigos lygis: {level}',
     'Open in Google Maps' => 'Atidaryti „Google Maps“',
+    'Your manager: {name}' => 'Jūsų vadovas: {name}',
+    "You don't have a manager yet." => 'Jūs dar neturite vadovo.',
     'History ({count})' => 'Istorija ({count})',
     'Planned' => 'Suplanuota',
     'In progress' => 'Vykdoma',

@@ -63,6 +63,8 @@ return [
     'You have no assigned work yet. Your manager will assign work to you.' => 'Sulle ei ole veel tööülesandeid määratud. Need määrab sinu juht.',
     'Required access level: {level}' => 'Nõutav ligipääsutase: {level}',
     'Open in Google Maps' => 'Ava Google Mapsis',
+    'Your manager: {name}' => 'Teie juht: {name}',
+    "You don't have a manager yet." => 'Teil pole veel juhti.',
     'History ({count})' => 'Ajalugu ({count})',
     'Planned' => 'Planeeritud',
     'In progress' => 'Töös',

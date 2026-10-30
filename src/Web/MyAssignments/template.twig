@@ -1,5 +1,6 @@
 {% do this.setTitle(t('My assignments')) %}
 <h1 class="h3 mb-4">{{ t('My assignments') }}</h1>
+<p class="text-secondary">{{ myAssignments.managerName is null ? t("You don't have a manager yet.") : t('Your manager: {name}', {name: myAssignments.managerName}) }}</p>
 {% if myAssignments.sites is empty %}
     <div class="alert alert-info" role="status">{{ t('You have no assigned work yet. Your manager will assign work to you.') }}</div>
 {% endif %}
