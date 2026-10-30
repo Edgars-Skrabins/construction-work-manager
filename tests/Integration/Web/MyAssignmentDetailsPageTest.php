@@ -39,7 +39,7 @@ final class MyAssignmentDetailsPageTest extends IntegrationTestCase
         assertStringContainsString('<title>Assignment details</title>', $body);
         assertMatchesRegularExpression('#<div class="col-lg-8" data-modal-content>\s*<h1 class="h3 mb-4" data-modal-title>Assignment details</h1>\s*<section class="assignment-details">#', $body);
         assertMatchesRegularExpression(
-            '#<h3 class="h5 fw-semibold mb-1">Concrete works</h3>\s*<p class="small text-secondary mb-3">Formwork, reinforcement and pouring of foundations, slabs and walls\.</p>\s*<dl class="row mb-0">\s*'
+            '#<h2 class="h5 fw-semibold mb-1">Concrete works</h2>\s*<p class="small text-secondary mb-3">Formwork, reinforcement and pouring of foundations, slabs and walls\.</p>\s*<dl class="row mb-0">\s*'
             . '<dt class="col-sm-4 fw-normal text-body-secondary">Construction site</dt>\s*<dd class="col-sm-8">\s*Āgenskalns Residential Block\s*'
             . '<span class="d-block small text-secondary">Mazā Nometņu iela 12, Rīga, Latvia</span>\s*'
             . '<a class="touch-link small" href="https://www\.google\.com/maps/search/\?api=1&amp;query=Maz%C4%81%20Nomet%C5%86u%20iela%2012%2C%20R%C4%ABga%2C%20Latvia" target="_blank" rel="noopener noreferrer">Open in Google Maps</a>\s*</dd>\s*'

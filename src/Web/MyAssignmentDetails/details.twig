@@ -1,5 +1,6 @@
 <section class="assignment-details">
-    <h3 class="h5 fw-semibold mb-1">{{ work.item.workItemName }}</h3>
+    {% set level = headingLevel ?? 3 %}
+    <h{{ level }} class="h5 fw-semibold mb-1">{{ work.item.workItemName }}</h{{ level }}>
     {% if work.workItemDescription is not null %}
         <p class="small text-secondary mb-3">{{ work.workItemDescription }}</p>
     {% endif %}
