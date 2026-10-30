@@ -59,6 +59,7 @@ All commands run inside Docker. Each make target wraps `docker compose`, and eac
 - `make check`: `composer check`, which runs `cs`, `stan`, `test:unit` and `test:integration`.
 - `make test`: `composer test`, the unit and integration suites. `test:integration` recreates the test database and applies the migrations first.
 - `make composer <args>`, `make shell`: Composer and a shell in the app container.
+- `make api-key:create CLIENT="…" [EXPIRES=YYYY-MM-DD]`, `make api-key:list`, `make api-key:revoke ID=<key-id>`: manage API keys.
 - `composer cs-fix`: fix code style.
 
 ## Conventions
