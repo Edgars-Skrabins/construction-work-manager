@@ -296,6 +296,24 @@ final class ManagerTeamPagesTest extends IntegrationTestCase
         assertStringContainsString('href="/employees/calendar">Work calendar</a>', (string) $this->request('GET', '/employees')->getBody());
     }
 
+    public function testDetailsShowTheDescriptionEscapedWithLineBreaks(): void
+    {
+        $assignments = $this->service(AssignmentRepositoryInterface::class);
+        $id = $assignments->create(4, 1, 1, new DateTimeImmutable('2030-03-10'), new DateTimeImmutable('2030-03-12'), 2, "Stāvs 2.\nŅemiet <b>kāpnes</b>.");
+        $without = $assignments->create(6, 2, 2, new DateTimeImmutable('2030-03-11'), new DateTimeImmutable('2030-03-11'), 2);
+        $this->logIn('manager@mail.test', '123123123');
+
+        $body = (string) $this->request('GET', '/employees/calendar?month=2030-03')->getBody();
+
+        assertMatchesRegularExpression(
+            '#<template id="calendar-entry-' . $id . '">.*?Planned</dd>\s*'
+            . '<dt class="col-12 fw-normal text-body-secondary mt-2">Description</dt>\s*'
+            . '<dd class="col-12 mb-0 text-break">Stāvs 2\.<br />\nŅemiet &lt;b&gt;kāpnes&lt;/b&gt;\.</dd>\s*</dl>#su',
+            $body,
+        );
+        assertMatchesRegularExpression('#<template id="calendar-entry-' . $without . '">(?:(?!</template>).)*Planned</dd>\s*</dl>#su', $body);
+    }
+
     private function today(): DateTimeImmutable
     {
         return new DateTimeImmutable('now', new DateTimeZone('Europe/Riga'));
