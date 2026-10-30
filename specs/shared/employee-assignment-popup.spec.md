@@ -1,7 +1,7 @@
 # Employee assignment popup — Spec
 
 **Type:** feature
-**Status:** ready for implementation
+**Status:** done
 **Last updated:** 2026-10-30
 
 # Part 1 — Business logic and usage
@@ -57,7 +57,7 @@ No new dependencies. Bootstrap 5.3 modals, the app's `assets/modal/modal.js`, th
 - `src/Web/MyAssignmentDetails/details.twig`: the details markup from Part 1, usage 3 (`work`: `AssignedWork`, `status`: `AssignmentDisplayStatus`), a `<dl>` like the calendar's details. The Maps link uses the existing URL format from My assignments.
 
 **My assignments**
-- `MyAssignments/template.twig`: each work item name (and each History row's text) becomes `<a href="{{ my-assignments.view }}" data-modal-link class="touch-link">`; the page includes `Web/Shared/Modal/modal.twig` once. `modal.js` fetches the page with `X-Modal: 1` and shows its `[data-modal-content]`.
+- `MyAssignments/template.twig`: each work item name (and each History row's text) becomes `<a href="{{ my-assignments.view }}" data-modal-link class="assignment-link">` (calm dotted underline shared with `.list-filter-link`, moved to `site.css`; below 768 px an `::after` extends its hit area to 44 px without changing the row layout, because `touch-link` padding on a flex item would make every row taller); the page includes `Web/Shared/Modal/modal.twig` once. `modal.js` fetches the page with `X-Modal: 1` and shows its `[data-modal-content]`.
 
 **My work calendar**
 - `MyAssignmentsCalendar/Action.php` gets `AssignedWork` from `MyAssignmentsService::calendar()`, passes their `item`s to `MonthCalendar` as today, and also passes `details`: the `AssignedWork`s keyed by assignment ID.
@@ -79,27 +79,28 @@ No new dependencies. Bootstrap 5.3 modals, the app's `assets/modal/modal.js`, th
 5. The catalog description of the work item is shown under the heading, as on My assignments, and is a different thing from the assignment's own description. (Session, 2026-10-30.)
 6. Another employee's or a missing assignment ID gives 404, as for scoped rows elsewhere. (User, 2026-10-30.)
 7. The status is shown as the badge, as on My assignments, not the calendar's swatch. (Session, 2026-10-30.)
+8. The partial's work item heading level is a parameter (`headingLevel`, default 3): the details page passes 2 so it follows its `h1`, and the modals keep 3 under their `h2` title. (Impeccable audit, 2026-10-30.)
 
 # Part 3 — Implementation TODO
 
 Read Part 1 and Part 2 before starting. Work through the tasks in order and tick each one when it is done.
 
-Baseline before starting: `make check` green on `main` at `efd58dd` (316 unit, 905 integration).
+Baseline before starting: `make check` green on `main` at `efd58dd` (316 unit, 905 integration). After: 316 unit and 920 integration tests green.
 
 ### A. Data and service
-- [ ] A1. `AssignedWork::$assignedByName`; `AssignmentRepository` shared query, `findAssignedWorkItem()` and `findAssignedWorkInPeriod()` (interface too, and the delegating repository in `AssignmentLockingTest`).
-- [ ] A2. `MyAssignmentsService::find()`, `displayStatus()`, and `calendar()` returning `AssignedWork`.
-- [ ] A3. Integration tests: the repository returns the creator's name and only the employee's own row (another employee's ID gives null); `findAssignedWorkInPeriod()` keeps `listInPeriod()`'s filter and order; the service throws `NotFoundException` for another employee's ID and `ForbiddenException` for other roles. Update `MyAssignmentsServiceTest` for the new `calendar()` return type.
+- [x] A1. `AssignedWork::$assignedByName`; `AssignmentRepository` shared query, `findAssignedWorkItem()` and `findAssignedWorkInPeriod()` (interface too, and the delegating repository in `AssignmentLockingTest`).
+- [x] A2. `MyAssignmentsService::find()`, `displayStatus()`, and `calendar()` returning `AssignedWork`.
+- [x] A3. Integration tests: the repository returns the creator's name and only the employee's own row (another employee's ID gives null); `findAssignedWorkInPeriod()` keeps `listInPeriod()`'s filter and order; the service throws `NotFoundException` for another employee's ID and `ForbiddenException` for other roles. Update `MyAssignmentsServiceTest` for the new `calendar()` return type.
 
 ### B. Page
-- [ ] B1. Route, `MyAssignmentDetails/Action.php`, `template.twig` and `details.twig`.
-- [ ] B2. Integration tests (`tests/Integration/Web/MyAssignmentDetailsPageTest.php`): the employee sees every detail for an own assignment, including a cancelled one; the description is escaped with `<br>`; no description row without one; another employee's and a missing ID give 404; admin and manager get 403; a guest is sent to login; the page has `data-modal-content` and the title.
+- [x] B1. Route, `MyAssignmentDetails/Action.php`, `template.twig` and `details.twig`.
+- [x] B2. Integration tests (`tests/Integration/Web/MyAssignmentDetailsPageTest.php`): the employee sees every detail for an own assignment, including a cancelled one; the description is escaped with `<br>`; no description row without one; another employee's and a missing ID give 404; admin and manager get 403; a guest is sent to login; the page has `data-modal-content` and the title.
 
 ### C. Popups
-- [ ] C1. My assignments: links with `data-modal-link`, `modal.twig` included. Tests: each current and History row links to its page; the modal partial is on the page.
-- [ ] C2. My work calendar: action passes `details`, `month.twig` renders link cards and the shared partial in the templates for employees; CSS for `a.calendar-entry`. Tests: cards are links to the page with the modal toggle; the templates contain the full details (address, Maps link, description, assigned by); the Work calendar's cards are still buttons. Replace `testDetailsDoNotShowTheDescriptionYet`.
-- [ ] C3. Translations in all six `messages/*/app.php`.
+- [x] C1. My assignments: links with `data-modal-link`, `modal.twig` included. Tests: each current and History row links to its page; the modal partial is on the page.
+- [x] C2. My work calendar: action passes `details`, `month.twig` renders link cards and the shared partial in the templates for employees; CSS for `a.calendar-entry`. Tests: cards are links to the page with the modal toggle; the templates contain the full details (address, Maps link, description, assigned by); the Work calendar's cards are still buttons. Replace `testDetailsDoNotShowTheDescriptionYet`.
+- [x] C3. Translations in all six `messages/*/app.php`.
 
 ### Z. Wrap-up
-- [ ] Z1. `make check` green.
-- [ ] Z2. As employee@mail.test, open assignments from My assignments (current and History) and the My work calendar with the mouse and the keyboard, and without JavaScript. Impeccable audit and polish pass on the popup. Screenshots at 375, 768 and 1280 px in both themes.
+- [x] Z1. `make check` green.
+- [x] Z2. As employee@mail.test, open assignments from My assignments (current and History) and the My work calendar with the mouse and the keyboard, and without JavaScript. Impeccable audit and polish pass on the popup. Screenshots at 375, 768 and 1280 px in both themes.
