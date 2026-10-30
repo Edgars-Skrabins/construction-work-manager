@@ -17,13 +17,23 @@ final readonly class SiteAccessService
         private ClockInterface $clock,
     ) {}
 
-    public function forSite(string $code): ?SiteAccess
+    public function period(?string $from, ?string $to): AccessPeriod
+    {
+        return AccessPeriod::fromQuery($from, $to, $this->clock->now());
+    }
+
+    public function forSite(string $code, AccessPeriod $period): ?SiteAccess
     {
         $site = $this->sites->findByCode($code);
         if ($site === null) {
             return null;
         }
 
-        return new SiteAccess($site, $this->assignments->findEmployeesNeedingAccess($site->id, $this->clock->now()));
+        return new SiteAccess(
+            $site,
+            $period->from,
+            $period->to,
+            $this->assignments->findEmployeesNeedingAccess($site->id, $period->from, $period->to),
+        );
     }
 }

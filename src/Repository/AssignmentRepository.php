@@ -188,10 +188,8 @@ final readonly class AssignmentRepository implements AssignmentRepositoryInterfa
         $this->db->createCommand()->delete('ASSIGNMENT', ['ID' => $id])->execute();
     }
 
-    public function findEmployeesNeedingAccess(int $constructionSiteId, DateTimeImmutable $date): array
+    public function findEmployeesNeedingAccess(int $constructionSiteId, DateTimeImmutable $from, DateTimeImmutable $to): array
     {
-        $day = $date->format(self::DATE_FORMAT);
-
         /** @var list<array{ID: int|string, FIRST_NAME: string, LAST_NAME: string, ACCESS_LEVEL_ID: int|string, ACCESS_LEVEL_NAME: string}> $rows */
         $rows = (new Query($this->db))
             ->select(['e.ID', 'e.FIRST_NAME', 'e.LAST_NAME', 'e.ACCESS_LEVEL_ID', 'ACCESS_LEVEL_NAME' => 'l.NAME'])
@@ -204,8 +202,8 @@ final readonly class AssignmentRepository implements AssignmentRepositoryInterfa
                 'a.CONSTRUCTION_SITE_ID' => $constructionSiteId,
                 'a.STATUS' => AssignmentStatus::Active->value,
             ])
-            ->andWhere(['<=', 'a.START_DATE', $day])
-            ->andWhere(['>=', 'a.END_DATE', $day])
+            ->andWhere(['<=', 'a.START_DATE', $to->format(self::DATE_FORMAT)])
+            ->andWhere(['>=', 'a.END_DATE', $from->format(self::DATE_FORMAT)])
             ->andWhere('e.ACCESS_LEVEL_ID >= s.REQUIRED_ACCESS_LEVEL_ID')
             ->orderBy(['e.LAST_NAME' => SORT_ASC, 'e.FIRST_NAME' => SORT_ASC, 'e.ID' => SORT_ASC])
             ->all();
