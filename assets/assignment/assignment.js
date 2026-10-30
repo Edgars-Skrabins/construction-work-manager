@@ -1,12 +1,11 @@
-document.addEventListener('DOMContentLoaded', () => {
-    document.querySelectorAll('form[data-confirm]').forEach((form) => {
-        form.addEventListener('submit', (event) => {
-            if (!window.confirm(form.dataset.confirm)) {
-                event.preventDefault();
-            }
-        });
-    });
+document.addEventListener('submit', (event) => {
+    const form = event.target;
+    if (form.matches('form[data-confirm]') && !window.confirm(form.dataset.confirm)) {
+        event.preventDefault();
+    }
+});
 
+document.addEventListener('DOMContentLoaded', () => {
     const employee = document.getElementById('employee');
     const site = document.getElementById('constructionSite');
     if (employee === null || site === null) {
