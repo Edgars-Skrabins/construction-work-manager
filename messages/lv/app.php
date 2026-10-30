@@ -5,6 +5,7 @@ declare(strict_types=1);
 return [
     'Language' => 'Valoda',
     'Toggle navigation' => 'Pārslēgt navigāciju',
+    'Dark mode' => 'Tumšais režīms',
     'My assignments' => 'Mani uzdevumi',
     'Employees' => 'Darbinieki',
     'Construction sites' => 'Būvobjekti',

@@ -8,6 +8,7 @@ use App\Entity\AssignmentDisplayStatus;
 use App\Entity\Employee;
 use App\Service\AssignmentService;
 use App\Web\Shared\Calendar\MonthCalendar;
+use App\Web\Shared\Listing\ListParams;
 use Psr\Clock\ClockInterface;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
@@ -29,7 +30,7 @@ final readonly class Action
         $actorId = (int) $this->currentUser->getId();
         $calendar = MonthCalendar::create(MonthCalendar::requestedMonth($query), $this->clock->now());
         $team = $this->assignments->teamEmployees($actorId);
-        $employeeId = is_string($query['employee'] ?? null) && preg_match('/^[1-9]\d{0,8}$/D', $query['employee']) === 1
+        $employeeId = is_string($query['employee'] ?? null) && preg_match(ListParams::POSITIVE_INT_PATTERN, $query['employee']) === 1
             ? (int) $query['employee']
             : null;
         if (!in_array($employeeId, array_map(static fn(Employee $employee): int => $employee->id, $team), true)) {

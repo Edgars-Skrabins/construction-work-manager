@@ -12,6 +12,7 @@ use League\OpenAPIValidation\PSR7\Exception\ValidationFailed;
 use League\OpenAPIValidation\PSR7\OperationAddress;
 use League\OpenAPIValidation\PSR7\ValidatorBuilder;
 use PHPUnit\Framework\Attributes\DataProvider;
+use Psr\Clock\ClockInterface;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Yiisoft\Yii\Http\Application;
@@ -45,6 +46,8 @@ final class OpenApiDocumentTest extends IntegrationTestCase
     #[DataProvider('validRequests')]
     public function testValidRequestAndItsResponseMatchTheDocument(string $path, int $status): void
     {
+        $tomorrow = $this->service(ClockInterface::class)->now()->modify('+1 day');
+        $path = strtr($path, ['{from}' => $tomorrow->format('Y-m-d'), '{to}' => $tomorrow->modify('+6 days')->format('Y-m-d')]);
         $request = $this->createRequest('GET', $path, ['Authorization' => 'Bearer ' . $this->plainKey()]);
 
         $address = $this->builder()->getServerRequestValidator()->validate($request);
@@ -61,8 +64,8 @@ final class OpenApiDocumentTest extends IntegrationTestCase
     public static function validRequests(): iterable
     {
         yield 'today' => ['/api/v1/construction-sites/RIX-AGK-01/employees', 200];
-        yield 'a period' => ['/api/v1/construction-sites/RIX-AGK-01/employees?from=2030-11-02&to=2030-11-08', 200];
-        yield 'only from' => ['/api/v1/construction-sites/rix-agk-01/employees?from=2030-11-02', 200];
+        yield 'a period' => ['/api/v1/construction-sites/RIX-AGK-01/employees?from={from}&to={to}', 200];
+        yield 'only from' => ['/api/v1/construction-sites/rix-agk-01/employees?from={from}', 200];
         yield 'unknown site code' => ['/api/v1/construction-sites/XXX-000-99/employees', 404];
         yield 'period before today' => ['/api/v1/construction-sites/RIX-AGK-01/employees?from=2020-01-01', 422];
         yield 'to before from' => ['/api/v1/construction-sites/RIX-AGK-01/employees?from=2030-11-05&to=2030-11-04', 422];

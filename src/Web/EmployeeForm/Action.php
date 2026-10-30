@@ -74,6 +74,7 @@ final readonly class Action
             'accessLevels' => $this->employees->accessLevels($actorId),
             'managers' => $this->employees->managers($actorId, $employee?->id),
             'roles' => ['admin', 'manager', 'employee'],
+            'showAssignments' => $employee !== null && isset($errors['role']) && $this->employees->hasActiveAssignments($actorId, $employee->id),
         ]);
     }
 }

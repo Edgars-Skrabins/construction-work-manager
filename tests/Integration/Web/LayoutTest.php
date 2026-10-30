@@ -17,7 +17,7 @@ final class LayoutTest extends IntegrationTestCase
 {
     use WebClient;
 
-    private const string TOGGLER = '<button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#main-navbar" aria-controls="main-navbar" aria-expanded="false" aria-label="Toggle navigation">';
+    private const string TOGGLER = '<button class="navbar-toggler navbar-control" type="button" data-bs-toggle="collapse" data-bs-target="#main-navbar" aria-controls="main-navbar" aria-expanded="false" aria-label="Toggle navigation">';
 
     /**
      * @return iterable<string, array{string, string}>
@@ -49,10 +49,34 @@ final class LayoutTest extends IntegrationTestCase
         $body = (string) $response->getBody();
 
         assertSame(200, $response->getStatusCode());
-        assertStringContainsString('<nav class="navbar navbar-expand-lg site-navbar">', $body);
+        assertStringContainsString('<nav class="navbar navbar-expand-xl site-navbar">', $body);
         assertStringContainsString(self::TOGGLER, $body);
-        assertMatchesRegularExpression('#<div class="collapse navbar-collapse" id="main-navbar">\s*<ul class="navbar-nav me-auto mb-2 mb-lg-0">.*href="' . preg_quote($landingPage, '#') . '".*</ul>\s*<form [^>]*action="/logout">.*Log out</button>\s*</form>\s*</div>#s', $body);
+        assertMatchesRegularExpression('#<div class="collapse navbar-collapse" id="main-navbar">\s*<ul class="navbar-nav me-auto mb-2 mb-xl-0">.*href="' . preg_quote($landingPage, '#') . '".*</ul>\s*<form [^>]*action="/logout">.*Log out</button>\s*</form>\s*</div>#s', $body);
         assertMatchesRegularExpression('#<script src="/assets/bootstrap/[^"]*bootstrap\.bundle\.min\.js[^"]*"#', $body);
+    }
+
+    #[DataProvider('landingPages')]
+    public function testLandingPagesShowAStaticBrandAndTheThemeToggle(string $email, string $landingPage): void
+    {
+        $this->logIn($email, '123123123');
+
+        $this->assertStaticBrandAndThemeToggle((string) $this->request('GET', $landingPage)->getBody());
+    }
+
+    public function testLoginPageShowsAStaticBrandAndTheThemeToggle(): void
+    {
+        $this->assertStaticBrandAndThemeToggle((string) $this->request('GET', '/login')->getBody());
+    }
+
+    #[DataProvider('landingPages')]
+    public function testActiveNavLinkIsMarkedAsTheCurrentPage(string $email, string $landingPage): void
+    {
+        $this->logIn($email, '123123123');
+
+        $body = (string) $this->request('GET', $landingPage)->getBody();
+
+        assertMatchesRegularExpression('#<a class="nav-link active" aria-current="page" href="' . preg_quote($landingPage, '#') . '">#', $body);
+        assertSame(1, substr_count($body, 'class="nav-link active"'));
     }
 
     public function testGuestGetsNoToggler(): void
@@ -94,6 +118,14 @@ final class LayoutTest extends IntegrationTestCase
     public function testLoginPageUsesTheDarkTheme(): void
     {
         $this->assertDarkTheme((string) $this->request('GET', '/login')->getBody());
+    }
+
+    private function assertStaticBrandAndThemeToggle(string $body): void
+    {
+        assertStringContainsString('<span class="navbar-brand">Construction Work Manager</span>', $body);
+        assertStringNotContainsString('<a class="navbar-brand"', $body);
+        assertMatchesRegularExpression('#<button class="btn btn-outline-secondary navbar-control theme-toggle" type="button" data-theme-toggle aria-pressed="true" title="Dark mode" hidden>\s*<span class="visually-hidden">Dark mode</span>#', $body);
+        assertMatchesRegularExpression('#<script src="/assets/main/[^"]*theme\.js[^"]*"></script>.*</head>#s', $body);
     }
 
     private function assertDarkTheme(string $body): void
