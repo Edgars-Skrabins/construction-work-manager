@@ -38,22 +38,22 @@ final class MyAssignmentsPageTest extends IntegrationTestCase
         assertSame(200, $response->getStatusCode());
         assertStringContainsString('<title>My assignments</title>', $body);
         assertStringContainsString('<p class="text-secondary">Your manager: Ilze Kalniņa</p>', $body);
-        assertStringContainsString('<h2 class="h6 text-secondary text-uppercase mb-1">' . self::SITE . '</h2>', $body);
+        assertStringContainsString('<h2 class="h5 mb-1">' . self::SITE . '</h2>', $body);
         assertStringContainsString('Mazā Nometņu iela 12, Rīga, Latvia', $body);
         assertStringContainsString('Required access level: General (1)', $body);
         assertStringContainsString('Concrete works', $body);
         assertStringContainsString('Formwork, reinforcement and pouring of foundations, slabs and walls.', $body);
-        assertMatchesRegularExpression('#<div class="assignment-block status-in-progress">\s*<div [^>]*>\s*<span class="fw-semibold">Concrete works</span>\s*<span [^>]*>\s*<span class="text-nowrap">\d{4}-\d{2}-\d{2} – \d{4}-\d{2}-\d{2}</span>\s*<span class="badge text-bg-primary">In progress</span>#u', $body);
+        assertMatchesRegularExpression('#<div class="assignment-block status-in-progress">\s*<div [^>]*>\s*<span class="fw-semibold">Concrete works</span>\s*<span [^>]*>\s*<span class="text-nowrap">\d{4}-\d{2}-\d{2} – \d{4}-\d{2}-\d{2}</span>\s*<span class="badge status-badge status-in-progress">In progress</span>#u', $body);
         assertStringNotContainsString(self::OTHER_EMPLOYEES_SITE, $body);
         assertStringNotContainsString(self::OTHER_EMPLOYEES_WORK, $body);
         assertStringNotContainsString(self::EMPTY_STATE, $body);
         foreach (['Jelgava Library Reconstruction', 'Vilnius Office Campus'] as $site) {
-            assertStringContainsString('<h2 class="h6 text-secondary text-uppercase mb-1">' . $site . '</h2>', $body);
+            assertStringContainsString('<h2 class="h5 mb-1">' . $site . '</h2>', $body);
         }
-        foreach (['text-bg-info">Planned', 'text-bg-primary">In progress', 'text-bg-danger">Overdue', 'text-bg-success">Done', 'text-bg-secondary">Cancelled'] as $badge) {
+        foreach (['status-badge status-planned">Planned', 'status-badge status-in-progress">In progress', 'status-badge status-overdue">Overdue', 'status-badge status-done">Done', 'status-badge status-cancelled">Cancelled'] as $badge) {
             assertStringContainsString('<span class="badge ' . $badge . '</span>', $body);
         }
-        assertStringContainsString('<summary>History (3)</summary>', $body);
+        assertMatchesRegularExpression('#<summary class="history-toggle"><svg [^>]*aria-hidden="true"[^>]*>.*?</svg>History \(3\)</summary>#', $body);
     }
 
     public function testMapLinkSearchesTheEncodedAddressInANewTab(): void
@@ -88,11 +88,11 @@ final class MyAssignmentsPageTest extends IntegrationTestCase
         assertStringContainsString('Your manager: Ilze Kalniņa', $body);
         assertStringContainsString(self::EMPTY_STATE, $body);
         assertStringNotContainsString('<section', $body);
-        assertStringContainsString('<summary>History (2)</summary>', $body);
-        assertStringContainsString('<span class="badge text-bg-success">Done</span>', $body);
+        assertMatchesRegularExpression('#<summary class="history-toggle"><svg [^>]*aria-hidden="true"[^>]*>.*?</svg>History \(2\)</summary>#', $body);
+        assertStringContainsString('<span class="badge status-badge status-done">Done</span>', $body);
         assertStringContainsString('<div class="assignment-block status-done ', $body);
         assertStringContainsString('<div class="assignment-block status-cancelled ', $body);
-        assertStringContainsString('<span class="badge text-bg-secondary">Cancelled</span>', $body);
+        assertStringContainsString('<span class="badge status-badge status-cancelled">Cancelled</span>', $body);
     }
 
     public function testEmployeeWithoutManagerIsToldSo(): void
