@@ -296,6 +296,18 @@ final class ManagerTeamPagesTest extends IntegrationTestCase
         assertStringContainsString('href="/employees/calendar">Work calendar</a>', (string) $this->request('GET', '/employees')->getBody());
     }
 
+    public function testCardsStayButtonsWithoutADetailsPage(): void
+    {
+        $this->service(AssignmentRepositoryInterface::class)->create(4, 1, 1, new DateTimeImmutable('2030-03-10'), new DateTimeImmutable('2030-03-12'), 2);
+        $this->logIn('manager@mail.test', '123123123');
+
+        $body = (string) $this->request('GET', '/employees/calendar?month=2030-03')->getBody();
+
+        assertStringContainsString('<button type="button" class="calendar-entry status-planned', $body);
+        assertStringNotContainsString('/my-assignments/', $body);
+        assertStringNotContainsString('<section class="assignment-details">', $body);
+    }
+
     public function testDetailsShowTheDescriptionEscapedWithLineBreaks(): void
     {
         $assignments = $this->service(AssignmentRepositoryInterface::class);

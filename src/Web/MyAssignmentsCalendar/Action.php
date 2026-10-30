@@ -4,7 +4,9 @@ declare(strict_types=1);
 
 namespace App\Web\MyAssignmentsCalendar;
 
+use App\Entity\AssignedWork;
 use App\Entity\AssignmentDisplayStatus;
+use App\Entity\AssignmentListItem;
 use App\Service\MyAssignmentsService;
 use App\Web\Shared\Calendar\MonthCalendar;
 use Psr\Clock\ClockInterface;
@@ -26,7 +28,11 @@ final readonly class Action
     {
         $calendar = MonthCalendar::create(MonthCalendar::requestedMonth($request->getQueryParams()), $this->clock->now());
         $employeeId = (int) $this->currentUser->getId();
-        $items = $this->myAssignments->calendar($employeeId, $calendar->from(), $calendar->to());
+        $details = [];
+        foreach ($this->myAssignments->calendar($employeeId, $calendar->from(), $calendar->to()) as $work) {
+            $details[$work->item->assignment->id] = $work;
+        }
+        $items = array_values(array_map(static fn(AssignedWork $work): AssignmentListItem => $work->item, $details));
 
         return $this->viewRenderer->render(__DIR__ . '/template', [
             'calendar' => $calendar,
@@ -34,6 +40,7 @@ final readonly class Action
             'weeks' => $calendar->weeks($items),
             'entries' => $calendar->entries($items),
             'statuses' => AssignmentDisplayStatus::calendarStatuses(),
+            'details' => $details,
         ]);
     }
 }
