@@ -21,5 +21,6 @@ final class MainAsset extends AssetBundle
     public array $depends = [
         BootstrapAsset::class,
         SelectAsset::class,
+        ThemeAsset::class,
     ];
 }

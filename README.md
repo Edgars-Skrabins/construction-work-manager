@@ -4,7 +4,7 @@ Construction Work Manager is a work management module for construction sites. Ad
 
 ## Tech stack
 
-- **Frontend:** server-rendered Twig views with Bootstrap 5 in a dark theme
+- **Frontend:** server-rendered Twig views with Bootstrap 5 in a dark and a light theme, switched in the navbar
 - **Backend:** PHP 8.4 with Yii 3, served by FrankenPHP
 - **Database:** Microsoft SQL Server 2022, run with Docker Compose
 - **API:** versioned JSON API under `/api/v1`, authenticated with per-client API keys
