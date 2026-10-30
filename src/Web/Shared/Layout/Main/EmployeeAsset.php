@@ -20,5 +20,6 @@ final class EmployeeAsset extends AssetBundle
     /** @var list<class-string<AssetBundle>> */
     public array $depends = [
         MainAsset::class,
+        DateInputAsset::class,
     ];
 }

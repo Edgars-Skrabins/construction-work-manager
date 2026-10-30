@@ -29,6 +29,7 @@ return [
     'Save' => 'Tallenna',
     'Cancel' => 'Peruuta',
     'Choose…' => 'Valitse…',
+    'Choose date' => 'Valitse päivämäärä',
     'Name' => 'Nimi',
     'Description' => 'Kuvaus',
     '{Property} cannot be blank.' => 'Kenttä ”{Property}” on pakollinen.',

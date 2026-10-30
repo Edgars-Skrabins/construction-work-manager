@@ -29,6 +29,7 @@ return [
     'Save' => 'Сохранить',
     'Cancel' => 'Отмена',
     'Choose…' => 'Выберите…',
+    'Choose date' => 'Выбрать дату',
     'Name' => 'Название',
     'Description' => 'Описание',
     '{Property} cannot be blank.' => 'Поле «{Property}» обязательно для заполнения.',

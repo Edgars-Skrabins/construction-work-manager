@@ -57,12 +57,12 @@
             <div class="row">
                 <div class="col-sm-6 mb-3">
                     <label for="startDate" class="form-label">{{ t('Start date') }}</label>
-                    <input type="date" class="form-control{% if errors.startDate is defined %} is-invalid{% endif %}" id="startDate" name="startDate" value="{{ form.startDate }}" required>
+                    {% include 'Web/Shared/Form/date-input.twig' with {id: 'startDate', value: form.startDate, invalid: errors.startDate is defined, required: true} %}
                     {% include 'Web/Shared/Form/field-errors.twig' with {errors: errors.startDate ?? []} %}
                 </div>
                 <div class="col-sm-6 mb-3">
                     <label for="endDate" class="form-label">{{ t('End date') }}</label>
-                    <input type="date" class="form-control{% if errors.endDate is defined %} is-invalid{% endif %}" id="endDate" name="endDate" value="{{ form.endDate }}" required>
+                    {% include 'Web/Shared/Form/date-input.twig' with {id: 'endDate', value: form.endDate, invalid: errors.endDate is defined, required: true} %}
                     {% include 'Web/Shared/Form/field-errors.twig' with {errors: errors.endDate ?? []} %}
                 </div>
             </div>

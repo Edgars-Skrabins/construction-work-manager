@@ -29,6 +29,7 @@ return [
     'Save' => 'Salvesta',
     'Cancel' => 'Tühista',
     'Choose…' => 'Vali…',
+    'Choose date' => 'Vali kuupäev',
     'Name' => 'Nimi',
     'Description' => 'Kirjeldus',
     '{Property} cannot be blank.' => 'Väli „{Property}“ on kohustuslik.',

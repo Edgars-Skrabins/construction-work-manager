@@ -29,6 +29,7 @@ return [
     'Save' => 'Išsaugoti',
     'Cancel' => 'Atšaukti',
     'Choose…' => 'Pasirinkite…',
+    'Choose date' => 'Pasirinkti datą',
     'Name' => 'Pavadinimas',
     'Description' => 'Aprašymas',
     '{Property} cannot be blank.' => 'Laukas „{Property}“ yra privalomas.',

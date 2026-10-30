@@ -359,6 +359,36 @@ final class AssignmentPagesTest extends IntegrationTestCase
         assertSame(['Laura Krūmiņa'], array_values(array_unique($links[2])));
     }
 
+    public function testTypedDatesInAnotherFormatAreRejected(): void
+    {
+        $this->logIn('manager@mail.test', '123123123');
+
+        $body = (string) $this->submit('/assignments/create', [
+            'employee' => '4',
+            'workItem' => '1',
+            'constructionSite' => '1',
+            'startDate' => '13/12/2027',
+            'endDate' => '2027-12-20',
+        ])->getBody();
+
+        assertStringContainsString('Enter a valid start date.', $body);
+        assertMatchesRegularExpression('#<input type="text" class="form-control is-invalid" id="startDate" name="startDate" value="13/12/2027"#', $body);
+    }
+
+    public function testDateFieldsAreIsoTextInputsWithAPickerButton(): void
+    {
+        $this->logIn('manager@mail.test', '123123123');
+
+        $body = (string) $this->request('GET', '/assignments/create')->getBody();
+
+        foreach (['startDate', 'endDate'] as $field) {
+            assertStringContainsString('<input type="text" class="form-control" id="' . $field . '" name="' . $field . '" value="" inputmode="numeric" pattern="\d{4}-\d{2}-\d{2}" placeholder="YYYY-MM-DD" maxlength="10" autocomplete="off" spellcheck="false" required>', $body);
+        }
+        assertSame(2, substr_count($body, '<button type="button" class="btn date-input-button" aria-label="Choose date" title="Choose date" hidden>'));
+        assertMatchesRegularExpression('#<script src="[^"]*/date-input/[^"]*date-input\.js[^"]*"#', $body);
+        assertMatchesRegularExpression('#<script src="[^"]*/date-input/[^"]*date-input\.js[^"]*"#', (string) $this->request('GET', '/assignments')->getBody());
+    }
+
     public function testManagerFilteringByAnotherTeamsEmployeeSeesNothing(): void
     {
         $this->logIn('manager@mail.test', '123123123');

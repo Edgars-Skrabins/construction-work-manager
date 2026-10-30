@@ -29,6 +29,7 @@ return [
     'Save' => 'Spara',
     'Cancel' => 'Avbryt',
     'Choose…' => 'Välj…',
+    'Choose date' => 'Välj datum',
     'Name' => 'Namn',
     'Description' => 'Beskrivning',
     '{Property} cannot be blank.' => 'Fältet ”{Property}” måste fyllas i.',

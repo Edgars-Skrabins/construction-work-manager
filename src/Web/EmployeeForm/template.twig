@@ -29,7 +29,7 @@
             </div>
             <div class="mb-3">
                 <label for="birthDate" class="form-label">{{ t('Birth date') }}</label>
-                <input type="date" class="form-control{% if errors.birthDate is defined %} is-invalid{% endif %}" id="birthDate" name="birthDate" value="{{ form.birthDate }}" required>
+                {% include 'Web/Shared/Form/date-input.twig' with {id: 'birthDate', value: form.birthDate, invalid: errors.birthDate is defined, required: true} %}
                 {% include 'Web/Shared/Form/field-errors.twig' with {errors: errors.birthDate ?? []} %}
             </div>
             <div class="mb-3">

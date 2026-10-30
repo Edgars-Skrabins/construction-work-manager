@@ -29,6 +29,7 @@ return [
     'Save' => 'Saglabāt',
     'Cancel' => 'Atcelt',
     'Choose…' => 'Izvēlieties…',
+    'Choose date' => 'Izvēlēties datumu',
     'Name' => 'Nosaukums',
     'Description' => 'Apraksts',
     '{Property} cannot be blank.' => 'Lauks „{Property}” ir obligāts.',
