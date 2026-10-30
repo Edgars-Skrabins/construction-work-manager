@@ -151,9 +151,9 @@ final class ManagerTeamPagesTest extends IntegrationTestCase
         );
         assertStringContainsString('<option value="01">January</option>', $body);
         assertStringContainsString('<option value="03" selected>March</option>', $body);
-        preg_match('#<select class="form-select form-select-sm w-auto" id="calendar-month" name="monthOfYear">(.*?)</select>#s', $body, $select);
+        preg_match('#<select class="form-select form-select-sm w-auto" id="calendar-month" name="monthOfYear" data-select-plain>(.*?)</select>#s', $body, $select);
         assertSame(12, substr_count($select[1] ?? '', '<option '));
-        preg_match('#<select class="form-select form-select-sm w-auto" id="calendar-year" name="year">(.*?)</select>#s', $body, $years);
+        preg_match('#<select class="form-select form-select-sm w-auto" id="calendar-year" name="year" data-select-plain>(.*?)</select>#s', $body, $years);
         $current = (int) $this->today()->format('Y');
         assertStringContainsString('<option value="' . ($current - 5) . '">', $years[1] ?? '');
         assertStringContainsString('<option value="' . ($current + 5) . '"', $years[1] ?? '');

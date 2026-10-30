@@ -6,14 +6,14 @@
         {% endif %}
     {% endfor %}
     <label class="visually-hidden" for="calendar-month">{{ t('Month') }}</label>
-    <select class="form-select form-select-sm w-auto" id="calendar-month" name="monthOfYear">
+    <select class="form-select form-select-sm w-auto" id="calendar-month" name="monthOfYear" data-select-plain>
         {% for name in month_names() %}
             {% set value = '%02d'|format(loop.index) %}
             <option value="{{ value }}"{% if value == calendar.month()|date('m') %} selected{% endif %}>{{ name }}</option>
         {% endfor %}
     </select>
     <label class="visually-hidden" for="calendar-year">{{ t('Year') }}</label>
-    <select class="form-select form-select-sm w-auto" id="calendar-year" name="year">
+    <select class="form-select form-select-sm w-auto" id="calendar-year" name="year" data-select-plain>
         {% for year in calendar.years() %}
             <option value="{{ year }}"{% if year == calendar.month()|date('Y') %} selected{% endif %}>{{ year }}</option>
         {% endfor %}
