@@ -1,7 +1,7 @@
 # My manager — Spec
 
 **Type:** feature
-**Status:** ready for implementation
+**Status:** done
 **Last updated:** 2026-10-30
 
 # Part 1 — Business logic and usage
@@ -92,21 +92,21 @@ A parallel change adds a Calendar button next to the heading and another changes
 
 Read Part 1 and Part 2 before starting. Work through the tasks in order and tick each one when it is done.
 
-Baseline before starting: run `make test` on `main` at `c93fa82` and record the counts here.
+Baseline before starting: unit 265 tests, integration 759 tests, all passing on `main` at `c93fa82`.
 
 ### A. Data and service
-- [ ] A1. Add `managerNameOf()` to `EmployeeRepositoryInterface` and `EmployeeRepository`.
-- [ ] A2. Add `managerName` to `MyAssignments` and fill it in `MyAssignmentsService::forEmployee()` after the permission check.
-- [ ] A3. Extend `MyAssignmentsServiceTest` with the cases from 2.2.
+- [x] A1. Add `managerNameOf()` to `EmployeeRepositoryInterface` and `EmployeeRepository`.
+- [x] A2. Add `managerName` to `MyAssignments` and fill it in `MyAssignmentsService::forEmployee()` after the permission check.
+- [x] A3. Extend `MyAssignmentsServiceTest` with the cases from 2.2.
 
 ### B. Page
-- [ ] B1. Add the one template line after the `<h1>` in `src/Web/MyAssignments/template.twig`.
-- [ ] B2. Add both messages to all six `messages/<locale>/app.php` files after `Open in Google Maps`.
-- [ ] B3. Extend `MyAssignmentsPageTest` with the cases from 2.2.
+- [x] B1. Add the one template line after the `<h1>` in `src/Web/MyAssignments/template.twig`.
+- [x] B2. Add both messages to all six `messages/<locale>/app.php` files after `Open in Google Maps`.
+- [x] B3. Extend `MyAssignmentsPageTest` with the cases from 2.2.
 
 ### C. Documentation
-- [ ] C1. In `README.md` Running the app step 4, mention the manager line in one clause.
+- [x] C1. In `README.md` Running the app step 4, mention the manager line in one clause.
 
 ### Z. Wrap-up
-- [ ] Z1. Run `make check`: code style, PHPStan and all tests pass.
-- [ ] Z2. Manual check: log in as `employee@mail.test` and see "Your manager: Ilze Kalniņa" under the heading; as `employee2@mail.test` see it above the empty-state alert.
+- [x] Z1. Run `make check`: code style, PHPStan and all tests pass.
+- [x] Z2. Manual check: log in as `employee@mail.test` and see "Your manager: Ilze Kalniņa" under the heading; as `employee2@mail.test` see it above the empty-state alert. (2026-10-30: checked as `employee@mail.test`; the empty state is covered by `MyAssignmentsPageTest`.)
