@@ -31,7 +31,7 @@ final readonly class Action
         return $this->viewRenderer->render(__DIR__ . '/template', [
             'calendar' => $calendar,
             'weeks' => $calendar->weeks($items),
-            'statuses' => [AssignmentDisplayStatus::Planned, AssignmentDisplayStatus::InProgress, AssignmentDisplayStatus::Overdue, AssignmentDisplayStatus::Done],
+            'statuses' => AssignmentDisplayStatus::calendarStatuses(),
         ]);
     }
 }

@@ -41,7 +41,7 @@ final readonly class Action
             'weeks' => $calendar->weeks($this->assignments->calendar($actorId, $calendar->from(), $calendar->to(), $employeeId)),
             'team' => $team,
             'employeeId' => $employeeId,
-            'statuses' => [AssignmentDisplayStatus::Planned, AssignmentDisplayStatus::InProgress, AssignmentDisplayStatus::Overdue, AssignmentDisplayStatus::Done],
+            'statuses' => AssignmentDisplayStatus::calendarStatuses(),
         ]);
     }
 }

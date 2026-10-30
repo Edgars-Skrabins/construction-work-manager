@@ -12,6 +12,14 @@ enum AssignmentDisplayStatus
     case Done;
     case Cancelled;
 
+    /**
+     * @return list<self>
+     */
+    public static function calendarStatuses(): array
+    {
+        return [self::Planned, self::InProgress, self::Overdue, self::Done];
+    }
+
     public function label(): string
     {
         return match ($this) {
