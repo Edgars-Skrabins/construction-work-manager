@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Console;
 
+use App\Entity\IsoDate;
 use App\Service\ApiKeyService;
 use App\Service\ValidationException;
 use DateTimeImmutable;
@@ -60,8 +61,8 @@ final class ApiKeyCreateCommand extends Command
 
     private function parseDate(string $value): DateTimeImmutable
     {
-        $date = DateTimeImmutable::createFromFormat('!Y-m-d', $value, new DateTimeZone('UTC'));
-        if ($date === false || $date->format('Y-m-d') !== $value) {
+        $date = IsoDate::parse($value, new DateTimeZone('UTC'));
+        if ($date === null) {
             throw ValidationException::forField('expires', 'The expiry date must be a valid date in the format YYYY-MM-DD.');
         }
 
