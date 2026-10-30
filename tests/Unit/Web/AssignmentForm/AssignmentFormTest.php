@@ -47,6 +47,20 @@ final class AssignmentFormTest extends TestCase
         assertArrayNotHasKey('description', $errors);
     }
 
+    public function testLineBreaksAreNormalizedAndTheDescriptionTrimmed(): void
+    {
+        $form = AssignmentForm::fromBody(['description' => " Floor 2\r\nRooms 4–6\rLadder \r\n"], false);
+
+        assertSame("Floor 2\nRooms 4–6\nLadder", $form->description);
+    }
+
+    public function testCrlfLineBreakCountsAsOneCharacter(): void
+    {
+        $errors = (new Validator())->validate(self::filled(str_repeat('a', 500) . "\r\n" . str_repeat('b', 499)))->getErrorMessagesIndexedByProperty();
+
+        assertArrayNotHasKey('description', $errors);
+    }
+
     public function testLongerDescriptionIsRefused(): void
     {
         $errors = (new Validator())->validate(self::filled(str_repeat('ā', 1001)))->getErrorMessagesIndexedByProperty();

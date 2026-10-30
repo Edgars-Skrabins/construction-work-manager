@@ -13,6 +13,7 @@ use App\Access\Role;
 use App\Access\Scope;
 use App\Entity\AccessLevel;
 use App\Entity\Assignment;
+use App\Entity\AssignmentDescription;
 use App\Entity\AssignmentDisplayStatus;
 use App\Entity\AssignmentListItem;
 use App\Entity\AssignmentStatus;
@@ -36,8 +37,6 @@ use function sprintf;
 
 final readonly class AssignmentService
 {
-    private const int DESCRIPTION_MAX_LENGTH = 1000;
-
     public function __construct(
         private AssignmentRepositoryInterface $assignments,
         private EmployeeRepositoryInterface $employees,
@@ -317,11 +316,11 @@ final readonly class AssignmentService
      */
     private function description(string $description, array &$errors): ?string
     {
-        $text = trim($description);
-        if (mb_strlen($text) > self::DESCRIPTION_MAX_LENGTH) {
+        $text = AssignmentDescription::normalize($description);
+        if (AssignmentDescription::isTooLong($text)) {
             $errors['description'] = $this->translator->translate(
                 '{Property} must contain at most {max, number} {max, plural, one{character} other{characters}}.',
-                ['Property' => $this->translator->translate('Description'), 'max' => self::DESCRIPTION_MAX_LENGTH],
+                ['Property' => $this->translator->translate('Description'), 'max' => AssignmentDescription::MAX_LENGTH],
             );
         }
 

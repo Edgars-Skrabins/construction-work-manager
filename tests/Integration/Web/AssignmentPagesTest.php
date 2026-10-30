@@ -176,15 +176,32 @@ final class AssignmentPagesTest extends IntegrationTestCase
             'description' => " Stāvs 2.\r\n<b>Kāpnes</b> ",
         ]);
         $id = $this->lastCreatedId();
-        assertSame("Stāvs 2.\r\n<b>Kāpnes</b>", $this->description($id));
+        assertSame("Stāvs 2.\n<b>Kāpnes</b>", $this->description($id));
 
         $edit = (string) $this->request('GET', "/assignments/$id/edit")->getBody();
-        assertStringContainsString("maxlength=\"1000\" aria-describedby=\"description-count\">Stāvs 2.\r\n&lt;b&gt;Kāpnes&lt;/b&gt;</textarea>", $edit);
-        assertStringContainsString('data-char-count="description">23 / 1000</div>', $edit);
+        assertStringContainsString("maxlength=\"1000\" aria-describedby=\"description-count\">Stāvs 2.\n&lt;b&gt;Kāpnes&lt;/b&gt;</textarea>", $edit);
+        assertStringContainsString('data-char-count="description">22 / 1000</div>', $edit);
         assertStringNotContainsString('Kāpnes', (string) $this->request('GET', '/assignments?q=' . urlencode('Mārtiņš'))->getBody());
 
         $this->submit("/assignments/$id/edit", ['employee' => '4', 'startDate' => '2027-03-01', 'endDate' => '2027-03-10', 'status' => 'active', 'description' => '']);
         assertNull($this->description($id));
+    }
+
+    public function testDescriptionThatFitsTheBrowserLimitWithCrlfLineBreaksIsSaved(): void
+    {
+        $this->logIn('manager@mail.test', '123123123');
+
+        $response = $this->submit('/assignments/create', [
+            'employee' => '4',
+            'workItem' => '2',
+            'constructionSite' => '1',
+            'startDate' => '2027-03-01',
+            'endDate' => '2027-03-10',
+            'description' => str_repeat('a', 500) . "\r\n" . str_repeat('b', 499),
+        ]);
+
+        assertSame(302, $response->getStatusCode());
+        assertSame(str_repeat('a', 500) . "\n" . str_repeat('b', 499), $this->description($this->lastCreatedId()));
     }
 
     public function testTooLongDescriptionShowsTheError(): void

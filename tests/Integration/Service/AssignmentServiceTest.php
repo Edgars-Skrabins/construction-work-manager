@@ -83,6 +83,13 @@ final class AssignmentServiceTest extends IntegrationTestCase
         assertSame(str_repeat('ā', 1000), $this->assignments()->find(2, $id)?->assignment->description);
     }
 
+    public function testCrlfAndCrLineBreaksCountAsOneCharacter(): void
+    {
+        $id = $this->assignments()->create(2, 5, 2, 2, '2026-11-10', '2026-11-20', str_repeat('a', 499) . "\r\n" . str_repeat('b', 498) . "\r" . 'c');
+
+        assertSame(str_repeat('a', 499) . "\n" . str_repeat('b', 498) . "\nc", $this->assignments()->find(2, $id)?->assignment->description);
+    }
+
     public function testLongerDescriptionIsRefusedAndNothingIsSaved(): void
     {
         $tooLong = ['description' => 'Description must contain at most 1,000 characters.'];

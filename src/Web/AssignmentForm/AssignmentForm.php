@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Web\AssignmentForm;
 
 use App\Entity\Assignment;
+use App\Entity\AssignmentDescription;
 use App\Web\Shared\Form\FormBody;
 use App\Web\Shared\Listing\ListParams;
 use Yiisoft\Validator\Label;
@@ -33,7 +34,7 @@ final class AssignmentForm implements RulesProviderInterface
     public string $status = '';
 
     #[Label('Description')]
-    #[Length(max: 1000)]
+    #[Length(max: AssignmentDescription::MAX_LENGTH)]
     public string $description = '';
 
     public string $currentEmployee = '';
@@ -45,9 +46,10 @@ final class AssignmentForm implements RulesProviderInterface
     public static function fromBody(mixed $body, bool $editing): self
     {
         $form = new self($editing);
-        foreach (['employee', 'workItem', 'constructionSite', 'startDate', 'endDate', 'status', 'description', 'currentEmployee'] as $name) {
+        foreach (['employee', 'workItem', 'constructionSite', 'startDate', 'endDate', 'status', 'currentEmployee'] as $name) {
             $form->$name = FormBody::string($body, $name);
         }
+        $form->description = AssignmentDescription::normalize(FormBody::string($body, 'description'));
 
         return $form;
     }
