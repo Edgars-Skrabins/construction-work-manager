@@ -1,6 +1,7 @@
 {% set title = item ? t('Edit assignment') : t('New assignment') %}
 {% do this.setTitle(title) %}
 {% do assetManager.register('App\\Web\\Shared\\Layout\\Main\\AssignmentAsset') %}
+{% set descriptionMaxLength = constant('App\\Entity\\AssignmentDescription::MAX_LENGTH') %}
 <div class="row justify-content-center">
     <div class="col-lg-8" data-modal-content>
         <h1 class="h3 mb-4" data-modal-title>{{ title }}</h1>
@@ -77,6 +78,12 @@
                     {% include 'Web/Shared/Form/field-errors.twig' with {errors: errors.status ?? []} %}
                 </div>
             {% endif %}
+            <div class="mb-3">
+                <label for="description" class="form-label">{{ t('Description') }}</label>
+                <textarea class="form-control{% if errors.description is defined %} is-invalid{% endif %}" id="description" name="description" rows="4" maxlength="{{ descriptionMaxLength }}" aria-describedby="description-count">{{ form.description }}</textarea>
+                <div class="form-text text-end" id="description-count" data-char-count="description">{{ form.description|length }} / {{ descriptionMaxLength }}</div>
+                {% include 'Web/Shared/Form/field-errors.twig' with {errors: errors.description ?? []} %}
+            </div>
             <button type="submit" class="btn btn-primary">{{ t('Save') }}</button>
             <a class="btn btn-link" href="{{ urlGenerator.generate('assignment.list') }}" data-modal-cancel>{{ t('Cancel') }}</a>
         </form>

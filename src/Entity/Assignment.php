@@ -19,6 +19,7 @@ final readonly class Assignment
         public int $createdById,
         public DateTimeImmutable $createdAt,
         public DateTimeImmutable $updatedAt,
+        public ?string $description = null,
     ) {}
 
     public function displayStatus(DateTimeImmutable $today): AssignmentDisplayStatus

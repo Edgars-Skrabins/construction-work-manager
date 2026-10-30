@@ -38,6 +38,7 @@ final readonly class AssignmentRepository implements AssignmentRepositoryInterfa
         'a.CREATED_BY_ID',
         'a.CREATED_AT',
         'a.UPDATED_AT',
+        'a.DESCRIPTION',
     ];
 
     public function __construct(
@@ -193,6 +194,7 @@ final readonly class AssignmentRepository implements AssignmentRepositoryInterfa
         DateTimeImmutable $startDate,
         DateTimeImmutable $endDate,
         int $createdById,
+        ?string $description = null,
     ): int {
         /** @var array{ID: int|string} $keys */
         $keys = $this->db->createCommand()->insertReturningPks('ASSIGNMENT', [
@@ -203,19 +205,27 @@ final readonly class AssignmentRepository implements AssignmentRepositoryInterfa
             'END_DATE' => $endDate->format(self::DATE_FORMAT),
             'STATUS' => AssignmentStatus::Active->value,
             'CREATED_BY_ID' => $createdById,
+            'DESCRIPTION' => $description,
         ]);
 
         return (int) $keys['ID'];
     }
 
-    public function update(int $id, int $employeeId, DateTimeImmutable $startDate, DateTimeImmutable $endDate, AssignmentStatus $status): void
-    {
+    public function update(
+        int $id,
+        int $employeeId,
+        DateTimeImmutable $startDate,
+        DateTimeImmutable $endDate,
+        AssignmentStatus $status,
+        ?string $description,
+    ): void {
         $this->db->createCommand()
             ->update('ASSIGNMENT', [
                 'EMPLOYEE_ID' => $employeeId,
                 'START_DATE' => $startDate->format(self::DATE_FORMAT),
                 'END_DATE' => $endDate->format(self::DATE_FORMAT),
                 'STATUS' => $status->value,
+                'DESCRIPTION' => $description,
                 'UPDATED_AT' => new Expression('SYSUTCDATETIME()'),
             ], ['ID' => $id])
             ->execute();
@@ -297,7 +307,7 @@ final readonly class AssignmentRepository implements AssignmentRepositoryInterfa
      */
     private static function assignmentFromRow(array $row): Assignment
     {
-        /** @var array{ID: int|string, EMPLOYEE_ID: int|string, WORK_ITEM_ID: int|string, CONSTRUCTION_SITE_ID: int|string, START_DATE: string, END_DATE: string, STATUS: string, CREATED_BY_ID: int|string, CREATED_AT: string, UPDATED_AT: string} $row */
+        /** @var array{ID: int|string, EMPLOYEE_ID: int|string, WORK_ITEM_ID: int|string, CONSTRUCTION_SITE_ID: int|string, START_DATE: string, END_DATE: string, STATUS: string, CREATED_BY_ID: int|string, CREATED_AT: string, UPDATED_AT: string, DESCRIPTION: string|null} $row */
         return new Assignment(
             id: (int) $row['ID'],
             employeeId: (int) $row['EMPLOYEE_ID'],
@@ -309,6 +319,7 @@ final readonly class AssignmentRepository implements AssignmentRepositoryInterfa
             createdById: (int) $row['CREATED_BY_ID'],
             createdAt: DbTime::fromUtc($row['CREATED_AT']),
             updatedAt: DbTime::fromUtc($row['UPDATED_AT']),
+            description: $row['DESCRIPTION'],
         );
     }
 

@@ -80,7 +80,7 @@ final class AssignmentLockingTest extends IntegrationTestCase
         }];
         yield 'update to active' => [static function (AssignmentService $s, AssignmentRepositoryInterface $r): void {
             $id = $r->create(5, 1, 2, new DateTimeImmutable('2030-01-10'), new DateTimeImmutable('2030-01-20'), 2);
-            $s->update(2, $id, 5, '2030-01-10', '2030-01-25', 'active');
+            $s->update(2, $id, 5, '2030-01-10', '2030-01-25', 'active', '');
         }];
     }
 
@@ -101,7 +101,7 @@ final class AssignmentLockingTest extends IntegrationTestCase
     {
         $id = $this->service(AssignmentRepositoryInterface::class)->create(6, 1, 2, new DateTimeImmutable('2030-01-10'), new DateTimeImmutable('2030-01-20'), 2);
 
-        $this->assignments()->update(2, $id, 5, '2030-01-10', '2030-01-20', 'active');
+        $this->assignments()->update(2, $id, 5, '2030-01-10', '2030-01-20', 'active', '');
 
         self::assertLockTimeout(fn() => $this->other->createCommand('UPDATE EMPLOYEE SET ACCESS_LEVEL_ID = 1 WHERE ID = 5')->execute());
         self::assertLockTimeout(fn() => $this->other->createCommand('UPDATE EMPLOYEE SET ACCESS_LEVEL_ID = 1 WHERE ID = 6')->execute());
@@ -308,13 +308,20 @@ final class AssignmentLockingTest extends IntegrationTestCase
                 DateTimeImmutable $startDate,
                 DateTimeImmutable $endDate,
                 int $createdById,
+                ?string $description = null,
             ): int {
-                return $this->assignments->create($employeeId, $workItemId, $constructionSiteId, $startDate, $endDate, $createdById);
+                return $this->assignments->create($employeeId, $workItemId, $constructionSiteId, $startDate, $endDate, $createdById, $description);
             }
 
-            public function update(int $id, int $employeeId, DateTimeImmutable $startDate, DateTimeImmutable $endDate, AssignmentStatus $status): void
-            {
-                $this->assignments->update($id, $employeeId, $startDate, $endDate, $status);
+            public function update(
+                int $id,
+                int $employeeId,
+                DateTimeImmutable $startDate,
+                DateTimeImmutable $endDate,
+                AssignmentStatus $status,
+                ?string $description,
+            ): void {
+                $this->assignments->update($id, $employeeId, $startDate, $endDate, $status, $description);
             }
 
             public function delete(int $id): void

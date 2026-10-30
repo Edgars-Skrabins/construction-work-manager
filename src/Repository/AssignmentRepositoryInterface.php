@@ -60,9 +60,17 @@ interface AssignmentRepositoryInterface
         DateTimeImmutable $startDate,
         DateTimeImmutable $endDate,
         int $createdById,
+        ?string $description = null,
     ): int;
 
-    public function update(int $id, int $employeeId, DateTimeImmutable $startDate, DateTimeImmutable $endDate, AssignmentStatus $status): void;
+    public function update(
+        int $id,
+        int $employeeId,
+        DateTimeImmutable $startDate,
+        DateTimeImmutable $endDate,
+        AssignmentStatus $status,
+        ?string $description,
+    ): void;
 
     public function delete(int $id): void;
 

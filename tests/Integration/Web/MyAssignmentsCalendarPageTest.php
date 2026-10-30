@@ -166,12 +166,23 @@ final class MyAssignmentsCalendarPageTest extends IntegrationTestCase
         return new DateTimeImmutable('now', new DateTimeZone('Europe/Riga'));
     }
 
+    public function testDetailsDoNotShowTheDescriptionYet(): void
+    {
+        $this->service(AssignmentRepositoryInterface::class)->create(4, 2, 2, new DateTimeImmutable('2030-03-10'), new DateTimeImmutable('2030-03-12'), 2, 'Bring the ladder.');
+        $this->logIn('employee@mail.test', '123123123');
+
+        $body = (string) $this->request('GET', '/my-assignments/calendar?month=2030-03')->getBody();
+
+        assertStringContainsString('<template id="calendar-entry-', $body);
+        assertStringNotContainsString('Bring the ladder.', $body);
+    }
+
     private function insertMarchWork(): void
     {
         $assignments = $this->service(AssignmentRepositoryInterface::class);
         $assignments->create(4, 2, 2, new DateTimeImmutable('2030-03-10'), new DateTimeImmutable('2030-03-12'), 2);
         $assignments->create(6, 3, 3, new DateTimeImmutable('2030-03-11'), new DateTimeImmutable('2030-03-11'), 2);
         $cancelled = $assignments->create(4, 4, 1, new DateTimeImmutable('2030-03-15'), new DateTimeImmutable('2030-03-15'), 2);
-        $assignments->update($cancelled, 4, new DateTimeImmutable('2030-03-15'), new DateTimeImmutable('2030-03-15'), AssignmentStatus::Cancelled);
+        $assignments->update($cancelled, 4, new DateTimeImmutable('2030-03-15'), new DateTimeImmutable('2030-03-15'), AssignmentStatus::Cancelled, null);
     }
 }

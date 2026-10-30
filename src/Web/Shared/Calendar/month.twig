@@ -83,6 +83,10 @@
                     <dd class="col-sm-7">{{ entry.item.assignment.endDate|date('Y-m-d') }}</dd>
                     <dt class="col-sm-5 fw-normal text-body-secondary">{{ t('Status') }}</dt>
                     <dd class="col-sm-7 mb-0"><span class="calendar-swatch {{ entry.status.stripeClass() }}" aria-hidden="true"></span> {{ t(entry.status.label()) }}</dd>
+                    {% if showEmployee and entry.item.assignment.description is not null %}
+                        <dt class="col-12 fw-normal text-body-secondary mt-2">{{ t('Description') }}</dt>
+                        <dd class="col-12 mb-0 text-break">{{ entry.item.assignment.description|nl2br }}</dd>
+                    {% endif %}
                 </dl>
             </section>
         </template>
