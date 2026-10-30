@@ -1,7 +1,7 @@
 # Assignment description — Spec
 
 **Type:** feature
-**Status:** ready for implementation
+**Status:** done
 **Last updated:** 2026-10-30
 
 # Part 1 — Business logic and usage
@@ -77,23 +77,23 @@ No new dependencies. `yiisoft/validator` `Length` rule, Twig's built-in `nl2br` 
 
 Read Part 1 and Part 2 before starting. Work through the tasks in order and tick each one when it is done.
 
-Baseline before starting: `make check` green on `main` at `5f80836`.
+Baseline before starting: `make check` green on `main` at `5f80836`. After: 314 unit and 903 integration tests green.
 
 ### A. Schema
-- [ ] A1. Add `SQL/019_add_assignment_description.sql`, `SQL/down/019_add_assignment_description.sql` and `src/Migration/M261029000019AddAssignmentDescription.php` as in 2.2. Check that the migration round trip and schema tests still pass.
+- [x] A1. Add `SQL/019_add_assignment_description.sql`, `SQL/down/019_add_assignment_description.sql` and `src/Migration/M261029000019AddAssignmentDescription.php` as in 2.2. Check that the migration round trip and schema tests still pass.
 
 ### B. Entity, repository and service
-- [ ] B1. `Assignment::$description`, `AssignmentRepository` columns, mapping, `create()` and `update()` (interface too). Update every caller of `update()` in tests to pass `null` (or a description where the test is about it).
-- [ ] B2. Integration test in `tests/Integration/Repository/AssignmentRepositoryTest.php`: a description with line breaks and non-ASCII characters round-trips through `create()`, `find()`, `findListItem()` and `listInPeriod()`; `update()` changes it and sets it to NULL.
-- [ ] B3. `AssignmentService::create()`/`update()` take the description, trim it, store `null` for empty, and refuse more than 1000 characters with the error under `description`. Update callers (`AssignmentForm/Action.php`, service and locking tests).
-- [ ] B4. Integration tests in `tests/Integration/Service/AssignmentServiceTest.php`: trimmed on create and update, whitespace-only stored as NULL, exactly 1000 characters accepted, 1001 refused with the `description` error (and nothing saved), the error reported together with a period error.
+- [x] B1. `Assignment::$description`, `AssignmentRepository` columns, mapping, `create()` and `update()` (interface too). Update every caller of `update()` in tests to pass `null` (or a description where the test is about it).
+- [x] B2. Integration test in `tests/Integration/Repository/AssignmentRepositoryTest.php`: a description with line breaks and non-ASCII characters round-trips through `create()`, `find()`, `findListItem()` and `listInPeriod()`; `update()` changes it and sets it to NULL.
+- [x] B3. `AssignmentService::create()`/`update()` take the description, trim it, store `null` for empty, and refuse more than 1000 characters with the error under `description`. Update callers (`AssignmentForm/Action.php`, service and locking tests).
+- [x] B4. Integration tests in `tests/Integration/Service/AssignmentServiceTest.php`: trimmed on create and update, whitespace-only stored as NULL, exactly 1000 characters accepted, 1001 refused with the `description` error (and nothing saved), the error reported together with a period error.
 
 ### C. Web
-- [ ] C1. `AssignmentForm` property, label, `Length(max: 1000)` rule, `fromBody()` and `fromAssignment()`; unit test `tests/Unit/Web/AssignmentForm/AssignmentFormTest.php` for the length rule (1000 ok, 1001 refused) and reading the field.
-- [ ] C2. Textarea and counter in `AssignmentForm/template.twig`; counter wiring in `assets/assignment/assignment.js`.
-- [ ] C3. Description row in the `month.twig` details template, Work calendar only, with `nl2br`.
-- [ ] C4. Integration tests in `tests/Integration/Web/AssignmentPagesTest.php` and `ManagerTeamPagesTest.php`: the manager saves a description through the New and Edit forms and the Edit form shows it; an over-long description shows the error; the Work calendar popup shows it escaped with `<br>` for line breaks (`<b>` shows as `&lt;b&gt;`); the Assignments list doesn't show it; My work calendar doesn't show it.
+- [x] C1. `AssignmentForm` property, label, `Length(max: 1000)` rule, `fromBody()` and `fromAssignment()`; unit test `tests/Unit/Web/AssignmentForm/AssignmentFormTest.php` for the length rule (1000 ok, 1001 refused) and reading the field.
+- [x] C2. Textarea and counter in `AssignmentForm/template.twig`; counter wiring in `assets/assignment/assignment.js`.
+- [x] C3. Description row in the `month.twig` details template, Work calendar only, with `nl2br`.
+- [x] C4. Integration tests in `tests/Integration/Web/AssignmentPagesTest.php` and `ManagerTeamPagesTest.php`: the manager saves a description through the New and Edit forms and the Edit form shows it; an over-long description shows the error; the Work calendar popup shows it escaped with `<br>` for line breaks (`<b>` shows as `&lt;b&gt;`); the Assignments list doesn't show it; My work calendar doesn't show it.
 
 ### Z. Wrap-up
-- [ ] Z1. `make check` green.
-- [ ] Z2. Manual check in the running app as manager@mail.test: create an assignment with a two-line description in the modal, watch the counter, edit it, open it on the Work calendar. Screenshots at 375, 768 and 1280 px in both themes.
+- [x] Z1. `make check` green.
+- [x] Z2. Manual check in the running app as manager@mail.test: create an assignment with a two-line description in the modal, watch the counter, edit it, open it on the Work calendar. Screenshots at 375, 768 and 1280 px in both themes.
