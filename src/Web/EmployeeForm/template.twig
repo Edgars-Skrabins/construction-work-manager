@@ -2,8 +2,8 @@
 {% do this.setTitle(title) %}
 {% do assetManager.register('App\\Web\\Shared\\Layout\\Main\\EmployeeAsset') %}
 <div class="row justify-content-center">
-    <div class="col-lg-8">
-        <h1 class="h3 mb-4">{{ title }}</h1>
+    <div class="col-lg-8" data-modal-content>
+        <h1 class="h3 mb-4" data-modal-title>{{ title }}</h1>
         {% if employee and employee.account and employee.account.passwordHash is null %}
             <div class="alert alert-info d-flex justify-content-between align-items-center" role="status">
                 <span>{{ t("Login pending: the employee hasn't set a password yet.") }}</span>
@@ -78,7 +78,7 @@
                 {% include 'Web/Shared/Form/field-errors.twig' with {errors: errors.loginActive ?? []} %}
             </div>
             <button type="submit" class="btn btn-primary">{{ t('Save') }}</button>
-            <a class="btn btn-link" href="{{ urlGenerator.generate('employee.list') }}">{{ t('Cancel') }}</a>
+            <a class="btn btn-link" href="{{ urlGenerator.generate('employee.list') }}" data-modal-cancel>{{ t('Cancel') }}</a>
         </form>
     </div>
 </div>

@@ -7,8 +7,8 @@
     {name: 'country', label: t('Country'), maxlength: 100},
 ] %}
 <div class="row justify-content-center">
-    <div class="col-lg-8">
-        <h1 class="h3 mb-4">{{ title }}</h1>
+    <div class="col-lg-8" data-modal-content>
+        <h1 class="h3 mb-4" data-modal-title>{{ title }}</h1>
         <form method="post" action="{{ site ? urlGenerator.generate('site.edit', {id: site.id}) : urlGenerator.generate('site.create') }}" novalidate>
             {{ csrf.hiddenInput()|raw }}
             <div class="mb-3">
@@ -42,7 +42,7 @@
                 {% include 'Web/Shared/Form/field-errors.twig' with {errors: errors.requiredAccessLevelId ?? []} %}
             </div>
             <button type="submit" class="btn btn-primary">{{ t('Save') }}</button>
-            <a class="btn btn-link" href="{{ urlGenerator.generate('site.list') }}">{{ t('Cancel') }}</a>
+            <a class="btn btn-link" href="{{ urlGenerator.generate('site.list') }}" data-modal-cancel>{{ t('Cancel') }}</a>
         </form>
     </div>
 </div>
