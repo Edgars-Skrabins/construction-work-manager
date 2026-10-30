@@ -11,12 +11,14 @@ use App\Access\ForbiddenException;
 use App\Access\Permission;
 use App\Access\Role;
 use App\Access\Scope;
+use App\Entity\AccessLevel;
 use App\Entity\Assignment;
 use App\Entity\AssignmentDisplayStatus;
 use App\Entity\AssignmentListItem;
 use App\Entity\AssignmentStatus;
 use App\Entity\ConstructionSite;
 use App\Entity\Employee;
+use App\Repository\AccessLevelRepositoryInterface;
 use App\Repository\AssignmentRepositoryInterface;
 use App\Repository\ConstructionSiteRepositoryInterface;
 use App\Repository\EmployeeRepositoryInterface;
@@ -40,6 +42,7 @@ final readonly class AssignmentService
         private EmployeeRepositoryInterface $employees,
         private ConstructionSiteRepositoryInterface $sites,
         private WorkItemRepositoryInterface $workItems,
+        private AccessLevelRepositoryInterface $accessLevels,
         private AccessChecker $accessChecker,
         private AccessScope $accessScope,
         private ClockInterface $clock,
@@ -92,6 +95,7 @@ final readonly class AssignmentService
             employees: $this->assignableEmployees($actorId, $this->scope($actorId)),
             sites: $this->sites->all(),
             workItems: $this->workItems->all(),
+            accessLevels: $this->accessLevelsById(),
         );
     }
 
@@ -296,5 +300,18 @@ final readonly class AssignmentService
     private function invalidPeriod(): array
     {
         return ['startDate' => $this->translator->translate('Enter a valid start date.')];
+    }
+
+    /**
+     * @return array<int, AccessLevel>
+     */
+    private function accessLevelsById(): array
+    {
+        $levels = [];
+        foreach ($this->accessLevels->all() as $level) {
+            $levels[$level->id] = $level;
+        }
+
+        return $levels;
     }
 }

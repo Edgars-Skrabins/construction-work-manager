@@ -38,7 +38,7 @@ final class MyAssignmentsPageTest extends IntegrationTestCase
         assertStringContainsString('<title>My assignments</title>', $body);
         assertStringContainsString('<h2 class="h6 text-secondary text-uppercase mb-1">' . self::SITE . '</h2>', $body);
         assertStringContainsString('Mazā Nometņu iela 12, Rīga, Latvia', $body);
-        assertStringContainsString('Required access level: General', $body);
+        assertStringContainsString('Required access level: General (1)', $body);
         assertStringContainsString('Concrete works', $body);
         assertStringContainsString('Formwork, reinforcement and pouring of foundations, slabs and walls.', $body);
         assertMatchesRegularExpression('#<div class="assignment-block status-in-progress">\s*<div [^>]*>\s*<span class="fw-semibold">Concrete works</span>\s*<span [^>]*>\s*<span class="text-nowrap">\d{4}-\d{2}-\d{2} – \d{4}-\d{2}-\d{2}</span>\s*<span class="badge text-bg-primary">In progress</span>#u', $body);

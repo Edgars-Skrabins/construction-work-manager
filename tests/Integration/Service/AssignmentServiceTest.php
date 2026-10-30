@@ -12,6 +12,7 @@ use App\Entity\AssignmentDisplayStatus;
 use App\Entity\AssignmentListItem;
 use App\Entity\AssignmentStatus;
 use App\Entity\Employee;
+use App\Repository\AccessLevelRepositoryInterface;
 use App\Repository\AssignmentRepositoryInterface;
 use App\Repository\ConstructionSiteRepositoryInterface;
 use App\Repository\EmployeeRepositoryInterface;
@@ -424,6 +425,7 @@ final class AssignmentServiceTest extends IntegrationTestCase
             $this->service(EmployeeRepositoryInterface::class),
             $this->service(ConstructionSiteRepositoryInterface::class),
             $this->service(WorkItemRepositoryInterface::class),
+            $this->service(AccessLevelRepositoryInterface::class),
             $this->service(AccessChecker::class),
             $this->service(AccessScope::class),
             new FixedClock($now),

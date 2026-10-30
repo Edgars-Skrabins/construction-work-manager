@@ -45,6 +45,7 @@ final class ManagerTeamPagesTest extends IntegrationTestCase
         foreach ([...self::SECOND_TEAM, 'Bērziņš, Jānis', 'Kalniņa, Ilze', 'Ozoliņš, Andris'] as $name) {
             assertStringNotContainsString("<td>$name</td>", $body);
         }
+        assertMatchesRegularExpression('#<td>Liepiņš, Mārtiņš</td>(?:(?!</tr>).)*<td>General \(1\)</td>#su', $body);
         assertStringNotContainsString('href="/employees/create"', $body);
         assertStringNotContainsString('/edit"', $body);
         assertStringNotContainsString('/delete"', $body);

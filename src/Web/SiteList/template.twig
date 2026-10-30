@@ -32,7 +32,7 @@
                         <td>{{ site.city }}</td>
                         <td>{{ site.country }}</td>
                         <td class="text-end">{{ site.areaM2 }}</td>
-                        <td>{{ site.requiredAccessLevelName }}</td>
+                        <td>{{ site.requiredAccessLevel().label() }}</td>
                         <td class="text-end text-nowrap">
                             {% if access.can('site.update') %}
                                 <a class="btn btn-sm btn-outline-primary" href="{{ urlGenerator.generate('site.edit', {id: site.id}) }}">{{ t('Edit') }}</a>

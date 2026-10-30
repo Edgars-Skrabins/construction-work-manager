@@ -84,6 +84,26 @@ final class AdminPagesTest extends IntegrationTestCase
         }
     }
 
+    public function testAccessLevelsAreShownWithTheirNumber(): void
+    {
+        $this->asAdmin();
+
+        $employees = (string) $this->request('GET', '/employees?q=' . rawurlencode('Bērziņš'))->getBody();
+        assertMatchesRegularExpression('#<td>Bērziņš, Jānis</td>(?:(?!</tr>).)*<td>Classified \(4\)</td>#su', $employees);
+
+        $sites = (string) $this->request('GET', '/sites?q=' . rawurlencode('Ādaži'))->getBody();
+        assertMatchesRegularExpression('#<td>Ādaži Defence Facility</td>(?:(?!</tr>).)*<td>Classified \(4\)</td>#su', $sites);
+
+        foreach (['/employees/4/edit' => 'accessLevelId', '/sites/1/edit' => 'requiredAccessLevelId'] as $path => $field) {
+            $body = (string) $this->request('GET', $path)->getBody();
+            assertMatchesRegularExpression(sprintf('#<select [^>]*name="%s"[^>]*>\s*<option value="">Choose…</option>#u', $field), $body);
+            foreach ([1 => 'General', 2 => 'Restricted', 3 => 'Critical infrastructure', 4 => 'Classified'] as $id => $name) {
+                assertMatchesRegularExpression(sprintf('#<option value="%d"( selected)?>%s \(%d\)</option>#', $id, $name, $id), $body);
+            }
+            assertMatchesRegularExpression('#<option value="1" selected>General \(1\)</option>#', $body);
+        }
+    }
+
     #[DataProvider('adminOnlyPages')]
     public function testOtherRolesAreForbidden(string $path): void
     {

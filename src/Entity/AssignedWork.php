@@ -11,7 +11,6 @@ final readonly class AssignedWork
         public string $street,
         public string $city,
         public string $country,
-        public string $requiredAccessLevelName,
         public ?string $workItemDescription,
     ) {}
 

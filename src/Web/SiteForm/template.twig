@@ -36,7 +36,7 @@
                 <select class="form-select{% if errors.requiredAccessLevelId is defined %} is-invalid{% endif %}" id="requiredAccessLevelId" name="requiredAccessLevelId" required>
                     <option value="">{{ t('Choose…') }}</option>
                     {% for level in accessLevels %}
-                        <option value="{{ level.id }}"{% if form.requiredAccessLevelId == level.id ~ '' %} selected{% endif %}>{{ level.id }} – {{ level.name }}</option>
+                        <option value="{{ level.id }}"{% if form.requiredAccessLevelId == level.id ~ '' %} selected{% endif %}>{{ level.label() }}</option>
                     {% endfor %}
                 </select>
                 {% include 'Web/Shared/Form/field-errors.twig' with {errors: errors.requiredAccessLevelId ?? []} %}

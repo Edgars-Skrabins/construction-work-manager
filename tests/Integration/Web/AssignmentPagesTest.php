@@ -115,6 +115,10 @@ final class AssignmentPagesTest extends IntegrationTestCase
         foreach ([1 => 1, 2 => 2, 3 => 3, 4 => 4, 10 => 4, 11 => 2] as $id => $level) {
             assertStringContainsString(sprintf('<option value="%d" data-required-level="%d"', $id, $level), $body);
         }
+        assertStringContainsString('>Mārtiņš Liepiņš – access level General (1)</option>', $body);
+        assertStringContainsString('>Laura Krūmiņa – access level Restricted (2)</option>', $body);
+        assertStringContainsString('>Āgenskalns Residential Block – requires General (1)</option>', $body);
+        assertStringContainsString('>Rīga Thermal Power Plant Upgrade – requires Critical infrastructure (3)</option>', $body);
     }
 
     public function testManagerCreatesEditsAndDeletesAnAssignment(): void

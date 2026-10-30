@@ -379,7 +379,7 @@ final class AssignmentRepositoryTest extends IntegrationTestCase
         $first = $work[0];
         assertSame('Āgenskalns Residential Block', $first->item->constructionSiteName);
         assertSame('Mazā Nometņu iela 12, Rīga, Latvia', $first->address());
-        assertSame('General', $first->requiredAccessLevelName);
+        assertSame('General (1)', $first->item->siteLevel()->label());
         assertSame('Concrete works', $first->item->workItemName);
         assertSame('Formwork, reinforcement and pouring of foundations, slabs and walls.', $first->workItemDescription);
         assertSame([], $this->repository()->findAssignedWork(5));
