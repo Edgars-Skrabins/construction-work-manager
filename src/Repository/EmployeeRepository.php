@@ -86,6 +86,19 @@ final readonly class EmployeeRepository implements EmployeeRepositoryInterface
         return is_string($role) ? Role::tryFrom($role) : null;
     }
 
+    public function managerNameOf(int $employeeId): ?string
+    {
+        /** @var array{FIRST_NAME: string, LAST_NAME: string}|null $row */
+        $row = (new Query($this->db))
+            ->select(['m.FIRST_NAME', 'm.LAST_NAME'])
+            ->from(['e' => 'EMPLOYEE'])
+            ->innerJoin(['m' => 'EMPLOYEE'], 'm.ID = e.MANAGER_ID')
+            ->where(['e.ID' => $employeeId])
+            ->one();
+
+        return $row === null ? null : $row['FIRST_NAME'] . ' ' . $row['LAST_NAME'];
+    }
+
     public function withRole(Role $role, ?int $managerId = null, ?int $exceptId = null): array
     {
         $query = $this->query()

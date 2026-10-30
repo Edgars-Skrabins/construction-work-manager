@@ -17,6 +17,7 @@ use DateTimeImmutable;
 use PHPUnit\Framework\Attributes\DataProvider;
 use Psr\Clock\ClockInterface;
 
+use function PHPUnit\Framework\assertNull;
 use function PHPUnit\Framework\assertSame;
 
 final class MyAssignmentsServiceTest extends IntegrationTestCase
@@ -83,6 +84,25 @@ final class MyAssignmentsServiceTest extends IntegrationTestCase
         $ids = array_map(static fn(AssignmentListItem $item): int => $item->assignment->id, $items);
         sort($ids);
         assertSame([$endsOnFirstDay, $startsOnLastDay, $spansTheRange], $ids);
+    }
+
+    public function testManagerNameIsIncluded(): void
+    {
+        assertSame('Ilze Kalniņa', $this->myAssignments()->forEmployee(6)->managerName);
+    }
+
+    public function testEmployeeWithoutManagerHasNoManagerName(): void
+    {
+        $this->db()->createCommand()->insert('EMPLOYEE', [
+            'FIRST_NAME' => 'Test',
+            'LAST_NAME' => 'Person',
+            'BIRTH_DATE' => '1990-01-01',
+            'ACCESS_LEVEL_ID' => 1,
+            'ROLE' => 'employee',
+            'MANAGER_ID' => null,
+        ])->execute();
+
+        assertNull($this->myAssignments()->forEmployee((int) $this->db()->getLastInsertId())->managerName);
     }
 
     /**

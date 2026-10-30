@@ -11,12 +11,14 @@ use App\Entity\AssignedSite;
 use App\Entity\AssignmentListItem;
 use App\Entity\AssignmentStatus;
 use App\Repository\AssignmentRepositoryInterface;
+use App\Repository\EmployeeRepositoryInterface;
 use DateTimeImmutable;
 
 final readonly class MyAssignmentsService
 {
     public function __construct(
         private AssignmentRepositoryInterface $assignments,
+        private EmployeeRepositoryInterface $employees,
         private AssignmentService $assignmentService,
         private AccessChecker $accessChecker,
     ) {}
@@ -43,6 +45,7 @@ final readonly class MyAssignmentsService
         return new MyAssignments(
             sites: array_map(static fn(array $rows): AssignedSite => new AssignedSite($rows), array_values($sites)),
             history: $history,
+            managerName: $this->employees->managerNameOf($employeeId),
         );
     }
 
