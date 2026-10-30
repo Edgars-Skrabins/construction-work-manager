@@ -47,6 +47,7 @@ final class ManagerTeamPagesTest extends IntegrationTestCase
         }
         assertMatchesRegularExpression('#<td>Liepiņš, Mārtiņš</td>(?:(?!</tr>).)*<td>General \(1\)</td>#su', $body);
         assertStringNotContainsString('href="/employees/create"', $body);
+        assertStringNotContainsString('(you)', $body);
         assertStringNotContainsString('/edit"', $body);
         assertStringNotContainsString('/delete"', $body);
     }
