@@ -33,6 +33,7 @@ return [
     'Search' => 'Meklēt',
     'Clear' => 'Notīrīt',
     'No results for “{query}”.' => 'Pēc „{query}” nekas netika atrasts.',
+    '{count, plural, one{# result} other{# results}}' => '{count, plural, zero{# rezultātu} one{# rezultāts} other{# rezultāti}}',
     'Name or email' => 'Vārds vai e-pasts',
     'Name or description' => 'Nosaukums vai apraksts',
     'Employee, work item or site' => 'Darbinieks, darba veids vai būvobjekts',
