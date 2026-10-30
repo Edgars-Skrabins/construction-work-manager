@@ -1,0 +1,91 @@
+.select-picker {
+    --select-picker-rows: 8;
+    --select-picker-row-height: calc(1.5em + 2 * var(--bs-dropdown-item-padding-y, 0.25rem));
+    max-width: 100%;
+}
+
+.select-picker-toggle {
+    display: block;
+    width: 100%;
+    overflow: hidden;
+    text-align: start;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.select-picker-toggle:disabled {
+    cursor: not-allowed;
+}
+
+.select-picker-menu {
+    top: 100%;
+    left: 0;
+    width: 100%;
+    min-width: 0;
+    margin-top: var(--bs-dropdown-spacer);
+}
+
+.select-picker-up .select-picker-menu {
+    top: auto;
+    bottom: 100%;
+    margin-top: 0;
+    margin-bottom: var(--bs-dropdown-spacer);
+}
+
+.select-picker-search {
+    width: calc(100% - 2 * var(--bs-dropdown-item-padding-x));
+    margin: 0 var(--bs-dropdown-item-padding-x) var(--bs-dropdown-padding-y);
+}
+
+.select-picker-list {
+    position: relative;
+    max-height: calc(var(--select-picker-rows) * var(--select-picker-row-height));
+    margin: 0;
+    padding: 0;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    list-style: none;
+}
+
+.select-picker-list:focus {
+    outline: 0;
+}
+
+.select-picker-option {
+    min-height: var(--select-picker-row-height);
+    cursor: pointer;
+    white-space: normal;
+    overflow-wrap: anywhere;
+}
+
+.select-picker-option:hover,
+.select-picker-option:focus {
+    color: var(--bs-dropdown-link-color);
+    background-color: transparent;
+}
+
+.select-picker-option.is-highlighted {
+    color: var(--bs-dropdown-link-hover-color);
+    background-color: var(--bs-secondary-bg);
+    box-shadow: inset 3px 0 0 var(--bs-primary);
+}
+
+.select-picker-option[aria-selected="true"] {
+    color: var(--bs-primary-text-emphasis);
+    font-weight: 600;
+}
+
+.select-picker-placeholder,
+.select-picker-option[aria-disabled="true"] {
+    color: var(--bs-secondary-color);
+}
+
+.select-picker-option[aria-disabled="true"] {
+    cursor: not-allowed;
+}
+
+.select-picker-empty {
+    margin: 0;
+    padding: var(--bs-dropdown-item-padding-y) var(--bs-dropdown-item-padding-x);
+    color: var(--bs-secondary-color);
+}
