@@ -23,6 +23,8 @@ interface EmployeeRepositoryInterface
 
     public function roleOf(int $id): ?Role;
 
+    public function managerNameOf(int $employeeId): ?string;
+
     /**
      * @return list<Employee>
      */
