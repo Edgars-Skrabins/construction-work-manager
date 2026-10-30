@@ -1,13 +1,9 @@
 {% do this.setTitle(t('My work calendar')) %}
-{% set month = calendar.month() %}
 <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-4">
     <h1 class="h3 mb-0">{{ t('My work calendar') }}</h1>
     <a class="btn btn-outline-secondary" href="{{ urlGenerator.generate('my-assignments') }}">{{ t('List') }}</a>
 </div>
-<nav class="d-flex flex-wrap align-items-center gap-2 mb-3" aria-label="{{ t('Months') }}">
-    <a class="btn btn-sm btn-outline-primary" href="{{ urlGenerator.generate('my-assignments.calendar', [], {month: calendar.previousMonth()}) }}">‹ {{ t('Previous') }}</a>
-    <h2 class="h5 mb-0 text-nowrap">{{ month_year(month) }}</h2>
-    <a class="btn btn-sm btn-outline-primary" href="{{ urlGenerator.generate('my-assignments.calendar', [], {month: calendar.nextMonth()}) }}">{{ t('Next') }} ›</a>
-    <a class="btn btn-sm btn-link" href="{{ urlGenerator.generate('my-assignments.calendar', [], {month: calendar.currentMonth()}) }}">{{ t('Today') }}</a>
-</nav>
+<div class="mb-3">
+    {% include 'Web/Shared/Calendar/month-nav.twig' with {calendar: calendar, route: 'my-assignments.calendar', query: {}} %}
+</div>
 {% include 'Web/Shared/Calendar/month.twig' with {weeks: weeks, statuses: statuses, showEmployee: false} %}

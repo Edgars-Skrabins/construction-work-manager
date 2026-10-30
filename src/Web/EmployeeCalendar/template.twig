@@ -5,12 +5,7 @@
     <a class="btn btn-outline-secondary" href="{{ urlGenerator.generate('employee.list') }}">{{ t('Employees list') }}</a>
 </div>
 <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-3">
-    <nav class="d-flex align-items-center gap-2" aria-label="{{ t('Months') }}">
-        <a class="btn btn-sm btn-outline-primary" href="{{ urlGenerator.generate('employee.calendar', [], {month: calendar.previousMonth(), employee: employeeId}) }}">‹ {{ t('Previous') }}</a>
-        <h2 class="h5 mb-0 text-nowrap">{{ month_year(month) }}</h2>
-        <a class="btn btn-sm btn-outline-primary" href="{{ urlGenerator.generate('employee.calendar', [], {month: calendar.nextMonth(), employee: employeeId}) }}">{{ t('Next') }} ›</a>
-        <a class="btn btn-sm btn-link" href="{{ urlGenerator.generate('employee.calendar', [], {month: calendar.currentMonth(), employee: employeeId}) }}">{{ t('Today') }}</a>
-    </nav>
+    {% include 'Web/Shared/Calendar/month-nav.twig' with {calendar: calendar, route: 'employee.calendar', query: {employee: employeeId}} %}
     <form class="d-flex align-items-center gap-2" method="get" action="{{ urlGenerator.generate('employee.calendar') }}">
         <input type="hidden" name="month" value="{{ month|date('Y-m') }}">
         <label class="visually-hidden" for="calendar-employee">{{ t('Employee') }}</label>
