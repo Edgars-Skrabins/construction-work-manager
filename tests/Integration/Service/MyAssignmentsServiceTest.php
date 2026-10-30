@@ -8,10 +8,12 @@ use App\Access\ForbiddenException;
 use App\Entity\AssignedSite;
 use App\Entity\AssignedWork;
 use App\Entity\AssignmentDisplayStatus;
+use App\Entity\AssignmentListItem;
 use App\Entity\AssignmentStatus;
 use App\Repository\AssignmentRepositoryInterface;
 use App\Service\MyAssignmentsService;
 use App\Tests\Integration\IntegrationTestCase;
+use DateTimeImmutable;
 use PHPUnit\Framework\Attributes\DataProvider;
 use Psr\Clock\ClockInterface;
 
@@ -65,6 +67,24 @@ final class MyAssignmentsServiceTest extends IntegrationTestCase
         assertSame([[], []], [$mine->sites, $mine->history]);
     }
 
+    public function testCalendarHasOnlyTheEmployeesOwnActiveAndDoneWorkInTheRange(): void
+    {
+        $this->insert(6, 1, 1, -10, -6);
+        $endsOnFirstDay = $this->insert(6, 2, 1, -6, -5, AssignmentStatus::Done);
+        $startsOnLastDay = $this->insert(6, 3, 3, 5, 9);
+        $spansTheRange = $this->insert(6, 4, 2, -20, 20);
+        $this->insert(6, 5, 3, 0, 0, AssignmentStatus::Cancelled);
+        $this->insert(6, 1, 2, 6, 8);
+        $this->insert(7, 5, 2, -1, 1);
+        $today = $this->service(ClockInterface::class)->now()->setTime(0, 0);
+
+        $items = $this->myAssignments()->calendar(6, $today->modify('-5 days'), $today->modify('+5 days'));
+
+        $ids = array_map(static fn(AssignmentListItem $item): int => $item->assignment->id, $items);
+        sort($ids);
+        assertSame([$endsOnFirstDay, $startsOnLastDay, $spansTheRange], $ids);
+    }
+
     /**
      * @return iterable<string, array{int}>
      */
@@ -80,6 +100,14 @@ final class MyAssignmentsServiceTest extends IntegrationTestCase
         $this->expectException(ForbiddenException::class);
 
         $this->myAssignments()->forEmployee($employeeId);
+    }
+
+    #[DataProvider('nonEmployees')]
+    public function testOtherRolesHaveNoOwnCalendar(int $employeeId): void
+    {
+        $this->expectException(ForbiddenException::class);
+
+        $this->myAssignments()->calendar($employeeId, new DateTimeImmutable('2026-10-26'), new DateTimeImmutable('2026-12-06'));
     }
 
     /**

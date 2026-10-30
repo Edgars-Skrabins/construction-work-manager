@@ -6,9 +6,12 @@ namespace App\Service;
 
 use App\Access\AccessChecker;
 use App\Access\Permission;
+use App\Access\Scope;
 use App\Entity\AssignedSite;
+use App\Entity\AssignmentListItem;
 use App\Entity\AssignmentStatus;
 use App\Repository\AssignmentRepositoryInterface;
+use DateTimeImmutable;
 
 final readonly class MyAssignmentsService
 {
@@ -41,5 +44,15 @@ final readonly class MyAssignmentsService
             sites: array_map(static fn(array $rows): AssignedSite => new AssignedSite($rows), array_values($sites)),
             history: $history,
         );
+    }
+
+    /**
+     * @return list<AssignmentListItem>
+     */
+    public function calendar(int $employeeId, DateTimeImmutable $from, DateTimeImmutable $to): array
+    {
+        $this->accessChecker->ensure($employeeId, Permission::AssignmentReadOwn);
+
+        return $this->assignments->listInPeriod($employeeId, Scope::Own, $from, $to, null);
     }
 }
