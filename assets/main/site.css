@@ -148,6 +148,7 @@ summary:focus-visible {
 
 .navbar-control {
     height: var(--app-control-height);
+    white-space: nowrap;
     display: inline-flex;
     align-items: center;
     justify-content: center;
@@ -186,6 +187,7 @@ summary:focus-visible {
 
     .navbar-account {
         max-width: 16rem;
+        margin-left: 1rem;
     }
 }
 
@@ -327,6 +329,10 @@ summary:focus-visible {
 .card {
     --bs-card-bg: var(--app-surface);
     --bs-card-cap-bg: var(--app-surface);
+}
+
+.table-responsive {
+    position: relative;
 }
 
 .table {
@@ -501,6 +507,21 @@ details[open] > .history-toggle .history-toggle-icon {
     .form-select {
         padding-top: 0.5625rem;
         padding-bottom: 0.5625rem;
+    }
+
+    .form-control-sm,
+    .form-select-sm {
+        padding-top: 0.65625rem;
+        padding-bottom: 0.65625rem;
+    }
+
+    .site-navbar .nav-link {
+        padding-top: 0.625rem;
+        padding-bottom: 0.625rem;
+    }
+
+    .modal-header .btn-close {
+        padding: 0.875rem;
     }
 
     .pagination {
