@@ -284,7 +284,7 @@ final class AssignmentPagesTest extends IntegrationTestCase
 
         assertStringContainsString('Employee: Laura Krūmiņa', $body);
         assertStringNotContainsString('Mārtiņš Liepiņš', $body);
-        assertStringContainsString('<a class="link-light text-decoration-none" href="/assignments?sort=employee&amp;q=Kr%C5%ABmi%C5%86a"', $body);
+        assertStringContainsString('<a class="link-body-emphasis text-decoration-none" href="/assignments?sort=employee&amp;q=Kr%C5%ABmi%C5%86a"', $body);
         assertStringContainsString('<input type="hidden" name="employee" value="5">', $body);
         assertStringContainsString('href="/assignments?sort=-employee&amp;q=Kr%C5%ABmi%C5%86a&amp;employee=5"', $body);
     }
