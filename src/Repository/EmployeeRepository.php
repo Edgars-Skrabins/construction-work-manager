@@ -30,6 +30,7 @@ final readonly class EmployeeRepository implements EmployeeRepositoryInterface
             'accessLevel' => ListSort::columns(['e.ACCESS_LEVEL_ID'], 'e.ID'),
             'role' => ListSort::columns(['e.ROLE'], 'e.ID'),
             'manager' => ListSort::columns(['m.LAST_NAME', 'm.FIRST_NAME'], 'e.ID'),
+            'login' => ListSort::columns(['(CASE WHEN a.EMPLOYEE_ID IS NULL THEN 0 WHEN a.IS_ACTIVE = 0 THEN 3 WHEN a.PASSWORD_HASH IS NULL THEN 1 ELSE 2 END)'], 'e.ID'),
         ];
 
         $query = (new Query($this->db))

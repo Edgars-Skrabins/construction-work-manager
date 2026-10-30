@@ -5,7 +5,7 @@
     <nav aria-label="{{ t('Pages') }}">
         <ul class="pagination">
             {% if current > 1 %}
-                <li class="page-item"><a class="page-link" href="{{ urlGenerator.generate(route, [], {sort: sort, page: current - 1, q: q ?: null}) }}">{{ t('Previous') }}</a></li>
+                <li class="page-item"><a class="page-link" href="{{ urlGenerator.generate(route, [], {sort: sort, page: current - 1, q: q ?: null}|merge(filters ?? {})) }}">{{ t('Previous') }}</a></li>
             {% else %}
                 <li class="page-item disabled"><span class="page-link">{{ t('Previous') }}</span></li>
             {% endif %}
@@ -18,13 +18,13 @@
                     {% if number == current %}
                         <li class="page-item active" aria-current="page"><span class="page-link">{{ number }}</span></li>
                     {% else %}
-                        <li class="page-item"><a class="page-link" href="{{ urlGenerator.generate(route, [], {sort: sort, page: number, q: q ?: null}) }}">{{ number }}</a></li>
+                        <li class="page-item"><a class="page-link" href="{{ urlGenerator.generate(route, [], {sort: sort, page: number, q: q ?: null}|merge(filters ?? {})) }}">{{ number }}</a></li>
                     {% endif %}
                     {% set shown = number %}
                 {% endif %}
             {% endfor %}
             {% if current < last %}
-                <li class="page-item"><a class="page-link" href="{{ urlGenerator.generate(route, [], {sort: sort, page: current + 1, q: q ?: null}) }}">{{ t('Next') }}</a></li>
+                <li class="page-item"><a class="page-link" href="{{ urlGenerator.generate(route, [], {sort: sort, page: current + 1, q: q ?: null}|merge(filters ?? {})) }}">{{ t('Next') }}</a></li>
             {% else %}
                 <li class="page-item disabled"><span class="page-link">{{ t('Next') }}</span></li>
             {% endif %}

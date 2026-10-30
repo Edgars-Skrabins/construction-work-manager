@@ -80,7 +80,7 @@ final class AssignmentLockingTest extends IntegrationTestCase
         }];
         yield 'update to active' => [static function (AssignmentService $s, AssignmentRepositoryInterface $r): void {
             $id = $r->create(5, 1, 2, new DateTimeImmutable('2030-01-10'), new DateTimeImmutable('2030-01-20'), 2);
-            $s->update(2, $id, '2030-01-10', '2030-01-25', 'active');
+            $s->update(2, $id, 5, '2030-01-10', '2030-01-25', 'active');
         }];
     }
 
@@ -95,6 +95,18 @@ final class AssignmentLockingTest extends IntegrationTestCase
         self::assertLockTimeout(fn() => $this->other->createCommand('UPDATE EMPLOYEE SET ACCESS_LEVEL_ID = 1 WHERE ID = 5')->execute());
         self::assertLockTimeout(fn() => $this->other->createCommand('UPDATE CONSTRUCTION_SITE SET REQUIRED_ACCESS_LEVEL_ID = 1 WHERE ID = 2')->execute());
         assertSame(1, $this->other->createCommand('UPDATE EMPLOYEE SET ACCESS_LEVEL_ID = 1 WHERE ID = 6')->execute());
+    }
+
+    public function testAReassignmentHoldsBothEmployeeRowsAndTheSiteRowUntilItCommits(): void
+    {
+        $id = $this->service(AssignmentRepositoryInterface::class)->create(6, 1, 2, new DateTimeImmutable('2030-01-10'), new DateTimeImmutable('2030-01-20'), 2);
+
+        $this->assignments()->update(2, $id, 5, '2030-01-10', '2030-01-20', 'active');
+
+        self::assertLockTimeout(fn() => $this->other->createCommand('UPDATE EMPLOYEE SET ACCESS_LEVEL_ID = 1 WHERE ID = 5')->execute());
+        self::assertLockTimeout(fn() => $this->other->createCommand('UPDATE EMPLOYEE SET ACCESS_LEVEL_ID = 1 WHERE ID = 6')->execute());
+        self::assertLockTimeout(fn() => $this->other->createCommand('UPDATE CONSTRUCTION_SITE SET REQUIRED_ACCESS_LEVEL_ID = 1 WHERE ID = 2')->execute());
+        assertSame(1, $this->other->createCommand('UPDATE EMPLOYEE SET ACCESS_LEVEL_ID = 1 WHERE ID = 4')->execute());
     }
 
     /**
@@ -245,9 +257,9 @@ final class AssignmentLockingTest extends IntegrationTestCase
                 return $this->assignments->findListItem($id, $viewerId, $scope);
             }
 
-            public function listPaginator(int $viewerId, Scope $scope, string $sort, string $search): OffsetPaginator
+            public function listPaginator(int $viewerId, Scope $scope, string $sort, string $search, array $filters = []): OffsetPaginator
             {
-                return $this->assignments->listPaginator($viewerId, $scope, $sort, $search);
+                return $this->assignments->listPaginator($viewerId, $scope, $sort, $search, $filters);
             }
 
             public function listInPeriod(int $viewerId, Scope $scope, DateTimeImmutable $from, DateTimeImmutable $to, ?int $employeeId): array
@@ -290,9 +302,9 @@ final class AssignmentLockingTest extends IntegrationTestCase
                 return $this->assignments->create($employeeId, $workItemId, $constructionSiteId, $startDate, $endDate, $createdById);
             }
 
-            public function updatePeriodAndStatus(int $id, DateTimeImmutable $startDate, DateTimeImmutable $endDate, AssignmentStatus $status): void
+            public function update(int $id, int $employeeId, DateTimeImmutable $startDate, DateTimeImmutable $endDate, AssignmentStatus $status): void
             {
-                $this->assignments->updatePeriodAndStatus($id, $startDate, $endDate, $status);
+                $this->assignments->update($id, $employeeId, $startDate, $endDate, $status);
             }
 
             public function delete(int $id): void

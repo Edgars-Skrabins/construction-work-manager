@@ -45,17 +45,17 @@ final class AssignmentRepositoryTest extends IntegrationTestCase
         assertSame(AssignmentStatus::Active, $assignment->status);
     }
 
-    public function testUpdatePeriodAndStatusChangesOnlyThoseFields(): void
+    public function testUpdateChangesTheEmployeePeriodAndStatusOnly(): void
     {
         $id = $this->insert(5, 2, 2, '2026-11-10', '2026-11-20');
 
-        $this->repository()->updatePeriodAndStatus($id, new DateTimeImmutable('2026-11-12'), new DateTimeImmutable('2026-11-25'), AssignmentStatus::Done);
+        $this->repository()->update($id, 6, new DateTimeImmutable('2026-11-12'), new DateTimeImmutable('2026-11-25'), AssignmentStatus::Done);
         $assignment = $this->repository()->find($id, 1, Scope::All);
 
         assertNotNull($assignment);
         assertSame(['2026-11-12', '2026-11-25'], [$assignment->startDate->format('Y-m-d'), $assignment->endDate->format('Y-m-d')]);
         assertSame(AssignmentStatus::Done, $assignment->status);
-        assertSame([5, 2, 2], [$assignment->employeeId, $assignment->workItemId, $assignment->constructionSiteId]);
+        assertSame([6, 2, 2], [$assignment->employeeId, $assignment->workItemId, $assignment->constructionSiteId]);
     }
 
     public function testDeleteRemovesTheAssignment(): void
@@ -221,7 +221,7 @@ final class AssignmentRepositoryTest extends IntegrationTestCase
     {
         if ($other !== null) {
             $id = $this->insert(4, 1, 1, $other[0], $other[1]);
-            $this->repository()->updatePeriodAndStatus($id, new DateTimeImmutable($other[0]), new DateTimeImmutable($other[1]), AssignmentStatus::from($other[2]));
+            $this->repository()->update($id, 4, new DateTimeImmutable($other[0]), new DateTimeImmutable($other[1]), AssignmentStatus::from($other[2]));
         }
 
         $found = $this->repository()->findOverlappingActive(4, 1, 1, new DateTimeImmutable('2026-11-10'), new DateTimeImmutable('2026-11-20'), null);
@@ -317,9 +317,9 @@ final class AssignmentRepositoryTest extends IntegrationTestCase
     public function testNeedsAccessExcludesDoneAndCancelledAndOtherSites(): void
     {
         $done = $this->insert(5, 1, 2, '2026-11-10', '2026-11-20');
-        $this->repository()->updatePeriodAndStatus($done, new DateTimeImmutable('2026-11-10'), new DateTimeImmutable('2026-11-20'), AssignmentStatus::Done);
+        $this->repository()->update($done, 5, new DateTimeImmutable('2026-11-10'), new DateTimeImmutable('2026-11-20'), AssignmentStatus::Done);
         $cancelled = $this->insert(8, 1, 2, '2026-11-10', '2026-11-20');
-        $this->repository()->updatePeriodAndStatus($cancelled, new DateTimeImmutable('2026-11-10'), new DateTimeImmutable('2026-11-20'), AssignmentStatus::Cancelled);
+        $this->repository()->update($cancelled, 8, new DateTimeImmutable('2026-11-10'), new DateTimeImmutable('2026-11-20'), AssignmentStatus::Cancelled);
         $this->insert(19, 1, 3, '2026-11-10', '2026-11-20');
 
         assertSame([], $this->employeeIdsNeedingAccess(2, '2026-11-15'));
@@ -367,7 +367,7 @@ final class AssignmentRepositoryTest extends IntegrationTestCase
         $electrical = $this->insert(6, 2, 1, '2026-11-01', '2026-11-05');
         $concrete = $this->insert(6, 1, 1, '2026-11-01', '2026-11-05');
         $done = $this->insert(6, 4, 3, '2026-10-01', '2026-10-05');
-        $this->repository()->updatePeriodAndStatus($done, new DateTimeImmutable('2026-10-01'), new DateTimeImmutable('2026-10-05'), AssignmentStatus::Done);
+        $this->repository()->update($done, 6, new DateTimeImmutable('2026-10-01'), new DateTimeImmutable('2026-10-05'), AssignmentStatus::Done);
         $this->insert(7, 5, 2, '2026-11-01', '2026-11-05');
 
         $work = $this->repository()->findAssignedWork(6);
@@ -410,9 +410,9 @@ final class AssignmentRepositoryTest extends IntegrationTestCase
     {
         $active = $this->insert(4, 1, 1, '2026-11-10', '2026-11-20');
         $done = $this->insert(4, 2, 1, '2026-11-10', '2026-11-20');
-        $this->repository()->updatePeriodAndStatus($done, new DateTimeImmutable('2026-11-10'), new DateTimeImmutable('2026-11-20'), AssignmentStatus::Done);
+        $this->repository()->update($done, 4, new DateTimeImmutable('2026-11-10'), new DateTimeImmutable('2026-11-20'), AssignmentStatus::Done);
         $cancelled = $this->insert(4, 3, 1, '2026-11-10', '2026-11-20');
-        $this->repository()->updatePeriodAndStatus($cancelled, new DateTimeImmutable('2026-11-10'), new DateTimeImmutable('2026-11-20'), AssignmentStatus::Cancelled);
+        $this->repository()->update($cancelled, 4, new DateTimeImmutable('2026-11-10'), new DateTimeImmutable('2026-11-20'), AssignmentStatus::Cancelled);
 
         assertSame([$active, $done], $this->idsInPeriod(1, Scope::All, null));
     }

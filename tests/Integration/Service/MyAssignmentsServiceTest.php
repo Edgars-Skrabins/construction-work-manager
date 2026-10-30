@@ -120,7 +120,7 @@ final class MyAssignmentsServiceTest extends IntegrationTestCase
 
         $id = $repository->create($employeeId, $workItemId, $siteId, $start, $end, 1);
         if ($status !== AssignmentStatus::Active) {
-            $repository->updatePeriodAndStatus($id, $start, $end, $status);
+            $repository->update($id, $employeeId, $start, $end, $status);
         }
 
         return $id;
