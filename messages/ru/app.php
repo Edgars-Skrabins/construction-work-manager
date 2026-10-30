@@ -5,6 +5,7 @@ declare(strict_types=1);
 return [
     'Language' => 'Язык',
     'Toggle navigation' => 'Показать или скрыть меню',
+    'Dark mode' => 'Тёмный режим',
     'My assignments' => 'Мои задания',
     'Employees' => 'Сотрудники',
     'Construction sites' => 'Строительные объекты',

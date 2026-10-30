@@ -19,6 +19,8 @@ interface AssignmentRepositoryInterface
 
     public function findListItem(int $id, int $viewerId, Scope $scope): ?AssignmentListItem;
 
+    public function employeeIdForUpdate(int $id): ?int;
+
     /**
      * @param array<string, int> $filters
      * @return OffsetPaginator<int, AssignmentListItem>

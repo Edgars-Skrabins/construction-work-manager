@@ -51,7 +51,7 @@
                     {% endfor %}
                 </select>
                 {% include 'Web/Shared/Form/field-errors.twig' with {errors: errors.role ?? []} %}
-                {% if employee and t("Finish or cancel this employee's active assignments first.") in (errors.role ?? []) and access.can('assignment.update') %}
+                {% if showAssignments and access.can('assignment.update') %}
                     <a class="btn btn-sm btn-outline-primary mt-2" href="{{ urlGenerator.generate('assignment.list', [], {employee: employee.id}) }}">{{ t('View assignments') }}</a>
                 {% endif %}
             </div>

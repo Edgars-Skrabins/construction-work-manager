@@ -113,7 +113,7 @@ final class MyAssignmentsCalendarPageTest extends IntegrationTestCase
         assertStringContainsString('<a class="btn btn-outline-secondary" href="/my-assignments">List</a>', $calendar);
         assertStringContainsString('<a class="btn btn-outline-secondary" href="/my-assignments/calendar">Calendar</a>', $list);
         foreach ([$calendar, $list] as $body) {
-            assertStringContainsString('<a class="nav-link active" href="/my-assignments">My assignments</a>', $body);
+            assertStringContainsString('<a class="nav-link active" aria-current="page" href="/my-assignments">My assignments</a>', $body);
             assertSame(1, substr_count($body, 'class="nav-link'));
         }
     }

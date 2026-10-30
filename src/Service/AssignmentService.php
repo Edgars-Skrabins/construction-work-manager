@@ -18,6 +18,7 @@ use App\Entity\AssignmentListItem;
 use App\Entity\AssignmentStatus;
 use App\Entity\ConstructionSite;
 use App\Entity\Employee;
+use App\Entity\IsoDate;
 use App\Repository\AccessLevelRepositoryInterface;
 use App\Repository\AssignmentRepositoryInterface;
 use App\Repository\ConstructionSiteRepositoryInterface;
@@ -35,8 +36,6 @@ use function sprintf;
 
 final readonly class AssignmentService
 {
-    private const string DATE_FORMAT = 'Y-m-d';
-
     public function __construct(
         private AssignmentRepositoryInterface $assignments,
         private EmployeeRepositoryInterface $employees,
@@ -86,6 +85,18 @@ final readonly class AssignmentService
         $this->accessChecker->ensure($actorId, Permission::EmployeeList);
 
         return $this->assignableEmployees($actorId, $this->scope($actorId));
+    }
+
+    public function editOptions(int $actorId): AssignmentFormOptions
+    {
+        $this->accessChecker->ensure($actorId, Permission::AssignmentUpdate);
+
+        return new AssignmentFormOptions(
+            employees: $this->assignableEmployees($actorId, $this->scope($actorId)),
+            sites: [],
+            workItems: [],
+            accessLevels: $this->accessLevelsById(),
+        );
     }
 
     public function formOptions(int $actorId): AssignmentFormOptions
@@ -140,13 +151,21 @@ final readonly class AssignmentService
         });
     }
 
-    public function update(int $actorId, int $id, int $employeeId, string $startDate, string $endDate, string $status): void
-    {
+    public function update(
+        int $actorId,
+        int $id,
+        int $employeeId,
+        string $startDate,
+        string $endDate,
+        string $status,
+        ?int $expectedEmployeeId = null,
+    ): void {
         $this->accessChecker->ensure($actorId, Permission::AssignmentUpdate);
         $scope = $this->scope($actorId);
-        $assignment = $this->scopedOrFail($actorId, $id);
+        $assignment = $this->scopedOrFail($actorId, $id, $scope);
+        $currentEmployeeId = $expectedEmployeeId ?? $assignment->employeeId;
 
-        $this->save(function () use ($actorId, $scope, $assignment, $employeeId, $startDate, $endDate, $status): void {
+        $this->save(function () use ($actorId, $scope, $assignment, $currentEmployeeId, $employeeId, $startDate, $endDate, $status): void {
             $errors = [];
             $period = $this->period($startDate, $endDate, $errors);
             $newStatus = AssignmentStatus::tryFrom($status);
@@ -154,10 +173,13 @@ final readonly class AssignmentService
                 $errors['status'] = $this->translator->translate('Choose a status.');
             }
 
-            $reassigned = $employeeId !== $assignment->employeeId;
+            $reassigned = $employeeId !== $currentEmployeeId;
             $employee = $reassigned || $newStatus === AssignmentStatus::Active
-                ? $this->lockEmployees($assignment->employeeId, $employeeId)
+                ? $this->lockEmployees($currentEmployeeId, $employeeId)
                 : null;
+            if ($this->assignments->employeeIdForUpdate($assignment->id) !== $currentEmployeeId) {
+                throw ValidationException::forField('employee', $this->concurrentChange());
+            }
             if ($reassigned && ($employee === null || !$this->isAssignable($employee, $actorId, $scope))) {
                 throw new ForbiddenException(sprintf('Employee %d may not assign employee %d.', $actorId, $employeeId));
             }
@@ -184,7 +206,7 @@ final readonly class AssignmentService
     {
         $this->accessChecker->ensure($actorId, Permission::AssignmentDelete);
 
-        $this->assignments->delete($this->scopedOrFail($actorId, $id)->id);
+        $this->assignments->delete($this->scopedOrFail($actorId, $id, $this->scope($actorId))->id);
     }
 
     public function displayStatus(Assignment $assignment): AssignmentDisplayStatus
@@ -202,7 +224,7 @@ final readonly class AssignmentService
         try {
             return $this->transaction->run($work);
         } catch (SerializationFailureException) {
-            throw ValidationException::forField('startDate', $this->translator->translate("The assignment couldn't be saved because of a change made at the same time. Try again."));
+            throw ValidationException::forField('startDate', $this->concurrentChange());
         }
     }
 
@@ -222,9 +244,9 @@ final readonly class AssignmentService
         return $this->employees->withRole(Role::Employee, $scope === Scope::All ? null : $actorId);
     }
 
-    private function scopedOrFail(int $actorId, int $id): Assignment
+    private function scopedOrFail(int $actorId, int $id, Scope $scope): Assignment
     {
-        return $this->assignments->find($id, $actorId, $this->scope($actorId))
+        return $this->assignments->find($id, $actorId, $scope)
             ?? throw new NotFoundException(sprintf('Assignment %d is not reachable for employee %d.', $id, $actorId));
     }
 
@@ -259,8 +281,8 @@ final readonly class AssignmentService
      */
     private function period(string $startDate, string $endDate, array &$errors): ?array
     {
-        $start = self::date($startDate);
-        $end = self::date($endDate);
+        $start = IsoDate::parse(trim($startDate));
+        $end = IsoDate::parse(trim($endDate));
 
         if ($start === null) {
             $errors['startDate'] = $this->invalidPeriod()['startDate'];
@@ -303,16 +325,14 @@ final readonly class AssignmentService
         if ($other !== null) {
             $errors['startDate'] = $this->translator->translate(
                 'The employee already has this work item at this site from {start} to {end}.',
-                ['start' => $other->startDate->format(self::DATE_FORMAT), 'end' => $other->endDate->format(self::DATE_FORMAT)],
+                ['start' => $other->startDate->format(IsoDate::FORMAT), 'end' => $other->endDate->format(IsoDate::FORMAT)],
             );
         }
     }
 
-    private static function date(string $value): ?DateTimeImmutable
+    private function concurrentChange(): string
     {
-        $date = DateTimeImmutable::createFromFormat('!' . self::DATE_FORMAT, trim($value));
-
-        return $date !== false && $date->format(self::DATE_FORMAT) === trim($value) ? $date : null;
+        return $this->translator->translate("The assignment couldn't be saved because of a change made at the same time. Try again.");
     }
 
     /**

@@ -6,6 +6,7 @@ namespace App\Web\AssignmentForm;
 
 use App\Entity\Assignment;
 use App\Web\Shared\Form\FormBody;
+use App\Web\Shared\Listing\ListParams;
 use Yiisoft\Validator\Label;
 use Yiisoft\Validator\Rule\Required;
 use Yiisoft\Validator\RulesProviderInterface;
@@ -30,6 +31,8 @@ final class AssignmentForm implements RulesProviderInterface
     #[Label('Status')]
     public string $status = '';
 
+    public string $currentEmployee = '';
+
     public function __construct(
         private readonly bool $editing = false,
     ) {}
@@ -37,7 +40,7 @@ final class AssignmentForm implements RulesProviderInterface
     public static function fromBody(mixed $body, bool $editing): self
     {
         $form = new self($editing);
-        foreach (['employee', 'workItem', 'constructionSite', 'startDate', 'endDate', 'status'] as $name) {
+        foreach (['employee', 'workItem', 'constructionSite', 'startDate', 'endDate', 'status', 'currentEmployee'] as $name) {
             $form->$name = FormBody::string($body, $name);
         }
 
@@ -48,11 +51,17 @@ final class AssignmentForm implements RulesProviderInterface
     {
         $form = new self(true);
         $form->employee = (string) $assignment->employeeId;
+        $form->currentEmployee = (string) $assignment->employeeId;
         $form->startDate = $assignment->startDate->format('Y-m-d');
         $form->endDate = $assignment->endDate->format('Y-m-d');
         $form->status = $assignment->status->value;
 
         return $form;
+    }
+
+    public function expectedEmployeeId(): ?int
+    {
+        return preg_match(ListParams::POSITIVE_INT_PATTERN, $this->currentEmployee) === 1 ? (int) $this->currentEmployee : null;
     }
 
     public function getRules(): iterable

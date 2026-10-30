@@ -42,6 +42,16 @@ final class InstantSearchTest extends IntegrationTestCase
     }
 
     #[DataProvider('lists')]
+    public function testSearchInputHasADecorativeIcon(string $path): void
+    {
+        $this->logIn('admin@mail.test', '123123123');
+
+        $body = (string) $this->request('GET', $path)->getBody();
+
+        assertMatchesRegularExpression('#<label class="visually-hidden" for="list-search">Search</label>\s*<div class="list-search">\s*<svg class="list-search-icon" [^>]*aria-hidden="true" focusable="false">.*?</svg>\s*<input class="form-control list-search-input" type="search" id="list-search" name="q"#s', $body);
+    }
+
+    #[DataProvider('lists')]
     public function testResultsSitInOneContainerWithAPoliteStatus(string $path): void
     {
         $this->logIn('admin@mail.test', '123123123');

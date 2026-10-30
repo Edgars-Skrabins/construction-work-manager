@@ -61,7 +61,7 @@ final readonly class Action
                             $form->endDate,
                         );
                     } else {
-                        $this->assignments->update($actorId, $item->assignment->id, (int) $form->employee, $form->startDate, $form->endDate, $form->status);
+                        $this->assignments->update($actorId, $item->assignment->id, (int) $form->employee, $form->startDate, $form->endDate, $form->status, $form->expectedEmployeeId());
                     }
                     $this->flash->addSuccess('Assignment saved.');
 
@@ -78,7 +78,7 @@ final readonly class Action
             'item' => $item,
             'form' => $form,
             'errors' => $errors,
-            'options' => $this->assignments->formOptions($actorId),
+            'options' => $item === null ? $this->assignments->formOptions($actorId) : $this->assignments->editOptions($actorId),
             'statuses' => AssignmentStatus::cases(),
         ]);
     }

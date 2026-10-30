@@ -64,6 +64,13 @@ final readonly class EmployeeService
         return $this->employees->find($id);
     }
 
+    public function hasActiveAssignments(int $actorId, int $id): bool
+    {
+        $this->accessChecker->ensure($actorId, Permission::EmployeeUpdate);
+
+        return $this->assignments->hasActiveForEmployee($id);
+    }
+
     /**
      * @return list<Employee>
      */

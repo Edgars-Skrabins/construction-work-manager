@@ -6,6 +6,9 @@
         <h1 class="h3 mb-4" data-modal-title>{{ title }}</h1>
         <form method="post" action="{{ item ? urlGenerator.generate('assignment.edit', {id: item.assignment.id}) : urlGenerator.generate('assignment.create') }}" novalidate>
             {{ csrf.hiddenInput()|raw }}
+            {% if item %}
+                <input type="hidden" name="currentEmployee" value="{{ form.currentEmployee }}">
+            {% endif %}
             <div class="mb-3">
                 <label for="employee" class="form-label">{{ t('Employee') }}</label>
                 <select class="form-select{% if errors.employee is defined or (item and errors.constructionSite is defined) %} is-invalid{% endif %}" id="employee" name="employee" required>
