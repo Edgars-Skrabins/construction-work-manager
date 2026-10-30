@@ -95,7 +95,7 @@ final class ManagerTeamPagesTest extends IntegrationTestCase
         assertSame(200, $response->getStatusCode());
         assertStringContainsString('<title>Work calendar</title>', $body);
         assertStringContainsString('href="/employees">Employees</a>', $body);
-        assertStringContainsString('<h2 class="h5 mb-0 text-nowrap">March 2030</h2>', $body);
+        assertStringContainsString('<h2 class="visually-hidden">March 2030</h2>', $body);
         assertSame(3 * 2, substr_count($body, '<span class="calendar-entry-line fw-semibold">Mārtiņš Liepiņš</span>'));
         assertSame(2, substr_count($body, '<span class="calendar-entry-line fw-semibold">Kristaps Vītols</span>'));
         assertMatchesRegularExpression(
@@ -133,7 +133,7 @@ final class ManagerTeamPagesTest extends IntegrationTestCase
         assertStringContainsString('<option value="4" selected>Liepiņš, Mārtiņš</option>', $filtered);
         assertStringContainsString('<span class="calendar-entry-line fw-semibold">Mārtiņš Liepiņš</span>', $filtered);
         assertStringNotContainsString('<span class="calendar-entry-line fw-semibold">Kristaps Vītols</span>', $filtered);
-        assertStringContainsString('href="/employees/calendar?month=2030-04&amp;employee=4"', $filtered);
+        assertMatchesRegularExpression('#data-calendar-picker>\s*<input type="hidden" name="employee" value="4">#', $filtered);
         assertStringContainsString('<span class="calendar-entry-line fw-semibold">Kristaps Vītols</span>', $foreign);
         assertStringNotContainsString('Anna Zariņa', $foreign);
         assertDoesNotMatchRegularExpression('#<option value="\d+" selected>[^<]+, #u', $foreign);
@@ -153,8 +153,14 @@ final class ManagerTeamPagesTest extends IntegrationTestCase
         assertStringContainsString('<option value="03" selected>March</option>', $body);
         preg_match('#<select class="form-select form-select-sm w-auto" id="calendar-month" name="monthOfYear">(.*?)</select>#s', $body, $select);
         assertSame(12, substr_count($select[1] ?? '', '<option '));
-        assertStringContainsString('<input class="form-control form-control-sm calendar-year" type="number" id="calendar-year" name="year" min="2000" max="2100" step="1" required value="2030">', $body);
-        assertStringContainsString('<button type="submit" class="btn btn-sm btn-outline-primary">Go</button>', $body);
+        preg_match('#<select class="form-select form-select-sm w-auto" id="calendar-year" name="year">(.*?)</select>#s', $body, $years);
+        $current = (int) $this->today()->format('Y');
+        assertStringContainsString('<option value="' . ($current - 5) . '">', $years[1] ?? '');
+        assertStringContainsString('<option value="' . ($current + 5) . '"', $years[1] ?? '');
+        assertStringContainsString('<option value="2030" selected>2030</option>', $years[1] ?? '');
+        assertStringContainsString('<button type="submit" class="btn btn-sm btn-outline-primary calendar-picker-submit">Go</button>', $body);
+        assertStringContainsString('<button type="submit" class="btn btn-sm btn-primary calendar-picker-submit">Show</button>', $body);
+        assertMatchesRegularExpression('#<form class="d-flex align-items-center gap-2" method="get" action="/employees/calendar" data-calendar-picker>\s*<input type="hidden" name="month" value="2030-03">#', $body);
     }
 
     public function testPickerOpensTheChosenMonthWithTheEmployeeFilter(): void
@@ -164,10 +170,9 @@ final class ManagerTeamPagesTest extends IntegrationTestCase
 
         $body = (string) $this->request('GET', '/employees/calendar?month=2031-01&year=2030&monthOfYear=03&employee=4')->getBody();
 
-        assertStringContainsString('<h2 class="h5 mb-0 text-nowrap">March 2030</h2>', $body);
+        assertStringContainsString('<h2 class="visually-hidden">March 2030</h2>', $body);
         assertStringContainsString('<span class="calendar-entry-line fw-semibold">Mārtiņš Liepiņš</span>', $body);
         assertStringNotContainsString('<span class="calendar-entry-line fw-semibold">Kristaps Vītols</span>', $body);
-        assertStringContainsString('href="/employees/calendar?month=2030-02&amp;employee=4">‹ Previous</a>', $body);
         assertStringContainsString('<input type="hidden" name="month" value="2030-03">', $body);
     }
 
@@ -177,7 +182,7 @@ final class ManagerTeamPagesTest extends IntegrationTestCase
 
         $body = (string) $this->request('GET', '/employees/calendar?year=1999&monthOfYear=03')->getBody();
 
-        assertStringContainsString('<h2 class="h5 mb-0 text-nowrap">' . $this->today()->format('F Y') . '</h2>', $body);
+        assertStringContainsString('<h2 class="visually-hidden">' . $this->today()->format('F Y') . '</h2>', $body);
         assertStringContainsString('<option value="' . $this->today()->format('m') . '" selected>', $body);
     }
 
@@ -223,15 +228,17 @@ final class ManagerTeamPagesTest extends IntegrationTestCase
         assertMatchesRegularExpression('#<script src="[^"]*/calendar\.js"#', $body);
     }
 
-    public function testMonthLinksCrossTheYear(): void
+    public function testMonthNavigationHasOnlyThePicker(): void
     {
         $this->logIn('manager@mail.test', '123123123');
 
         $body = (string) $this->request('GET', '/employees/calendar?month=2031-01')->getBody();
 
-        assertStringContainsString('href="/employees/calendar?month=2030-12">‹ Previous</a>', $body);
-        assertStringContainsString('href="/employees/calendar?month=2031-02">Next ›</a>', $body);
-        assertStringContainsString('href="/employees/calendar?month=' . $this->today()->format('Y-m') . '">Today</a>', $body);
+        assertStringNotContainsString('Previous</a>', $body);
+        assertStringNotContainsString('Next ›</a>', $body);
+        assertStringNotContainsString('>Today</a>', $body);
+        assertStringContainsString('<option value="01" selected>January</option>', $body);
+        assertStringContainsString('<option value="2031" selected>2031</option>', $body);
         assertStringContainsString('No assigned work this month.', $body);
     }
 
@@ -242,7 +249,7 @@ final class ManagerTeamPagesTest extends IntegrationTestCase
 
         $body = (string) $this->request('GET', '/employees/calendar?month=2030-13')->getBody();
 
-        assertStringContainsString('<h2 class="h5 mb-0 text-nowrap">' . $today->format('F Y') . '</h2>', $body);
+        assertStringContainsString('<h2 class="visually-hidden">' . $today->format('F Y') . '</h2>', $body);
         assertMatchesRegularExpression(
             '#<td class="calendar-today" aria-current="date">\s*<div class="fw-semibold mb-1">' . $today->format('j') . '<span class="visually-hidden"> Today</span></div>#',
             $body,

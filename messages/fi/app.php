@@ -131,7 +131,6 @@ return [
 
     'Work calendar' => 'Työkalenteri',
     'Employees list' => 'Työntekijäluettelo',
-    'Months' => 'Kuukaudet',
     'Today' => 'Tänään',
     'All employees' => 'Kaikki työntekijät',
     'Show' => 'Näytä',

@@ -2,6 +2,10 @@ for (const calendar of document.querySelectorAll('[data-calendar]')) {
     calendar.classList.add('calendar-enhanced');
 }
 
+for (const picker of document.querySelectorAll('form[data-calendar-picker]')) {
+    picker.classList.add('calendar-picker-enhanced');
+}
+
 document.addEventListener('change', (event) => {
     const form = event.target.closest('form[data-calendar-picker]');
     if (form === null) {

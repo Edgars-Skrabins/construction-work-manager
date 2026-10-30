@@ -131,7 +131,6 @@ return [
 
     'Work calendar' => 'Arbetskalender',
     'Employees list' => 'Medarbetarlista',
-    'Months' => 'Månader',
     'Today' => 'Idag',
     'All employees' => 'Alla medarbetare',
     'Show' => 'Visa',

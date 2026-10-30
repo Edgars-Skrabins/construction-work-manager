@@ -6,7 +6,7 @@
 </div>
 <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-3">
     {% include 'Web/Shared/Calendar/month-nav.twig' with {calendar: calendar, route: 'employee.calendar', query: {employee: employeeId}} %}
-    <form class="d-flex align-items-center gap-2" method="get" action="{{ urlGenerator.generate('employee.calendar') }}">
+    <form class="d-flex align-items-center gap-2" method="get" action="{{ urlGenerator.generate('employee.calendar') }}" data-calendar-picker>
         <input type="hidden" name="month" value="{{ month|date('Y-m') }}">
         <label class="visually-hidden" for="calendar-employee">{{ t('Employee') }}</label>
         <select class="form-select form-select-sm" id="calendar-employee" name="employee">
@@ -15,7 +15,7 @@
                 <option value="{{ employee.id }}"{% if employee.id == employeeId %} selected{% endif %}>{{ employee.lastName }}, {{ employee.firstName }}</option>
             {% endfor %}
         </select>
-        <button type="submit" class="btn btn-sm btn-primary">{{ t('Show') }}</button>
+        <button type="submit" class="btn btn-sm btn-primary calendar-picker-submit">{{ t('Show') }}</button>
     </form>
 </div>
 {% include 'Web/Shared/Calendar/month.twig' with {weeks: weeks, entries: entries, statuses: statuses, showEmployee: true} %}

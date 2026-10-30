@@ -103,6 +103,6 @@
     border-top: 1px solid var(--bs-border-color);
 }
 
-.calendar-year {
-    width: 6rem;
+.calendar-picker-enhanced .calendar-picker-submit {
+    display: none;
 }

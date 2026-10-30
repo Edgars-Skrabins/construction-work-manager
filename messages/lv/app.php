@@ -131,7 +131,6 @@ return [
 
     'Work calendar' => 'Darbu kalendārs',
     'Employees list' => 'Darbinieku saraksts',
-    'Months' => 'Mēneši',
     'Today' => 'Šodien',
     'All employees' => 'Visi darbinieki',
     'Show' => 'Rādīt',

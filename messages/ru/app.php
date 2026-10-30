@@ -131,7 +131,6 @@ return [
 
     'Work calendar' => 'Календарь работ',
     'Employees list' => 'Список сотрудников',
-    'Months' => 'Месяцы',
     'Today' => 'Сегодня',
     'All employees' => 'Все сотрудники',
     'Show' => 'Показать',
