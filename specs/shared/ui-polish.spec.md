@@ -157,7 +157,13 @@ All decided by this session on the coordinator's instruction not to interview th
     - The dialog's Delete is `btn-outline-danger` like on desktop. It looked filled because a tap leaves a sticky `:hover`, so under `(hover: none)` outline buttons no longer fill on hover, only when pressed, active or open.
     - `.text-secondary` (Bootstrap's `#6c757d`, 3.6–4.0:1 on dark) maps to the theme's `--bs-secondary-color`, at least 5.7:1 in both themes.
     - The inline "Open in Google Maps" and "First login? Set your password" links get a `touch-link` class with vertical padding below 768 px, giving a 44 px hit area without moving the text.
-17. **No PRODUCT.md or DESIGN.md** is added; `CLAUDE.md` and the specs already describe the design system.
+17. **Each status has its own hue** (user request, 2026-10-30): Planned blue (`#2b5d8c` light, `#7fb2e5` dark), In progress amber, Overdue red, Done green, Cancelled neutral grey. Planned had been grey like Cancelled and too close to In progress in light mode. Every badge text is at least 4.8:1 on its tint on cards and page in both themes. Cancelled also gets a dashed, untinted badge as a second cue, because strikethrough would hurt the label's legibility. The calendar cards and legend take `--calendar-accent` from the same `--app-status-*` tokens, so badges, stripes, cards and legend always agree, and the label stays as text.
+18. **Calendar density** (user request, 2026-10-30): a day shows up to three cards; with four entries all four show, and from five it shows three plus "+N more" (`CalendarDay::VISIBLE_ENTRIES` 4). The month grid starts at 992 px (`d-lg-block`), where a column fits about 18 characters per line; below that the agenda list (the phone layout) is used, because at 768 px a seventh of the width left about 8 readable characters. Cell and card padding are slightly tighter for more text.
+19. **One name format** (user request, 2026-10-30): "First Last" everywhere. The Employees list and the Work calendar's employee filter switched from "Last, First"; the list still sorts by surname (`name` sort key on `LAST_NAME`).
+20. **Dates read YYYY-MM-DD in forms too** (user request, 2026-10-30): native `type=date` shows the browser's locale format and can't be forced, so date fields are text inputs (`Shared/Form/date-input.twig`: `pattern` `\d{4}-\d{2}-\d{2}`, `placeholder` YYYY-MM-DD, `inputmode` numeric) with a calendar button that opens the browser's own picker through a hidden `type=date` input's `showPicker()` and writes the ISO value back. Without JavaScript or `showPicker()` the button stays hidden and the field is plain text. Server validation (`IsoDate`) is unchanged and rejects other formats with the existing messages. `DateInputAsset` is a dependency of `EmployeeAsset` and `AssignmentAsset`, so the list pages that open forms in modals load it too. One new message, `Choose date`. Rejected: a custom calendar widget, which would be a large component for the same result.
+21. **Resting hint for row actions** (user request, 2026-10-30): where row actions hide until hover, the Actions cell shows a faint "⋯" (`list-row-hint`, `aria-hidden`) at rest, which fades out as the buttons fade in on hover or focus. It's not shown in compact mode (the chevron is) or on touch screens (buttons always show).
+22. **The year list comes from the data** (user decision, 2026-10-30): from the earliest visible assignment's start year to the latest end year, always including the current year ±1 and the shown year, limited to 2000–2100. `AssignmentRepositoryInterface::yearRange()` runs one `MIN(YEAR(START_DATE))`/`MAX(YEAR(END_DATE))` query over Active and Done assignments (the ones the calendar shows) in the viewer's scope (own for My work calendar, `AccessScope` for the Work calendar, plus its employee filter). Without assignments the list is the current year ±1. `month=YYYY-MM` addresses outside the list still open.
+23. **No PRODUCT.md or DESIGN.md** is added; `CLAUDE.md` and the specs already describe the design system.
 
 # Part 3 — Implementation TODO
 
@@ -194,7 +200,15 @@ Baseline before starting: record the test counts from `make check` in A0.
 ### G. Critique fixes
 - [x] G1. Compact mode up to 1199.98 px, the row chevron, plain filter text in compact mode, no sticky hover fills on touch, `.text-secondary` mapped to the theme, and `touch-link` on the two inline links.
 
+### H. Second round of user requests
+- [x] H1. Status hues, the dashed Cancelled badge, and the calendar accents from the status tokens.
+- [x] H2. `CalendarDay::VISIBLE_ENTRIES` 4, the grid from `lg`, tighter padding; `CalendarDayTest`, `ManagerTeamPagesTest`, `MyAssignmentsCalendarPageTest`.
+- [x] H3. "First Last" in the Employees list and the employee filter; name assertions in `AdminPagesTest` and `ManagerTeamPagesTest`.
+- [x] H4. `date-input.twig`, `DateInputAsset`, `assets/date-input/`, the three date fields, `Choose date` ×6, and the `AssignmentPagesTest` markup and invalid-format tests.
+- [x] H5. The resting `⋯` hint in `row-actions.twig` and `listing.css`.
+- [x] H6. `yearRange()` in the repository, `calendarYears()` in both services, `MonthCalendar::years()` merging it with the current year ±1 and the shown year; repository, unit and page tests.
+
 ### Z. Wrap-up
-- [x] Z1. `make check` passes: 307 unit tests (4261 assertions) and 885 integration tests (9044 assertions).
+- [x] Z1. `make check` passes: 309 unit tests (4283 assertions) and 892 integration tests (9116 assertions).
 - [x] Z2. Re-screenshot every page at 375, 768, 1024 and 1280 px in both themes for guest, admin, manager and employee, including the modals, and compare with the before set: navbar order, badges, focus, no sideways scroll, 44 px targets at 375 px.
 - [x] Z3. Update `CLAUDE.md` if it describes anything changed here (the navbar order, status colours).
