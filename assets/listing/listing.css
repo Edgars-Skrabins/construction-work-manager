@@ -39,6 +39,10 @@
     right: 0;
 }
 
+.list-row-hint {
+    display: none;
+}
+
 @media (hover: hover) and (pointer: fine) {
     .list-row-actions {
         opacity: 0;
@@ -50,13 +54,31 @@
         opacity: 1;
     }
 
+    table:not(.list-compact) .list-row-hint {
+        display: block;
+        position: absolute;
+        top: 50%;
+        right: 0.75rem;
+        color: var(--bs-secondary-color);
+        opacity: 0.6;
+        transform: translateY(-50%);
+        transition: opacity 0.12s ease-out;
+        pointer-events: none;
+    }
+
+    tr:hover .list-row-hint,
+    tr:focus-within .list-row-hint {
+        opacity: 0;
+    }
+
     .table > tbody > tr:has(.list-row-actions):hover > * {
         --bs-table-bg-state: var(--bs-secondary-bg);
     }
 }
 
 @media (prefers-reduced-motion: reduce) {
-    .list-row-actions {
+    .list-row-actions,
+    .list-row-hint {
         transition: none;
     }
 }
