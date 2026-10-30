@@ -121,6 +121,16 @@ final class AssignmentPagesTest extends IntegrationTestCase
         assertStringContainsString('>Rīga Thermal Power Plant Upgrade – requires Critical infrastructure (3)</option>', $body);
     }
 
+    public function testEditFormLabelsTheEmployeesAccessLevels(): void
+    {
+        $this->logIn('manager@mail.test', '123123123');
+
+        $body = (string) $this->request('GET', '/assignments/1/edit')->getBody();
+
+        assertStringContainsString('>Mārtiņš Liepiņš – access level General (1)</option>', $body);
+        assertStringContainsString('>Kristaps Vītols – access level Restricted (2)</option>', $body);
+    }
+
     public function testManagerCreatesEditsAndDeletesAnAssignment(): void
     {
         $this->logIn('manager@mail.test', '123123123');
