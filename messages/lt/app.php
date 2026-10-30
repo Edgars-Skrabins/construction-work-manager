@@ -49,6 +49,7 @@ return [
     'sorted ascending' => 'surikiuota didėjančia tvarka',
     'sorted descending' => 'surikiuota mažėjančia tvarka',
     'No assignments match the filter.' => 'Nėra filtrą atitinkančių užduočių.',
+    'Filter assignments by this' => 'Filtruoti užduotis pagal tai',
     '{label}: {name}' => '{label}: {name}',
 
     'Log in' => 'Prisijungti',

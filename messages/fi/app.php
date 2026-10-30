@@ -49,6 +49,7 @@ return [
     'sorted ascending' => 'lajiteltu nousevasti',
     'sorted descending' => 'lajiteltu laskevasti',
     'No assignments match the filter.' => 'Suodatinta vastaavia työtehtäviä ei ole.',
+    'Filter assignments by this' => 'Suodata työtehtävät tämän mukaan',
     '{label}: {name}' => '{label}: {name}',
 
     'Log in' => 'Kirjaudu sisään',

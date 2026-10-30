@@ -49,6 +49,7 @@ return [
     'sorted ascending' => 'kārtots augošā secībā',
     'sorted descending' => 'kārtots dilstošā secībā',
     'No assignments match the filter.' => 'Neviens uzdevums neatbilst filtram.',
+    'Filter assignments by this' => 'Filtrēt uzdevumus pēc šī',
     '{label}: {name}' => '{label}: {name}',
 
     'Log in' => 'Pieteikties',

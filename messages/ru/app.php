@@ -49,6 +49,7 @@ return [
     'sorted ascending' => 'отсортировано по возрастанию',
     'sorted descending' => 'отсортировано по убыванию',
     'No assignments match the filter.' => 'Нет заданий, соответствующих фильтру.',
+    'Filter assignments by this' => 'Отфильтровать задания по этому значению',
     '{label}: {name}' => '{label}: {name}',
 
     'Log in' => 'Войти',

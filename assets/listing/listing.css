@@ -18,6 +18,22 @@
     }
 }
 
+.list-filter-link {
+    color: inherit;
+    text-decoration: underline dotted color-mix(in srgb, var(--bs-secondary-color) 60%, transparent);
+    text-underline-offset: 0.25em;
+}
+
+.list-filter-link:hover,
+.list-filter-link:focus-visible {
+    color: var(--bs-link-hover-color);
+    text-decoration: underline solid currentColor;
+}
+
+.list-filter-link .list-truncate {
+    text-decoration: inherit;
+}
+
 .list-actions {
     position: sticky;
     right: 0;
@@ -60,6 +76,10 @@
 
     .list-compact > tbody > tr:has(.list-row-actions) {
         cursor: pointer;
+    }
+
+    .list-compact > tbody > tr:has(.list-row-actions) .list-filter-link {
+        pointer-events: none;
     }
 
     .list-compact > tbody > tr:has(.list-row-actions):focus-visible {

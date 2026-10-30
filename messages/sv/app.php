@@ -49,6 +49,7 @@ return [
     'sorted ascending' => 'sorterad stigande',
     'sorted descending' => 'sorterad fallande',
     'No assignments match the filter.' => 'Inga uppdrag matchar filtret.',
+    'Filter assignments by this' => 'Filtrera uppdrag efter detta',
     '{label}: {name}' => '{label}: {name}',
 
     'Log in' => 'Logga in',

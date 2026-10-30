@@ -30,7 +30,7 @@
             } else {
                 row.removeAttribute('tabindex');
             }
-            group.querySelectorAll('a').forEach((link) => {
+            row.querySelectorAll('.list-row-actions a, .list-filter-link').forEach((link) => {
                 if (compact.matches) {
                     link.tabIndex = -1;
                 } else {
@@ -40,21 +40,25 @@
         });
     };
 
+    const choice = (link, className, text) => {
+        const item = document.createElement('button');
+        item.type = 'button';
+        item.className = className;
+        item.textContent = text;
+        item.addEventListener('click', () => {
+            chosen = link;
+            sheet.hide();
+        });
+        return item;
+    };
+
     const open = (row) => {
         const group = row.querySelector('.list-row-actions');
         lastRow = row;
         title.textContent = group.getAttribute('aria-label');
-        body.replaceChildren(...Array.from(group.querySelectorAll('a'), (link) => {
-            const item = document.createElement('button');
-            item.type = 'button';
-            item.className = `${link.className.replace('btn-sm', '')} w-100`;
-            item.textContent = link.textContent;
-            item.addEventListener('click', () => {
-                chosen = link;
-                sheet.hide();
-            });
-            return item;
-        }));
+        const actions = Array.from(group.querySelectorAll('a'), (link) => choice(link, `${link.className.replace('btn-sm', '')} w-100`, link.textContent));
+        const filters = Array.from(row.querySelectorAll('.list-filter-link'), (link) => choice(link, 'btn btn-outline-secondary w-100 text-start text-truncate', link.dataset.filterLabel));
+        body.replaceChildren(...actions, ...(filters.length > 0 ? [document.createElement('hr'), ...filters] : []));
         sheet.show();
     };
 
@@ -90,7 +94,7 @@
     });
 
     document.addEventListener('focusin', (event) => {
-        if (compact.matches && event.target.matches('.list-row-actions a')) {
+        if (compact.matches && event.target.matches('.list-row-actions a, .list-filter-link')) {
             rowOf(event.target)?.focus();
         }
     });

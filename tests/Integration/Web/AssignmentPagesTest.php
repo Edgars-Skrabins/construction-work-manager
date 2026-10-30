@@ -336,6 +336,29 @@ final class AssignmentPagesTest extends IntegrationTestCase
         }
     }
 
+    public function testNamesLinkToTheirFilterKeepingSortSearchAndOtherFilters(): void
+    {
+        $this->logIn('admin@mail.test', '123123123');
+
+        $body = (string) $this->request('GET', '/assignments?site=9&q=Vilnius&sort=-endDate')->getBody();
+
+        $keep = '/assignments\?sort=-endDate&amp;q=Vilnius&amp;site=9';
+        assertMatchesRegularExpression('#<a class="list-filter-link" href="' . $keep . '&amp;employee=\d+" data-filter-label="Employee: [^"]+"><span [^>]*list-truncate[^>]*>[^<]+</span><span class="visually-hidden"> Filter assignments by this</span></a>#u', $body);
+        assertMatchesRegularExpression('#<a class="list-filter-link" href="' . $keep . '&amp;workItem=\d+" data-filter-label="Work item: [^"]+">#u', $body);
+        assertStringContainsString('<a class="list-filter-link" href="/assignments?sort=-endDate&amp;q=Vilnius&amp;site=9" data-filter-label="Construction site: Vilnius Office Campus">', $body);
+    }
+
+    public function testFilterLinksPointAtTheRowsOwnEmployee(): void
+    {
+        $this->logIn('manager@mail.test', '123123123');
+
+        $body = (string) $this->request('GET', '/assignments?employee=5')->getBody();
+
+        preg_match_all('#<a class="list-filter-link" href="/assignments\?sort=-startDate&amp;employee=(\d+)" data-filter-label="Employee: ([^"]+)">#u', $body, $links);
+        assertSame(['5'], array_values(array_unique($links[1])));
+        assertSame(['Laura Krūmiņa'], array_values(array_unique($links[2])));
+    }
+
     public function testManagerFilteringByAnotherTeamsEmployeeSeesNothing(): void
     {
         $this->logIn('manager@mail.test', '123123123');
@@ -355,7 +378,7 @@ final class AssignmentPagesTest extends IntegrationTestCase
 
         $body = (string) $this->request('GET', '/assignments?employee=abc')->getBody();
 
-        assertStringNotContainsString('Employee: ', $body);
+        assertStringNotContainsString('<span class="badge rounded-pill', $body);
         assertStringContainsString('page=3"', $body);
     }
 

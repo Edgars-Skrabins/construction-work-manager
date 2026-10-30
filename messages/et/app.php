@@ -49,6 +49,7 @@ return [
     'sorted ascending' => 'sorditud kasvavalt',
     'sorted descending' => 'sorditud kahanevalt',
     'No assignments match the filter.' => 'Filtrile vastavaid tööülesandeid ei ole.',
+    'Filter assignments by this' => 'Filtreeri tööülesandeid selle järgi',
     '{label}: {name}' => '{label}: {name}',
 
     'Log in' => 'Logi sisse',
