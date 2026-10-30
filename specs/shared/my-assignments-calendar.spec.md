@@ -71,6 +71,7 @@ No new dependencies. It uses the existing `MonthCalendar`, `CalendarDay`, `Calen
 6. **No employee name and no filter on entries**, since every entry is the employee's own. The work item becomes the entry's bold line and the site its second line.
 7. **The service method lives in `MyAssignmentsService`** next to `forEmployee()`, because it has the same permission and the same "own" rule; `AssignmentService::calendar()` stays for `employee.list`.
 8. **Heading "My work calendar"**, to tell it apart from the managers' "Work calendar"; the buttons are just "Calendar" and "List".
+9. **The month navigation and the legend statuses have one home too** (added 2026-10-30, from review): `src/Web/Shared/Calendar/month-nav.twig` renders Previous, the month heading, Next and Today for a given `route` and extra `query` (the Work calendar passes `{employee: employeeId}`), and `AssignmentDisplayStatus::calendarStatuses()` gives the legend's Planned, In progress, Overdue and Done to both actions.
 
 # Part 3 — Implementation TODO
 
