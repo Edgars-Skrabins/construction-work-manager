@@ -42,6 +42,13 @@ interface AssignmentRepositoryInterface
      */
     public function findAssignedWork(int $employeeId): array;
 
+    public function findAssignedWorkItem(int $employeeId, int $id): ?AssignedWork;
+
+    /**
+     * @return list<AssignedWork>
+     */
+    public function findAssignedWorkInPeriod(int $employeeId, DateTimeImmutable $from, DateTimeImmutable $to): array;
+
     public function hasActiveForEmployee(int $employeeId): bool;
 
     public function findOverlappingActive(

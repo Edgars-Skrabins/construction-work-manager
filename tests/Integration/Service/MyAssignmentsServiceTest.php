@@ -8,9 +8,9 @@ use App\Access\ForbiddenException;
 use App\Entity\AssignedSite;
 use App\Entity\AssignedWork;
 use App\Entity\AssignmentDisplayStatus;
-use App\Entity\AssignmentListItem;
 use App\Entity\AssignmentStatus;
 use App\Repository\AssignmentRepositoryInterface;
+use App\Service\NotFoundException;
 use App\Service\MyAssignmentsService;
 use App\Tests\Integration\IntegrationTestCase;
 use DateTimeImmutable;
@@ -81,9 +81,50 @@ final class MyAssignmentsServiceTest extends IntegrationTestCase
 
         $items = $this->myAssignments()->calendar(6, $today->modify('-5 days'), $today->modify('+5 days'));
 
-        $ids = array_map(static fn(AssignmentListItem $item): int => $item->assignment->id, $items);
+        $ids = array_map(static fn(AssignedWork $work): int => $work->item->assignment->id, $items);
         sort($ids);
         assertSame([$endsOnFirstDay, $startsOnLastDay, $spansTheRange], $ids);
+    }
+
+    public function testEmployeeFindsTheirOwnAssignmentWithItsStatus(): void
+    {
+        $cancelled = $this->insert(6, 2, 1, -6, -5, AssignmentStatus::Cancelled);
+        $current = $this->insert(6, 1, 1, -1, 1);
+
+        $work = $this->myAssignments()->find(6, $cancelled);
+
+        assertSame($cancelled, $work->item->assignment->id);
+        assertSame(AssignmentDisplayStatus::Cancelled, $this->myAssignments()->displayStatus($work->item->assignment));
+        assertSame(AssignmentDisplayStatus::InProgress, $this->myAssignments()->displayStatus($this->myAssignments()->find(6, $current)->item->assignment));
+    }
+
+    /**
+     * @return iterable<string, array{bool}>
+     */
+    public static function unreachableAssignments(): iterable
+    {
+        yield 'another employee\'s assignment' => [true];
+        yield 'a missing assignment' => [false];
+    }
+
+    #[DataProvider('unreachableAssignments')]
+    public function testAnotherEmployeesOrAMissingAssignmentIsNotFound(bool $exists): void
+    {
+        $id = $exists ? $this->insert(7, 1, 1, -1, 1) : 999999;
+
+        $this->expectException(NotFoundException::class);
+
+        $this->myAssignments()->find(6, $id);
+    }
+
+    #[DataProvider('nonEmployees')]
+    public function testOtherRolesCannotOpenAnAssignment(int $employeeId): void
+    {
+        $id = $this->insert(6, 1, 1, -1, 1);
+
+        $this->expectException(ForbiddenException::class);
+
+        $this->myAssignments()->find($employeeId, $id);
     }
 
     public function testManagerNameIsIncluded(): void

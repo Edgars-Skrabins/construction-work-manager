@@ -8,6 +8,7 @@ use App\Access\AccessChecker;
 use App\Access\AccessScope;
 use App\Access\Role;
 use App\Access\Scope;
+use App\Entity\AssignedWork;
 use App\Entity\Assignment;
 use App\Entity\AssignmentListItem;
 use App\Entity\AssignmentStatus;
@@ -280,6 +281,16 @@ final class AssignmentLockingTest extends IntegrationTestCase
             public function findAssignedWork(int $employeeId): array
             {
                 return $this->assignments->findAssignedWork($employeeId);
+            }
+
+            public function findAssignedWorkItem(int $employeeId, int $id): ?AssignedWork
+            {
+                return $this->assignments->findAssignedWorkItem($employeeId, $id);
+            }
+
+            public function findAssignedWorkInPeriod(int $employeeId, DateTimeImmutable $from, DateTimeImmutable $to): array
+            {
+                return $this->assignments->findAssignedWorkInPeriod($employeeId, $from, $to);
             }
 
             public function hasActiveForEmployee(int $employeeId): bool
