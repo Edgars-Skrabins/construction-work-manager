@@ -253,6 +253,11 @@ final class AssignmentPagesTest extends IntegrationTestCase
         assertMatchesRegularExpression('#<select class="form-select" id="employee" name="employee" required>#', $page);
         assertStringContainsString('<option value="5" data-access-level="2" selected>', $page);
         assertStringNotContainsString('<option value="7" data-access-level', $page);
+        assertStringContainsString('<input type="hidden" name="currentEmployee" value="5">', $page);
+
+        $stale = $this->submit("/assignments/$id/edit", ['employee' => '6', 'currentEmployee' => '4', 'startDate' => '2027-03-01', 'endDate' => '2027-03-10', 'status' => 'active']);
+        assertSame(200, $stale->getStatusCode());
+        assertStringContainsString('because of a change made at the same time', (string) $stale->getBody());
 
         $tooLow = $this->submit("/assignments/$id/edit", ['employee' => '4', 'startDate' => '2027-03-01', 'endDate' => '2027-03-10', 'status' => 'active']);
         $body = (string) $tooLow->getBody();
@@ -262,7 +267,7 @@ final class AssignmentPagesTest extends IntegrationTestCase
 
         assertSame(403, $this->submit("/assignments/$id/edit", ['employee' => '7', 'startDate' => '2027-03-01', 'endDate' => '2027-03-10', 'status' => 'active'])->getStatusCode());
 
-        $saved = $this->submit("/assignments/$id/edit", ['employee' => '6', 'startDate' => '2027-03-01', 'endDate' => '2027-03-10', 'status' => 'active']);
+        $saved = $this->submit("/assignments/$id/edit", ['employee' => '6', 'currentEmployee' => '5', 'startDate' => '2027-03-01', 'endDate' => '2027-03-10', 'status' => 'active']);
         assertSame(302, $saved->getStatusCode());
         assertSame(6, (int) $this->db()->createCommand('SELECT EMPLOYEE_ID FROM ASSIGNMENT WHERE ID = :id', [':id' => $id])->queryScalar());
     }
