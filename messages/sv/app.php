@@ -90,6 +90,7 @@ return [
     '—' => '—',
     'Pending setup' => 'Väntar på aktivering',
     'Inactive' => 'Inaktivt',
+    '(you)' => '(du)',
     'No manager' => 'Ingen chef',
     "Login pending: the employee hasn't set a password yet." => 'Kontot väntar på aktivering: medarbetaren har inte valt något lösenord ännu.',
     'New setup code' => 'Ny aktiveringskod',

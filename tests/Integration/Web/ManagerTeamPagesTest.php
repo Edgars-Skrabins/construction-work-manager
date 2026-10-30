@@ -46,6 +46,7 @@ final class ManagerTeamPagesTest extends IntegrationTestCase
             assertStringNotContainsString("<td>$name</td>", $body);
         }
         assertStringNotContainsString('href="/employees/create"', $body);
+        assertStringNotContainsString('(you)', $body);
         assertStringNotContainsString('/edit"', $body);
         assertStringNotContainsString('/delete"', $body);
     }

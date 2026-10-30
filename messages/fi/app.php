@@ -90,6 +90,7 @@ return [
     '—' => '—',
     'Pending setup' => 'Odottaa aktivointia',
     'Inactive' => 'Ei aktiivinen',
+    '(you)' => '(sinä)',
     'No manager' => 'Ei esihenkilöä',
     "Login pending: the employee hasn't set a password yet." => 'Käyttäjätili odottaa aktivointia: työntekijä ei ole vielä asettanut salasanaa.',
     'New setup code' => 'Uusi aktivointikoodi',

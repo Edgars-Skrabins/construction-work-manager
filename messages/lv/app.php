@@ -90,6 +90,7 @@ return [
     '—' => '—',
     'Pending setup' => 'Gaida aktivizāciju',
     'Inactive' => 'Neaktīvs',
+    '(you)' => '(jūs)',
     'No manager' => 'Bez vadītāja',
     "Login pending: the employee hasn't set a password yet." => 'Konts vēl nav aktivizēts: darbinieks vēl nav iestatījis paroli.',
     'New setup code' => 'Jauns aktivizācijas kods',

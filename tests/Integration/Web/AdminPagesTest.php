@@ -266,6 +266,28 @@ final class AdminPagesTest extends IntegrationTestCase
         assertStringNotContainsString('Roofing', $body);
     }
 
+    public function testEmployeesCanBeSortedByLoginKeepingTheSearch(): void
+    {
+        $this->asAdmin();
+
+        $sorted = (string) $this->request('GET', '/employees?sort=login')->getBody();
+        $searched = (string) $this->request('GET', '/employees?sort=-login&q=' . rawurlencode('iņš'))->getBody();
+
+        assertStringContainsString('href="/employees?sort=-login">Login ▲</a>', $sorted);
+        assertStringContainsString('href="/employees?sort=login&amp;q=' . urlencode('iņš') . '">Login ▼</a>', $searched);
+        assertStringContainsString('name="sort" value="-login"', $searched);
+    }
+
+    public function testOnlyTheAdminsOwnRowIsMarked(): void
+    {
+        $this->asAdmin();
+
+        $body = (string) $this->request('GET', '/employees')->getBody();
+
+        assertStringContainsString('<td>Bērziņš, Jānis <span class="text-secondary">(you)</span></td>', $body);
+        assertSame(1, substr_count($body, '(you)'));
+    }
+
     public function testUnmatchedSearchEchoesTheQueryEscaped(): void
     {
         $this->asAdmin();
