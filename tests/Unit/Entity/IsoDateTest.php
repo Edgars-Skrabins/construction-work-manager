@@ -32,6 +32,7 @@ final class IsoDateTest extends TestCase
         yield 'no leading zeros' => ['2030-1-2'];
         yield 'trailing text' => ['2030-11-02x'];
         yield 'trailing newline' => ["2030-11-02\n"];
+        yield 'year zero' => ['0000-01-01'];
     }
 
     #[DataProvider('invalidDates')]

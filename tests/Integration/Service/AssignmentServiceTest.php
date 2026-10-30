@@ -261,6 +261,21 @@ final class AssignmentServiceTest extends IntegrationTestCase
         $this->assertErrors(fn() => $this->assignments()->update(2, $assignment->id, $assignment->employeeId, '2026-11-10', '2026-11-20', 'active', ''), $levelError);
     }
 
+    public function testAssignmentOfAnEmployeeWhoBecameAManagerCanStayDoneButNotBeReopened(): void
+    {
+        $assignment = $this->existing(6, 1, 1, '2026-11-10', '2026-11-20');
+        $this->assignments()->update(1, $assignment->id, 6, '2026-11-10', '2026-11-20', 'done', '');
+        $this->db()->createCommand("UPDATE EMPLOYEE SET ROLE = N'manager', MANAGER_ID = NULL WHERE ID = 6")->execute();
+
+        $this->assertErrors(
+            fn() => $this->assignments()->update(1, $assignment->id, 6, '2026-11-10', '2026-11-20', 'active', ''),
+            ['employee' => 'Only employees can have active assignments.'],
+        );
+
+        $this->assignments()->update(1, $assignment->id, 6, '2026-11-10', '2026-11-21', 'done', '');
+        assertSame(AssignmentStatus::Done, $this->assignments()->find(1, $assignment->id)?->assignment->status);
+    }
+
     public function testManagerReassignsToAnotherOfTheirEmployees(): void
     {
         $assignment = $this->existing(4, 1, 1, '2026-11-10', '2026-11-20');

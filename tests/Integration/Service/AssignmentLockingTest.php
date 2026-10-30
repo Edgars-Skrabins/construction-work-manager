@@ -161,6 +161,25 @@ final class AssignmentLockingTest extends IntegrationTestCase
         ));
     }
 
+    public function testAnEmployeeSaveLocksTheChosenManagerAgainstADemotion(): void
+    {
+        $employee = $this->service(EmployeeRepositoryInterface::class)->find(4);
+        assertNotNull($employee);
+
+        $this->service(EmployeeService::class)->update(1, 4, new EmployeeInput(
+            $employee->firstName,
+            $employee->lastName,
+            $employee->birthDate,
+            $employee->accessLevelId,
+            Role::Employee,
+            3,
+            $employee->account?->email,
+            $employee->account->isActive ?? true,
+        ));
+
+        self::assertLockTimeout(fn() => (new EmployeeRepository($this->other))->findForUpdate(3));
+    }
+
     public function testAnAssignmentSaveWaitsForARoleChangeThatCheckedForActiveAssignments(): void
     {
         $saveBlocked = false;

@@ -129,6 +129,7 @@ return [
     "You can't remove your own login." => 'Negalite pašalinti savo paskyros.',
     "You can't deactivate your own login." => 'Negalite išjungti savo paskyros.',
     "Finish or cancel this employee's active assignments first." => 'Pirmiausia užbaikite arba atšaukite aktyvias šio darbuotojo užduotis.',
+    'Only employees can have active assignments.' => 'Aktyvių užduočių gali turėti tik darbuotojai.',
     'This email is already used by another login.' => 'Šis el. paštas jau naudojamas kitoje paskyroje.',
 
     'Work calendar' => 'Darbų kalendorius',

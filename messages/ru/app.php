@@ -129,6 +129,7 @@ return [
     "You can't remove your own login." => 'Нельзя удалить собственный вход.',
     "You can't deactivate your own login." => 'Нельзя отключить собственный вход.',
     "Finish or cancel this employee's active assignments first." => 'Сначала завершите или отмените активные задания этого сотрудника.',
+    'Only employees can have active assignments.' => 'Активные задания могут быть только у сотрудников.',
     'This email is already used by another login.' => 'Эта эл. почта уже используется для другого входа.',
 
     'Work calendar' => 'Календарь работ',

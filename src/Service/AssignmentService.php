@@ -198,6 +198,9 @@ final readonly class AssignmentService
             if ($reassigned && ($employee === null || !$this->isAssignable($employee, $actorId, $scope))) {
                 throw new ForbiddenException(sprintf('Employee %d may not assign employee %d.', $actorId, $employeeId));
             }
+            if (!$reassigned && $newStatus === AssignmentStatus::Active && ($employee === null || !$this->isAssignable($employee, $actorId, $scope))) {
+                $errors['employee'] = $this->translator->translate('Only employees can have active assignments.');
+            }
 
             if ($newStatus === AssignmentStatus::Active) {
                 $site = $this->sites->findForUpdate($assignment->constructionSiteId);

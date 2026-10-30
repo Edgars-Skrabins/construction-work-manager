@@ -94,10 +94,9 @@ final readonly class EmployeeService
     public function create(int $actorId, EmployeeInput $input): SavedEmployee
     {
         $this->accessChecker->ensure($actorId, Permission::EmployeeCreate);
-        $data = $this->validate($input, null);
 
-        return $this->guardEmail(fn(): SavedEmployee => $this->transaction->run(function () use ($data, $input): SavedEmployee {
-            $id = $this->employees->create($data);
+        return $this->guardEmail(fn(): SavedEmployee => $this->transaction->run(function () use ($input): SavedEmployee {
+            $id = $this->employees->create($this->validate($input, null));
             $setupCode = $input->email === null ? null : $this->createAccount($id, $input->email, $input->loginActive);
 
             return new SavedEmployee($id, $setupCode);
@@ -165,7 +164,7 @@ final readonly class EmployeeService
         if (!$this->accessLevels->exists($input->accessLevelId)) {
             $errors['accessLevelId'] = $this->translator->translate('Choose an access level.');
         }
-        if ($managerId !== null && ($managerId === $employee?->id || $this->employees->find($managerId)?->role !== Role::Manager)) {
+        if ($managerId !== null && ($managerId === $employee?->id || $this->employees->findForUpdate($managerId)?->role !== Role::Manager)) {
             $errors['managerId'] = $this->translator->translate('Choose a manager.');
         }
         if ($input->email !== null) {

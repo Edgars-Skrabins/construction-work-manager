@@ -129,6 +129,7 @@ return [
     "You can't remove your own login." => 'Jūs nevarat noņemt savu kontu.',
     "You can't deactivate your own login." => 'Jūs nevarat deaktivizēt savu kontu.',
     "Finish or cancel this employee's active assignments first." => 'Vispirms pabeidziet vai atceliet šī darbinieka aktīvos uzdevumus.',
+    'Only employees can have active assignments.' => 'Aktīvi uzdevumi var būt tikai darbiniekiem.',
     'This email is already used by another login.' => 'Šis e-pasts jau tiek izmantots citā kontā.',
 
     'Work calendar' => 'Darbu kalendārs',

@@ -129,6 +129,7 @@ return [
     "You can't remove your own login." => 'Du kan inte ta bort ditt eget konto.',
     "You can't deactivate your own login." => 'Du kan inte inaktivera ditt eget konto.',
     "Finish or cancel this employee's active assignments first." => 'Slutför eller avbryt först den här medarbetarens aktiva uppdrag.',
+    'Only employees can have active assignments.' => 'Endast medarbetare kan ha aktiva uppdrag.',
     'This email is already used by another login.' => 'E-postadressen används redan av ett annat konto.',
 
     'Work calendar' => 'Arbetskalender',

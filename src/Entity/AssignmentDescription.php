@@ -15,6 +15,6 @@ final class AssignmentDescription
 
     public static function isTooLong(string $description): bool
     {
-        return mb_strlen($description) > self::MAX_LENGTH;
+        return strlen(mb_convert_encoding($description, 'UTF-16LE', 'UTF-8')) / 2 > self::MAX_LENGTH;
     }
 }

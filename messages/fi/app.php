@@ -129,6 +129,7 @@ return [
     "You can't remove your own login." => 'Et voi poistaa omaa käyttäjätiliäsi.',
     "You can't deactivate your own login." => 'Et voi poistaa omaa käyttäjätiliäsi käytöstä.',
     "Finish or cancel this employee's active assignments first." => 'Päätä tai peru ensin tämän työntekijän aktiiviset työtehtävät.',
+    'Only employees can have active assignments.' => 'Aktiivisia työtehtäviä voi olla vain työntekijöillä.',
     'This email is already used by another login.' => 'Tämä sähköposti on jo toisen käyttäjätilin käytössä.',
 
     'Work calendar' => 'Työkalenteri',

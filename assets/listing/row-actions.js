@@ -101,7 +101,7 @@
 
     compact.addEventListener('change', apply);
     document.querySelectorAll('[data-list-results]').forEach((results) => {
-        new MutationObserver(apply).observe(results, {childList: true, subtree: true});
+        new MutationObserver(apply).observe(results.parentElement, {childList: true, subtree: true});
     });
     apply();
 })();
