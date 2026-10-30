@@ -26,7 +26,7 @@
                         <th scope="col" class="text-end">{% include 'Web/Shared/Listing/sort-link.twig' with {label: t('Area (m²)'), key: 'area', route: 'site.list'} %}</th>
                         <th scope="col">{% include 'Web/Shared/Listing/sort-link.twig' with {label: t('Required access level'), key: 'accessLevel', route: 'site.list'} %}</th>
                         {% if showActions %}
-                            <th scope="col" class="text-end">{{ t('Actions') }}</th>
+                            <th scope="col" class="text-end list-actions">{{ t('Actions') }}</th>
                         {% endif %}
                     </tr>
                 </thead>
@@ -47,7 +47,7 @@
                                 {% if access.can('site.delete') %}
                                     {% set actions = actions|merge([{label: t('Delete'), url: urlGenerator.generate('site.delete', {id: site.id}), variant: 'danger'}]) %}
                                 {% endif %}
-                                <td class="text-end text-nowrap">{% include 'Web/Shared/Listing/row-actions.twig' with {name: site.name, actions: actions} %}</td>
+                                <td class="text-end text-nowrap list-actions">{% include 'Web/Shared/Listing/row-actions.twig' with {name: site.name, actions: actions} %}</td>
                             {% endif %}
                         </tr>
                     {% endfor %}

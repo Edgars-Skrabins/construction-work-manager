@@ -40,7 +40,7 @@
                         <th scope="col">{% include 'Web/Shared/Listing/sort-link.twig' with {label: t('End date'), key: 'endDate', route: 'assignment.list'} %}</th>
                         <th scope="col">{{ t('Status') }}</th>
                         {% if showActions %}
-                            <th scope="col" class="text-end">{{ t('Actions') }}</th>
+                            <th scope="col" class="text-end list-actions">{{ t('Actions') }}</th>
                         {% endif %}
                     </tr>
                 </thead>
@@ -70,7 +70,7 @@
                                 {% if access.can('assignment.delete') %}
                                     {% set actions = actions|merge([{label: t('Delete'), url: urlGenerator.generate('assignment.delete', {id: item.assignment.id}), variant: 'danger'}]) %}
                                 {% endif %}
-                                <td class="text-end text-nowrap">{% include 'Web/Shared/Listing/row-actions.twig' with {name: item.employeeName ~ ' – ' ~ item.workItemName, actions: actions} %}</td>
+                                <td class="text-end text-nowrap list-actions">{% include 'Web/Shared/Listing/row-actions.twig' with {name: item.employeeName ~ ' – ' ~ item.workItemName, actions: actions} %}</td>
                             {% endif %}
                         </tr>
                     {% endfor %}

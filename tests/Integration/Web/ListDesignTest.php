@@ -41,8 +41,8 @@ final class ListDesignTest extends IntegrationTestCase
 
         $body = (string) $this->request('GET', $path)->getBody();
 
-        assertStringContainsString('<th scope="col" class="text-end">Actions</th>', $body);
-        assertMatchesRegularExpression('#<td class="text-end text-nowrap"><div class="d-inline-flex gap-1" role="group" aria-label="Actions for [^"]+">#', $body);
+        assertStringContainsString('<th scope="col" class="text-end list-actions">Actions</th>', $body);
+        assertMatchesRegularExpression('#<td class="text-end text-nowrap list-actions"><div class="d-inline-flex gap-1" role="group" aria-label="Actions for [^"]+">#', $body);
         assertMatchesRegularExpression('#<span class="d-inline-block text-truncate align-bottom list-truncate" title="([^"]+)">\1</span>#', $body);
     }
 

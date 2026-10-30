@@ -32,7 +32,7 @@
                         <th scope="col">{% include 'Web/Shared/Listing/sort-link.twig' with {label: t('Manager'), key: 'manager', route: 'employee.list'} %}</th>
                         <th scope="col">{% include 'Web/Shared/Listing/sort-link.twig' with {label: t('Login'), key: 'login', route: 'employee.list'} %}</th>
                         {% if showActions %}
-                            <th scope="col" class="text-end">{{ t('Actions') }}</th>
+                            <th scope="col" class="text-end list-actions">{{ t('Actions') }}</th>
                         {% endif %}
                     </tr>
                 </thead>
@@ -54,7 +54,7 @@
                                 {% if access.can('employee.delete') and employee.id ~ '' != currentUser.getId() %}
                                     {% set actions = actions|merge([{label: t('Delete'), url: urlGenerator.generate('employee.delete', {id: employee.id}), variant: 'danger'}]) %}
                                 {% endif %}
-                                <td class="text-end text-nowrap">{% include 'Web/Shared/Listing/row-actions.twig' with {name: name, actions: actions} %}</td>
+                                <td class="text-end text-nowrap list-actions">{% include 'Web/Shared/Listing/row-actions.twig' with {name: name, actions: actions} %}</td>
                             {% endif %}
                         </tr>
                     {% endfor %}

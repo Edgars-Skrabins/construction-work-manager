@@ -7,11 +7,18 @@
 }
 
 @media (min-width: 992px) {
-    .list-truncate {
-        max-width: 16rem;
-    }
-
     .list-truncate-wide {
         max-width: 28rem;
     }
+}
+
+@media (min-width: 1400px) {
+    .list-truncate {
+        max-width: 16rem;
+    }
+}
+
+.list-actions {
+    position: sticky;
+    right: 0;
 }

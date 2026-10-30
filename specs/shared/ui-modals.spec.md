@@ -1,7 +1,7 @@
 # UI modals — Spec
 
 **Type:** feature
-**Status:** in progress
+**Status:** done
 **Last updated:** 2026-10-30
 
 # Part 1 — Business logic and usage
@@ -28,7 +28,7 @@ This feature opens every create, edit, reassign and delete action of the lists i
   2. The table columns keep their current order and sorting. The Actions column is always last, right-aligned, and holds small outline buttons in one row, in the order Edit, Reassign, Delete; Edit is amber (primary), Reassign grey (secondary), Delete red (danger). The buttons of a row are a group labelled "Actions for <row name>" for screen readers.
   3. The Actions column is shown only when the viewer may do at least one row action on that list, so the managers' team list has no empty column.
   4. Long text never makes a row taller or wider than its limit: names, sites, managers, cities and descriptions are cut with an ellipsis at a maximum width, and the full text is in the cell's tooltip (`title`). The work item description shows its full text cut by width instead of the 100-character slice. Dates and codes never break.
-  5. Wide tables keep scrolling inside their own box on phones, as decided in `responsive-layout.spec.md`; the truncation widths are smaller below the `lg` breakpoint, so less scrolling is needed.
+  5. Wide tables keep scrolling inside their own box on phones and tablets, as decided in `responsive-layout.spec.md`, and the Actions column stays pinned to the right edge while the table scrolls, so Edit and Delete are always in reach. The truncation widths are smaller below the `xxl` breakpoint, so the four lists fit at 1280 px, in Latvian too.
   6. The empty and no-results texts look the same on every list: a muted, centred message in a bordered box.
 - **Rules:**
   - The server stays the only source of the forms and their validation: the modal shows the existing pages' content and posts to the existing routes with the page's CSRF token. No API, no JSON, no client-side validation.
@@ -131,13 +131,20 @@ In `src/Web/EmployeeList/`, `SiteList/`, `WorkItemList/` and `AssignmentList/tem
 }
 
 @media (min-width: 992px) {
-    .list-truncate {
-        max-width: 16rem;
-    }
-
     .list-truncate-wide {
         max-width: 28rem;
     }
+}
+
+@media (min-width: 1400px) {
+    .list-truncate {
+        max-width: 16rem;
+    }
+}
+
+.list-actions {
+    position: sticky;
+    right: 0;
 }
 ```
 
@@ -176,10 +183,11 @@ All decided by the implementing session without a user interview, as instructed,
 10. **Modal size** — `modal-lg`, `modal-dialog-scrollable`, and `modal-fullscreen-sm-down` on phones.
 11. **Row actions** — one partial, small outline buttons with `gap-1`, in the order Edit, Reassign, Delete, labelled as a group per row. Rejected: a dropdown menu ("⋯"), which hides the actions behind one more click.
 12. **Actions column** — only rendered when the viewer has a row action on that list.
-13. **Truncation** — `text-truncate` on an inline-block span with a CSS max-width (10/14rem below `lg`, 16/28rem from `lg`) and the full text in `title`. Rejected: cutting server-side to N characters, which wastes space on wide screens and still overflows with wide letters.
+13. **Truncation** — `text-truncate` on an inline-block span with a CSS max-width and the full text in `title`: 10rem below `xxl` and 16rem from `xxl` (1400 px), and for the description 14rem below `lg` and 28rem from `lg`. Changed on 2026-10-30 from 16rem at `lg`, after the browser check showed the Assignments list overflowing at 1280 px in Latvian. Rejected: cutting server-side to N characters, which wastes space on wide screens and still overflows with wide letters.
 14. **Mobile tables** — keep scrolling inside `table-responsive` (`responsive-layout.spec.md`); no card layout.
 15. **Empty state** — one partial, a muted centred message in a bordered box.
 16. **Styles** — in `assets/listing/listing.css` through `ListingAsset`, kept out of `assets/main/site.css`, which `ui-shell` reworks at the same time.
+17. **Pinned actions** (2026-10-30) — the Actions `<th>` and `<td>` get `list-actions` (`position: sticky; right: 0`), so on phones the row buttons stay visible while the table scrolls sideways. The cells already have the opaque table background. Added after the 375 px browser check showed the buttons only after scrolling.
 
 # Part 3 — Implementation TODO
 
@@ -200,9 +208,9 @@ Baseline before starting: `make check` green on `main` at `0dd23e5`.
 ### C. Lists
 - [x] C1. Add `row-actions.twig`, `truncated-text.twig`, `empty-state.twig` and `listing.css`.
 - [x] C2. Rework the four list templates as described in 2.2, include the modal partial, and register `EmployeeAsset` on the Employees list.
-- [ ] C3. Add `ModalTest` and the list design tests, and update `InstantSearchTest` and other tests broken by the markup.
+- [x] C3. Add `ModalTest` and the list design tests, and update `InstantSearchTest` and other tests broken by the markup.
 
 ### Z. Wrap-up
-- [ ] Z1. `make check` green.
-- [ ] Z2. Manual check in the running app at 375, 768 and 1280 px, on every list: create, edit, reassign and delete open in the modal; a validation error stays in it; a successful save and a delete reload the list with its search kept and the flash shown; a refused delete shows "still in use"; Esc, ×, Cancel close it and focus returns; site filtering and the manager lock work in the modal; a new employee login shows the setup code in the modal; long text is truncated with a tooltip; no page-level horizontal scroll; no console errors.
+- [x] Z1. `make check` green (285 unit, 864 integration tests).
+- [x] Z2. Manual check in the running app at 375, 768 and 1280 px, on every list: create, edit, reassign and delete open in the modal; a validation error stays in it; a successful save and a delete reload the list with its search kept and the flash shown; a refused delete shows "still in use"; Esc, ×, Cancel close it and focus returns; site filtering and the manager lock work in the modal; a new employee login shows the setup code in the modal; long text is truncated with a tooltip; no page-level horizontal scroll; no console errors. Result: all confirmed in Chromium at 375, 768 and 1280 px, in dark and light themes, as admin and as manager; two fixes came out of it (decisions 13 and 17).
 - [x] Z3. Update `CLAUDE.md` (the `src/Web/Shared/` description, the modal flow) and the README if it describes these pages.
