@@ -34,7 +34,7 @@
     --bs-info-border-subtle: #2b4a59;
     --app-focus-outline: #e09a1c;
     --app-selection: rgba(224, 154, 28, 0.35);
-    --app-status-planned: #c9c3b8;
+    --app-status-planned: #7fb2e5;
     --app-status-in-progress: #e8a83a;
     --bs-danger: #f0776f;
     --bs-danger-rgb: 240, 119, 111;
@@ -80,7 +80,7 @@
     --bs-info-border-subtle: #b5cdd8;
     --app-focus-outline: #8a4f00;
     --app-selection: rgba(224, 154, 28, 0.3);
-    --app-status-planned: #4a463f;
+    --app-status-planned: #2b5d8c;
     --app-status-in-progress: #8a4f00;
     --bs-danger: #b42318;
     --bs-danger-rgb: 180, 35, 24;
@@ -379,6 +379,11 @@ summary:focus-visible {
     background-color: color-mix(in srgb, var(--app-status-color) 14%, transparent);
     border: 1px solid color-mix(in srgb, var(--app-status-color) 40%, transparent);
     font-weight: 600;
+}
+
+.status-badge.status-cancelled {
+    background-color: transparent;
+    border-style: dashed;
 }
 
 .assignment-block {

@@ -1,17 +1,17 @@
 .calendar .status-planned {
-    --calendar-accent: var(--bs-secondary-color);
+    --calendar-accent: var(--app-status-planned);
 }
 
 .calendar .status-in-progress {
-    --calendar-accent: var(--bs-primary);
+    --calendar-accent: var(--app-status-in-progress);
 }
 
 .calendar .status-overdue {
-    --calendar-accent: var(--bs-danger);
+    --calendar-accent: var(--app-status-overdue);
 }
 
 .calendar .status-done {
-    --calendar-accent: var(--bs-success);
+    --calendar-accent: var(--app-status-done);
 }
 
 .calendar-swatch {
@@ -30,7 +30,7 @@
     display: block;
     width: 100%;
     margin-bottom: 0.25rem;
-    padding: 0.125rem 0.375rem;
+    padding: 0.125rem 0.3125rem;
     font-size: 0.8125rem;
     line-height: 1.3;
     text-align: start;
@@ -88,7 +88,7 @@
 
 .work-calendar td {
     height: 6rem;
-    padding: 0.375rem;
+    padding: 0.25rem;
     vertical-align: top;
 }
 
