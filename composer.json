@@ -73,6 +73,7 @@
     },
     "require-dev": {
         "friendsofphp/php-cs-fixer": "^3.95.27",
+        "league/openapi-psr7-validator": "^0.24.0",
         "phpstan/phpstan": "^2.3.3",
         "phpunit/phpunit": "^13.4.5",
         "vlucas/phpdotenv": "^5.8"
