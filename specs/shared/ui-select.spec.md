@@ -1,7 +1,7 @@
 # Searchable select — Spec
 
 **Type:** feature
-**Status:** ready for implementation
+**Status:** in progress
 **Last updated:** 2026-10-30
 
 # Part 1 — Business logic and usage
@@ -58,7 +58,7 @@ The `<body>` gets `data-select-search="{{ t('Search') }}"` and `data-select-no-m
   - Right after the select it inserts `<div class="dropdown select-picker">` holding:
     - `<button type="button" class="form-select select-picker-toggle …" id="<id>-picker" aria-haspopup="listbox" aria-expanded="false" aria-controls="<id>-picker-list">` with the chosen text in a `<span class="select-picker-value">`. Its classes are the select's classes plus `select-picker-toggle` (so `form-select-sm` and `is-invalid` carry over), and it gets `aria-invalid="true"` while `is-invalid` is set. `aria-labelledby` is the label's id and the toggle's own id (the `label[for="<id>"]` gets the id `<id>-label` if it has none); a select without a label keeps its `aria-label`. The select's `aria-describedby` is copied. `disabled` mirrors the select.
     - `<div class="dropdown-menu select-picker-menu">` (shown with Bootstrap's `show` class) holding, for lists with more than 8 options, `<input type="search" class="form-control form-control-sm select-picker-search" role="combobox" aria-autocomplete="list" aria-expanded="true" aria-controls="<id>-picker-list" aria-label="…" placeholder="…" autocomplete="off" spellcheck="false">`, then `<ul class="select-picker-list" role="listbox" id="<id>-picker-list" aria-labelledby="<label id>" tabindex="-1">` and `<p class="select-picker-empty" role="status">` (empty until there are no matches).
-  - The wrapper's `min-width` is the select's rendered width before it was hidden, so a select in an inline filter keeps its size.
+  - When the select's parent is a flex container (an inline filter such as the work calendar's), the wrapper's `width` is the select's rendered width before it was hidden, so it keeps its size; `max-width: 100%` keeps it inside the screen. In a block parent the wrapper simply fills the width like `form-select`.
 - Options are rendered as `<li role="option" class="dropdown-item select-picker-option" id="<id>-picker-option-<index>" aria-selected="true|false">` (`aria-disabled="true"` for disabled options, the placeholder with `select-picker-placeholder`), built with `textContent`, never `innerHTML`. Hidden options are skipped; with a search text, the empty-value option is skipped too.
 - Matching: `text.normalize('NFD').replace(/\p{M}/gu, '').toLowerCase()` of the option text contains the same normalisation of the trimmed search text.
 - The highlighted option has the class `is-highlighted` and is the `aria-activedescendant` of the focused element (the search box, or the listbox without one), and is scrolled into view with `scrollIntoView({block: 'nearest'})`.
@@ -77,7 +77,7 @@ One new message, `No matches`, at the same position in all six `messages/*/app.p
 
 ### Tests
 
-- `tests/Integration/Web/SelectAssetTest.php` (new): for the assignment form, employee form, site form and work calendar (as admin), the page loads `/assets/select/…select.js` and `…select.css`, and the `<body>` has the `data-select-search` and `data-select-no-matches` texts; the Latvian page has them translated.
+- `tests/Integration/Web/SelectAssetTest.php` (new): for the assignment form, employee form, site form and work calendar (as admin), the native select markup is unchanged, the page loads `/assets/select/…select.js` and `…select.css`, and the `<body>` has the `data-select-search` and `data-select-no-matches` texts; `select.js` comes before `assignment.js`; the Latvian page has the texts translated.
 - The existing `MessageCatalogTest` covers the new message.
 
 ### Docs
@@ -109,13 +109,13 @@ Read Part 1 and Part 2 before starting. Work through the tasks in order and tick
 Baseline before starting: the unit and integration suites pass on `main` (`make check`).
 
 ### A. Component
-- [ ] A1. Add `assets/select/select.js` as described in 2.2 (enhancement, rendering, filtering, keyboard, mouse, placement, sync, observer for added content).
-- [ ] A2. Add `assets/select/select.css` as described in 2.2.
-- [ ] A3. Add `src/Web/Shared/Layout/Main/SelectAsset.php` and add it to `MainAsset::$depends` after `BootstrapAsset`.
-- [ ] A4. Add `data-select-search` and `data-select-no-matches` to `<body>` in `layout.twig`, and `No matches` to all six `messages/*/app.php` files.
-- [ ] A5. Add `tests/Integration/Web/SelectAssetTest.php` (2.2 Tests).
+- [x] A1. Add `assets/select/select.js` as described in 2.2 (enhancement, rendering, filtering, keyboard, mouse, placement, sync, observer for added content).
+- [x] A2. Add `assets/select/select.css` as described in 2.2.
+- [x] A3. Add `src/Web/Shared/Layout/Main/SelectAsset.php` and add it to `MainAsset::$depends` after `BootstrapAsset`.
+- [x] A4. Add `data-select-search` and `data-select-no-matches` to `<body>` in `layout.twig`, and `No matches` to all six `messages/*/app.php` files.
+- [x] A5. Add `tests/Integration/Web/SelectAssetTest.php` (2.2 Tests).
 
 ### Z. Wrap-up
-- [ ] Z1. Update `CLAUDE.md` (2.2 Docs).
+- [x] Z1. Update `CLAUDE.md` (2.2 Docs).
 - [ ] Z2. `make check`.
-- [ ] Z3. Manual check in the running app at 375 px, 768 px and 1280 px: the assignment form (search an employee without diacritics, keyboard choose, see only allowed sites after choosing an employee, submit empty for validation errors, open `/assignments/new#employee`), the employee form (role admin disables Manager), the site form, the work calendar filter; the dropdown stays inside the screen on the phone.
+- [ ] Z3. Manual check in the running app at 375 px, 768 px and 1280 px: the assignment form (search an employee without diacritics, keyboard choose, see only allowed sites after choosing an employee, submit empty for validation errors, open `/assignments/create#employee`), the employee form (role admin disables Manager), the site form, the work calendar filter; the dropdown stays inside the screen on the phone.
