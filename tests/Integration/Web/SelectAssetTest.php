@@ -7,9 +7,7 @@ namespace App\Tests\Integration\Web;
 use App\Tests\Integration\IntegrationTestCase;
 use PHPUnit\Framework\Attributes\DataProvider;
 
-use function PHPUnit\Framework\assertLessThan;
 use function PHPUnit\Framework\assertMatchesRegularExpression;
-use function PHPUnit\Framework\assertNotFalse;
 use function PHPUnit\Framework\assertSame;
 use function PHPUnit\Framework\assertStringContainsString;
 
@@ -38,7 +36,7 @@ final class SelectAssetTest extends IntegrationTestCase
 
         assertSame(200, $response->getStatusCode());
         assertStringContainsString($select, $body);
-        assertMatchesRegularExpression('#<link href="/assets/select/[^"]*select\.css[^"]*" rel="stylesheet">#', $body);
+        assertMatchesRegularExpression('#<link rel="stylesheet" href="/assets/select/[^"]*select\.css">#', $body);
         assertMatchesRegularExpression('#<script src="/assets/select/[^"]*select\.js[^"]*"#', $body);
         assertStringContainsString('<body class="d-flex flex-column" data-select-search="Search" data-select-no-matches="No matches">', $body);
     }
@@ -49,11 +47,7 @@ final class SelectAssetTest extends IntegrationTestCase
 
         $body = (string) $this->request('GET', '/assignments/create')->getBody();
 
-        $select = strpos($body, 'select/select.js');
-        $assignment = strpos($body, 'assignment/assignment.js');
-        assertNotFalse($select);
-        assertNotFalse($assignment);
-        assertLessThan($assignment, $select);
+        assertMatchesRegularExpression('#<script src="/assets/select/[^"]*select\.js"></script>.*<script src="/assets/assignment/[^"]*assignment\.js"></script>#s', $body);
     }
 
     public function testTextsAreTranslated(): void
