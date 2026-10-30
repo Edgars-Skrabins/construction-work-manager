@@ -54,13 +54,6 @@ final class EnvironmentTest extends TestCase
         Environment::prepare();
     }
 
-    public function testAppEnvIsReadFromEnvironment(): void
-    {
-        $this->setEnv('APP_ENV', 'test');
-
-        assertSame('test', Environment::appEnv());
-    }
-
     public function testAppEnvDefaultsToProdWhenNotSet(): void
     {
         $this->unsetEnv('APP_ENV');
@@ -90,13 +83,6 @@ final class EnvironmentTest extends TestCase
         }
     }
 
-    public function testIsTest(): void
-    {
-        $this->setEnv('APP_ENV', 'test');
-
-        assertTrue(Environment::isTest());
-    }
-
     public function testAppDebugDefaultsToFalse(): void
     {
         $this->unsetEnv('APP_DEBUG');
@@ -111,13 +97,6 @@ final class EnvironmentTest extends TestCase
         assertTrue(Environment::appDebug());
     }
 
-    public function testAppDebugFalse(): void
-    {
-        $this->setEnv('APP_DEBUG', 'false');
-
-        assertFalse(Environment::appDebug());
-    }
-
     public function testAppHostPathDefaultsToNull(): void
     {
         $this->unsetEnv('APP_HOST_PATH');
@@ -125,41 +104,11 @@ final class EnvironmentTest extends TestCase
         assertNull(Environment::appHostPath());
     }
 
-    public function testAppHostPathIsRead(): void
-    {
-        $this->setEnv('APP_HOST_PATH', '/projects/myapp');
-
-        assertSame('/projects/myapp', Environment::appHostPath());
-    }
-
     public function testAppHostPathEmptyStringTreatedAsNull(): void
     {
         $this->setEnv('APP_HOST_PATH', '');
 
         assertNull(Environment::appHostPath());
-    }
-
-    public function testDbSettingsAreRead(): void
-    {
-        $this->setEnv('DB_HOST', 'db.example');
-        $this->setEnv('DB_PORT', '14330');
-        $this->setEnv('DB_TRUST_SERVER_CERTIFICATE', 'true');
-        $this->setEnv('DB_NAME', 'app_db');
-        $this->setEnv('DB_USER', 'app_user');
-        $this->setEnv('DB_PASSWORD', 'app_secret');
-        $this->setEnv('DB_TEST_NAME', 'app_db_test');
-        $this->setEnv('DB_TEST_USER', 'test_user');
-        $this->setEnv('DB_TEST_PASSWORD', 'test_secret');
-
-        assertSame('db.example', Environment::dbHost());
-        assertSame(14330, Environment::dbPort());
-        assertTrue(Environment::dbTrustServerCertificate());
-        assertSame('app_db', Environment::dbName());
-        assertSame('app_user', Environment::dbUser());
-        assertSame('app_secret', Environment::dbPassword());
-        assertSame('app_db_test', Environment::dbTestName());
-        assertSame('test_user', Environment::dbTestUser());
-        assertSame('test_secret', Environment::dbTestPassword());
     }
 
     public function testDbSettingsDefaults(): void

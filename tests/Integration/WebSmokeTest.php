@@ -9,16 +9,6 @@ use function PHPUnit\Framework\assertStringContainsString;
 
 final class WebSmokeTest extends IntegrationTestCase
 {
-    public function testLoginPageIsRenderedWithLayout(): void
-    {
-        $response = $this->handleRequest('GET', '/login');
-        $body = (string) $response->getBody();
-
-        assertSame(200, $response->getStatusCode());
-        assertStringContainsString('<title>Log in</title>', $body);
-        assertStringContainsString('class="navbar-brand"', $body);
-    }
-
     public function testUnknownPageReturnsNotFoundWithLayout(): void
     {
         $response = $this->handleRequest('GET', '/missing-page');

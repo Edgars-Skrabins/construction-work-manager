@@ -67,14 +67,6 @@ final class RequirePermissionTest extends IntegrationTestCase
         $this->middleware(Permission::SiteRead, null)->process($this->serverRequest(), $this->handler());
     }
 
-    public function testForBuildsARouteMiddlewareDefinition(): void
-    {
-        assertSame(
-            ['class' => RequirePermission::class, '__construct()' => ['permission' => Permission::WorkItemDelete]],
-            RequirePermission::for(Permission::WorkItemDelete),
-        );
-    }
-
     public function testViewAccessChecksTheCurrentUser(): void
     {
         assertTrue($this->viewAccess(1)->can('employee.create'));

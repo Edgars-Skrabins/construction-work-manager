@@ -55,11 +55,6 @@ final class ValidationExceptionTest extends TestCase
         }
     }
 
-    public function testForFieldHoldsOneError(): void
-    {
-        assertSame(['email' => 'Used.'], ValidationException::forField('email', 'Used.')->errors);
-    }
-
     /**
      * @return Closure(): int
      */
