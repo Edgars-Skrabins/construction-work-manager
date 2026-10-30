@@ -63,7 +63,7 @@ final class MyAssignmentsPageTest extends IntegrationTestCase
         $body = (string) $this->request('GET', '/my-assignments')->getBody();
 
         assertStringContainsString(
-            '<a href="https://www.google.com/maps/search/?api=1&amp;query=Maz%C4%81%20Nomet%C5%86u%20iela%2012%2C%20R%C4%ABga%2C%20Latvia" target="_blank" rel="noopener noreferrer">Open in Google Maps</a>',
+            '<a class="touch-link" href="https://www.google.com/maps/search/?api=1&amp;query=Maz%C4%81%20Nomet%C5%86u%20iela%2012%2C%20R%C4%ABga%2C%20Latvia" target="_blank" rel="noopener noreferrer">Open in Google Maps</a>',
             $body,
         );
     }
