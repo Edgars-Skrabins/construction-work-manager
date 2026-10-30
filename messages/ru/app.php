@@ -189,7 +189,7 @@ return [
     'Enter a valid start date.' => 'Введите корректную дату начала.',
     'Enter a valid end date.' => 'Введите корректную дату окончания.',
     "The end date can't be before the start date." => 'Дата окончания не может быть раньше даты начала.',
-    'The site requires access level {required}; the employee has level {actual}.' => 'Для объекта требуется уровень допуска {required}, а у сотрудника уровень {actual}.',
+    'The site requires {required}; the employee has {actual}.' => 'Для объекта требуется {required}, а у сотрудника {actual}.',
     "The assignment couldn't be saved because of a change made at the same time. Try again." => 'Не удалось сохранить задание, так как в это же время были внесены другие изменения. Повторите попытку.',
     'The employee already has this work item at this site from {start} to {end}.' => 'У сотрудника уже есть этот вид работ на этом объекте с {start} по {end}.',
 ];

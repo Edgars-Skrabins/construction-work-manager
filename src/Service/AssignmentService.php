@@ -281,8 +281,8 @@ final readonly class AssignmentService
     {
         if ($employee->accessLevelId < $site->requiredAccessLevelId) {
             $errors['constructionSite'] = $this->translator->translate(
-                'The site requires access level {required}; the employee has level {actual}.',
-                ['required' => $site->requiredAccessLevelId, 'actual' => $employee->accessLevelId],
+                'The site requires {required}; the employee has {actual}.',
+                ['required' => $site->requiredAccessLevel()->label(), 'actual' => $this->accessLevelsById()[$employee->accessLevelId]->label()],
             );
         }
     }

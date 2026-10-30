@@ -122,7 +122,7 @@ final class AssignmentServiceTest extends IntegrationTestCase
     {
         $this->assertErrors(
             fn() => $this->assignments()->create(2, 5, 1, 3, '2026-11-10', '2026-11-20'),
-            ['constructionSite' => 'The site requires access level 3; the employee has level 2.'],
+            ['constructionSite' => 'The site requires Critical infrastructure (3); the employee has Restricted (2).'],
         );
 
         $this->assertCreated(5, 1, 2);
@@ -148,7 +148,7 @@ final class AssignmentServiceTest extends IntegrationTestCase
         yield 'several errors at once' => [9999, 4, '2026-11-20', '2026-11-10', [
             'endDate' => "The end date can't be before the start date.",
             'workItem' => 'Choose a work item.',
-            'constructionSite' => 'The site requires access level 4; the employee has level 2.',
+            'constructionSite' => 'The site requires Classified (4); the employee has Restricted (2).',
         ]];
     }
 
@@ -193,7 +193,7 @@ final class AssignmentServiceTest extends IntegrationTestCase
     {
         $assignment = $this->existing(6, 1, 3, '2026-11-10', '2026-11-20');
         $this->db()->createCommand('UPDATE EMPLOYEE SET ACCESS_LEVEL_ID = 2 WHERE ID = 6')->execute();
-        $levelError = ['constructionSite' => 'The site requires access level 3; the employee has level 2.'];
+        $levelError = ['constructionSite' => 'The site requires Critical infrastructure (3); the employee has Restricted (2).'];
 
         $this->assertErrors(fn() => $this->assignments()->update(2, $assignment->id, $assignment->employeeId, '2026-11-10', '2026-11-25', 'active'), $levelError);
 
@@ -241,7 +241,7 @@ final class AssignmentServiceTest extends IntegrationTestCase
 
         $this->assertErrors(
             fn() => $this->assignments()->update(2, $assignment->id, 4, '2026-11-10', '2026-11-20', 'active'),
-            ['constructionSite' => 'The site requires access level 2; the employee has level 1.'],
+            ['constructionSite' => 'The site requires Restricted (2); the employee has General (1).'],
         );
 
         $this->assignments()->update(2, $assignment->id, 4, '2026-11-10', '2026-11-20', 'done');

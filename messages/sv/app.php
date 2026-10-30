@@ -189,7 +189,7 @@ return [
     'Enter a valid start date.' => 'Ange ett giltigt startdatum.',
     'Enter a valid end date.' => 'Ange ett giltigt slutdatum.',
     "The end date can't be before the start date." => 'Slutdatumet kan inte vara före startdatumet.',
-    'The site requires access level {required}; the employee has level {actual}.' => 'Byggarbetsplatsen kräver behörighetsnivå {required}, men medarbetaren har nivå {actual}.',
+    'The site requires {required}; the employee has {actual}.' => 'Byggarbetsplatsen kräver {required}, men medarbetaren har {actual}.',
     "The assignment couldn't be saved because of a change made at the same time. Try again." => 'Uppdraget kunde inte sparas eftersom en annan ändring gjordes samtidigt. Försök igen.',
     'The employee already has this work item at this site from {start} to {end}.' => 'Medarbetaren har redan det här arbetsmomentet på den här byggarbetsplatsen från {start} till {end}.',
 ];

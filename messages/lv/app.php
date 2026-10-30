@@ -189,7 +189,7 @@ return [
     'Enter a valid start date.' => 'Ievadiet derīgu sākuma datumu.',
     'Enter a valid end date.' => 'Ievadiet derīgu beigu datumu.',
     "The end date can't be before the start date." => 'Beigu datums nevar būt agrāks par sākuma datumu.',
-    'The site requires access level {required}; the employee has level {actual}.' => 'Būvobjektam nepieciešams piekļuves līmenis {required}, bet darbiniekam ir līmenis {actual}.',
+    'The site requires {required}; the employee has {actual}.' => 'Būvobjektam nepieciešams {required}, bet darbiniekam ir {actual}.',
     "The assignment couldn't be saved because of a change made at the same time. Try again." => 'Uzdevumu neizdevās saglabāt, jo tajā pašā laikā tika veiktas citas izmaiņas. Mēģiniet vēlreiz.',
     'The employee already has this work item at this site from {start} to {end}.' => 'Darbiniekam jau ir šis darba veids šajā būvobjektā no {start} līdz {end}.',
 ];

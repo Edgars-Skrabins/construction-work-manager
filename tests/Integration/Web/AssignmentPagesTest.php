@@ -185,7 +185,7 @@ final class AssignmentPagesTest extends IntegrationTestCase
 
         assertSame(200, $response->getStatusCode());
         assertStringContainsString('The end date can&#039;t be before the start date.', $body);
-        assertStringContainsString('The site requires access level 3; the employee has level 2.', $body);
+        assertStringContainsString('The site requires Critical infrastructure (3); the employee has Restricted (2).', $body);
     }
 
     public function testTamperedAssigneeIsForbidden(): void
@@ -258,7 +258,7 @@ final class AssignmentPagesTest extends IntegrationTestCase
         $body = (string) $tooLow->getBody();
         assertSame(200, $tooLow->getStatusCode());
         assertMatchesRegularExpression('#is-invalid" id="employee"#', $body);
-        assertStringContainsString('The site requires access level 2; the employee has level 1.', $body);
+        assertStringContainsString('The site requires Restricted (2); the employee has General (1).', $body);
 
         assertSame(403, $this->submit("/assignments/$id/edit", ['employee' => '7', 'startDate' => '2027-03-01', 'endDate' => '2027-03-10', 'status' => 'active'])->getStatusCode());
 

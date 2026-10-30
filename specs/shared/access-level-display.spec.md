@@ -17,6 +17,7 @@ Access levels are the four rows of `ACCESS_LEVEL`, whose ID is also their order:
      - the Access level column of the Employees list (also the managers' team list, which is the same page);
      - the Required access level column of the Sites list;
      - "Required access level: Restricted (2)" in each site section of My assignments;
+     - the assignment save error under the construction site (or the employee on the edit form), "The site requires Restricted (2); the employee has General (1).";
      - the badge tooltip below.
   2. **Badge tooltip.** On the Assignments list, the "Access level too low" badge of a flagged assignment explains itself: "Āgenskalns Residential Block requires Restricted (2). Mārtiņš Liepiņš has General (1)." with the assignment's site, the site's required level, the employee and the employee's current level.
      - It is a Bootstrap tooltip that opens on mouse hover and on keyboard focus (the badge is in the tab order), and on tap on touch screens, because a tap focuses the badge.
@@ -28,7 +29,6 @@ Access levels are the four rows of `ACCESS_LEVEL`, whose ID is also their order:
   - Which assignments are flagged doesn't change (`AssignmentListItem::accessLevelTooLow()`).
 - **Out of scope:**
   - The API: it already returns the level's `id` and `name` separately and stays as it is.
-  - The assignment save error "The site requires access level {required}; the employee has level {actual}." keeps its numbers; it isn't one of the places listed above.
   - The work calendar: it shows no access levels and no badge.
   - A "Choose an access level" placeholder: no access level select shows "0" or a blank option today, they already start with "Choose…".
 
@@ -70,7 +70,7 @@ No new dependencies. The tooltip is Bootstrap 5's `Tooltip` from the already loa
 
 ### Translations
 
-- New message IDs in all six `messages/*/app.php`: `{site} requires {required}. {employee} has {actual}.`, `{name} – access level {level}`, `{name} – requires {level}`. The unused `{name} (access level {level})` and `{name} (requires level {level})` are removed.
+- New message IDs in all six `messages/*/app.php`: `{site} requires {required}. {employee} has {actual}.`, `{name} – access level {level}`, `{name} – requires {level}` and `The site requires {required}; the employee has {actual}.`. The unused `{name} (access level {level})`, `{name} (requires level {level})` and `The site requires access level {required}; the employee has level {actual}.` are removed.
 
 ## 2.3 Decisions
 
@@ -81,7 +81,8 @@ No new dependencies. The tooltip is Bootstrap 5's `Tooltip` from the already loa
 5. **Accessibility:** visually hidden text inside the badge, not `aria-describedby`, because Bootstrap sets and removes `aria-describedby` on the element itself when the tooltip shows and hides. The badge has `tabindex="0"` so focus and tap open the tooltip.
 6. **Tooltip script:** one delegated `bootstrap.Tooltip` on `document.body` in the existing assignment script, so rows replaced by later scripts get tooltips too.
 7. **Placeholder:** no select shows "0", so the existing "Choose…" stays and no "Choose an access level" option is added.
-8. **Save error text** with level numbers stays unchanged, out of the listed places.
+8. ~~**Save error text** with level numbers stays unchanged, out of the listed places.~~ Replaced by decision 9.
+9. **Save error text** (2026-10-30): the user wants numbered levels everywhere, so the access level save error uses the labels too: "The site requires {required}; the employee has {actual}." `AssignmentService::checkAccessLevel()` builds both with `label()`, the employee's from the `accessLevelsById()` map. The old message ID is replaced in all six message files.
 
 # Part 3 — Implementation TODO
 
@@ -98,6 +99,10 @@ Read Part 1 and Part 2 before starting. Work through the tasks in order and tick
 - [x] B1. `src/Web/Shared/Access/access-level-too-low-badge.twig`, used by the Assignments list; the tooltip message in all six message files.
 - [x] B2. The delegated tooltip in `assets/assignment/assignment.js`.
 - [x] B3. Page test: a flagged assignment's badge has `tabindex="0"`, `data-bs-toggle="tooltip"`, the `data-bs-title` and the hidden text with the site's and the employee's levels; the Assignments list has no inline script.
+
+### C. Save error (added 2026-10-30)
+
+- [x] C1. `AssignmentService::checkAccessLevel()` uses the labels in the new message "The site requires {required}; the employee has {actual}.", translated in all six message files; `AssignmentServiceTest` and `AssignmentPagesTest` expect the labels.
 
 ### Z. Wrap-up
 
