@@ -47,6 +47,52 @@ final class MonthCalendarTest extends TestCase
         assertSame($expected, $this->calendar($month)->month()->format('Y-m-d'));
     }
 
+    /**
+     * @return iterable<string, array{array<mixed>, string|null}>
+     */
+    public static function queries(): iterable
+    {
+        yield 'nothing' => [[], null];
+        yield 'month only' => [['month' => '2027-02'], '2027-02'];
+        yield 'picker' => [['year' => '2030', 'monthOfYear' => '03'], '2030-03'];
+        yield 'picker wins over month' => [['month' => '2027-02', 'year' => '2030', 'monthOfYear' => '03'], '2030-03'];
+        yield 'year without month of year' => [['month' => '2027-02', 'year' => '2030'], null];
+        yield 'month of year without year' => [['monthOfYear' => '03'], null];
+        yield 'array values' => [['year' => ['2030'], 'monthOfYear' => '03', 'month' => '2027-02'], null];
+        yield 'array month' => [['month' => ['2027-02']], null];
+    }
+
+    /**
+     * @param array<mixed> $query
+     */
+    #[DataProvider('queries')]
+    public function testRequestedMonthPrefersThePickerOverTheMonthParameter(array $query, ?string $expected): void
+    {
+        assertSame($expected, MonthCalendar::requestedMonth($query));
+    }
+
+    /**
+     * @return iterable<string, array{string, string, string}>
+     */
+    public static function pickerValues(): iterable
+    {
+        yield 'valid' => ['2030', '03', '2030-03-01'];
+        yield 'single digit month' => ['2030', '3', '2026-10-01'];
+        yield 'month 13' => ['2030', '13', '2026-10-01'];
+        yield 'year too low' => ['1999', '12', '2026-10-01'];
+        yield 'year too high' => ['2101', '01', '2026-10-01'];
+        yield 'year not a number' => ['abc', '03', '2026-10-01'];
+        yield 'empty year' => ['', '03', '2026-10-01'];
+    }
+
+    #[DataProvider('pickerValues')]
+    public function testPickerValuesAreValidatedLikeTheMonthParameter(string $year, string $monthOfYear, string $expected): void
+    {
+        $month = MonthCalendar::requestedMonth(['year' => $year, 'monthOfYear' => $monthOfYear]);
+
+        assertSame($expected, $this->calendar($month)->month()->format('Y-m-d'));
+    }
+
     public function testTodayIsTakenInRigaNotUtc(): void
     {
         $justAfterRigaMidnight = (new DateTimeImmutable('2026-10-31 22:30:00', new DateTimeZone('UTC')))->setTimezone(new DateTimeZone('Europe/Riga'));

@@ -1,10 +1,13 @@
 {% do this.setTitle(t('Assignments')) %}
 {% do assetManager.register('App\\Web\\Shared\\Layout\\Main\\AssignmentAsset') %}
+{% set showActions = access.can('assignment.update') or access.can('assignment.delete') %}
 <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-4">
     <h1 class="h3 mb-0">{{ t('Assignments') }}</h1>
-    {% if access.can('assignment.create') %}
-        <a class="btn btn-primary" href="{{ urlGenerator.generate('assignment.create') }}">{{ t('New assignment') }}</a>
-    {% endif %}
+    <div class="d-flex flex-wrap gap-2">
+        {% if access.can('assignment.create') %}
+            <a class="btn btn-primary" href="{{ urlGenerator.generate('assignment.create') }}" data-modal-link>{{ t('New assignment') }}</a>
+        {% endif %}
+    </div>
 </div>
 {% include 'Web/Shared/Listing/search-form.twig' with {route: 'assignment.list', placeholder: t('Employee, work item or site')} %}
 <div data-list-results>
@@ -20,11 +23,11 @@
         </div>
     {% endif %}
     {% if paginator.getTotalItems() == 0 and q != '' %}
-        <p class="text-secondary">{{ t('No results for “{query}”.', {query: q}) }}</p>
+        {% include 'Web/Shared/Listing/empty-state.twig' with {message: t('No results for “{query}”.', {query: q})} %}
     {% elseif paginator.getTotalItems() == 0 and filters is not empty %}
-        <p class="text-secondary">{{ t('No assignments match the filter.') }}</p>
+        {% include 'Web/Shared/Listing/empty-state.twig' with {message: t('No assignments match the filter.')} %}
     {% elseif paginator.getTotalItems() == 0 %}
-        <p class="text-secondary">{{ t('No assignments yet.') }}</p>
+        {% include 'Web/Shared/Listing/empty-state.twig' with {message: t('No assignments yet.')} %}
     {% else %}
         <div class="table-responsive">
             <table class="table align-middle assignment-table">
@@ -36,16 +39,18 @@
                         <th scope="col">{% include 'Web/Shared/Listing/sort-link.twig' with {label: t('Start date'), key: 'startDate', route: 'assignment.list'} %}</th>
                         <th scope="col">{% include 'Web/Shared/Listing/sort-link.twig' with {label: t('End date'), key: 'endDate', route: 'assignment.list'} %}</th>
                         <th scope="col">{{ t('Status') }}</th>
-                        <th scope="col" class="text-end">{{ t('Actions') }}</th>
+                        {% if showActions %}
+                            <th scope="col" class="text-end list-actions">{{ t('Actions') }}</th>
+                        {% endif %}
                     </tr>
                 </thead>
                 <tbody>
                     {% for row in rows %}
                         {% set item = row.item %}
                         <tr class="{{ row.status.stripeClass() }}">
-                            <td>{{ item.employeeName }}</td>
-                            <td>{{ item.workItemName }}</td>
-                            <td>{{ item.constructionSiteName }}</td>
+                            <td>{% include 'Web/Shared/Listing/truncated-text.twig' with {text: item.employeeName} %}</td>
+                            <td>{% include 'Web/Shared/Listing/truncated-text.twig' with {text: item.workItemName} %}</td>
+                            <td>{% include 'Web/Shared/Listing/truncated-text.twig' with {text: item.constructionSiteName} %}</td>
                             <td class="text-nowrap">{{ item.assignment.startDate|date('Y-m-d') }}</td>
                             <td class="text-nowrap">{{ item.assignment.endDate|date('Y-m-d') }}</td>
                             <td>
@@ -54,18 +59,19 @@
                                     {% include 'Web/Shared/Access/access-level-too-low-badge.twig' with {item: item} %}
                                 {% endif %}
                             </td>
-                            <td class="text-end text-nowrap">
+                            {% if showActions %}
+                                {% set actions = [] %}
                                 {% if access.can('assignment.update') %}
-                                    <a class="btn btn-sm btn-outline-primary" href="{{ urlGenerator.generate('assignment.edit', {id: item.assignment.id}) }}">{{ t('Edit') }}</a>
-                                    <a class="btn btn-sm btn-outline-secondary" href="{{ urlGenerator.generate('assignment.edit', {id: item.assignment.id}) }}#employee">{{ t('Reassign') }}</a>
+                                    {% set actions = actions|merge([
+                                        {label: t('Edit'), url: urlGenerator.generate('assignment.edit', {id: item.assignment.id}), variant: 'primary'},
+                                        {label: t('Reassign'), url: urlGenerator.generate('assignment.edit', {id: item.assignment.id}) ~ '#employee', variant: 'secondary'},
+                                    ]) %}
                                 {% endif %}
                                 {% if access.can('assignment.delete') %}
-                                    <form class="d-inline" method="post" action="{{ urlGenerator.generate('assignment.delete', {id: item.assignment.id}) }}" data-confirm="{{ t('Delete this assignment?') }}">
-                                        {{ csrf.hiddenInput()|raw }}
-                                        <button type="submit" class="btn btn-sm btn-outline-danger">{{ t('Delete') }}</button>
-                                    </form>
+                                    {% set actions = actions|merge([{label: t('Delete'), url: urlGenerator.generate('assignment.delete', {id: item.assignment.id}), variant: 'danger'}]) %}
                                 {% endif %}
-                            </td>
+                                <td class="text-end text-nowrap list-actions">{% include 'Web/Shared/Listing/row-actions.twig' with {name: item.employeeName ~ ' – ' ~ item.workItemName, actions: actions} %}</td>
+                            {% endif %}
                         </tr>
                     {% endfor %}
                 </tbody>
@@ -74,3 +80,4 @@
         {% include 'Web/Shared/Listing/pagination.twig' with {route: 'assignment.list'} %}
     {% endif %}
 </div>
+{% include 'Web/Shared/Modal/modal.twig' %}

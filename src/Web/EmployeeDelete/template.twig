@@ -1,7 +1,7 @@
 {% do this.setTitle(t('Delete employee')) %}
 <div class="row justify-content-center">
-    <div class="col-lg-8">
-        <h1 class="h3 mb-4">{{ t('Delete employee {name}?', {name: employee.fullName()}) }}</h1>
+    <div class="col-lg-8" data-modal-content>
+        <h1 class="h3 mb-4" data-modal-title>{{ t('Delete employee {name}?', {name: employee.fullName()}) }}</h1>
         {% if error %}
             <div class="alert alert-danger" role="alert">{{ error }}</div>
         {% else %}
@@ -13,6 +13,6 @@
         {% if error and employee.role.value == 'employee' and access.can('assignment.update') %}
             <a class="btn btn-outline-primary" href="{{ urlGenerator.generate('assignment.list', [], {employee: employee.id}) }}">{{ t('View assignments') }}</a>
         {% endif %}
-        <a class="btn btn-link" href="{{ urlGenerator.generate('employee.list') }}">{{ t('Cancel') }}</a>
+        <a class="btn btn-link" href="{{ urlGenerator.generate('employee.list') }}" data-modal-cancel>{{ t('Cancel') }}</a>
     </div>
 </div>

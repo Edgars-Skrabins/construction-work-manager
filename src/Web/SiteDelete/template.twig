@@ -1,7 +1,7 @@
 {% do this.setTitle(t('Delete construction site')) %}
 <div class="row justify-content-center">
-    <div class="col-lg-8">
-        <h1 class="h3 mb-4">{{ t('Delete construction site {name}?', {name: site.name}) }}</h1>
+    <div class="col-lg-8" data-modal-content>
+        <h1 class="h3 mb-4" data-modal-title>{{ t('Delete construction site {name}?', {name: site.name}) }}</h1>
         {% if error %}
             <div class="alert alert-danger" role="alert">{{ error }}</div>
         {% else %}
@@ -13,6 +13,6 @@
         {% if error and access.can('assignment.update') %}
             <a class="btn btn-outline-primary" href="{{ urlGenerator.generate('assignment.list', [], {site: site.id}) }}">{{ t('View assignments') }}</a>
         {% endif %}
-        <a class="btn btn-link" href="{{ urlGenerator.generate('site.list') }}">{{ t('Cancel') }}</a>
+        <a class="btn btn-link" href="{{ urlGenerator.generate('site.list') }}" data-modal-cancel>{{ t('Cancel') }}</a>
     </div>
 </div>

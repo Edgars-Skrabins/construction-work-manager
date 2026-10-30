@@ -89,10 +89,10 @@ final class AdminPagesTest extends IntegrationTestCase
         $this->asAdmin();
 
         $employees = (string) $this->request('GET', '/employees?q=' . rawurlencode('Kalniņa'))->getBody();
-        assertMatchesRegularExpression('#<td>Kalniņa, Ilze</td>(?:(?!</tr>).)*<td>Classified \(4\)</td>#su', $employees);
+        assertMatchesRegularExpression('#' . self::cell('Kalniņa, Ilze') . '(?:(?!</tr>).)*' . self::cell('Classified (4)') . '#su', $employees);
 
         $sites = (string) $this->request('GET', '/sites?q=' . rawurlencode('Ādaži'))->getBody();
-        assertMatchesRegularExpression('#<td>Ādaži Defence Facility</td>(?:(?!</tr>).)*<td>Classified \(4\)</td>#su', $sites);
+        assertMatchesRegularExpression('#' . self::cell('Ādaži Defence Facility') . '(?:(?!</tr>).)*' . self::cell('Classified (4)') . '#su', $sites);
 
         foreach (['/employees/4/edit' => 'accessLevelId', '/sites/1/edit' => 'requiredAccessLevelId'] as $path => $field) {
             $body = (string) $this->request('GET', $path)->getBody();
@@ -161,7 +161,7 @@ final class AdminPagesTest extends IntegrationTestCase
         $this->assertRedirectsTo('/sites', $this->submit('/sites/create', $fields));
         $list = (string) $this->request('GET', '/sites')->getBody();
         assertStringContainsString('Construction site saved.', $list);
-        assertStringContainsString('<td class="text-end">150.50</td>', $list);
+        assertStringContainsString('<td class="text-end text-nowrap">150.50</td>', $list);
         assertStringContainsString('<td class="text-nowrap">RIX-TST-01</td>', $list);
         $id = $this->idOf(self::SITE, 'CONSTRUCTION_SITE');
 
@@ -183,7 +183,7 @@ final class AdminPagesTest extends IntegrationTestCase
         $id = $this->idOf(self::WORK_ITEM, 'WORK_ITEM');
 
         $this->assertRedirectsTo('/work-items', $this->submit("/work-items/$id/edit", ['name' => self::WORK_ITEM, 'description' => 'Updated.']));
-        assertStringContainsString('<td>Updated.</td>', (string) $this->request('GET', '/work-items')->getBody());
+        assertMatchesRegularExpression('#' . self::cell('Updated.') . '#', (string) $this->request('GET', '/work-items')->getBody());
 
         $this->assertRedirectsTo('/work-items', $this->submit("/work-items/$id/delete", []));
         assertStringContainsString('Work item deleted.', (string) $this->request('GET', '/work-items')->getBody());
@@ -200,7 +200,7 @@ final class AdminPagesTest extends IntegrationTestCase
         $this->assertRedirectsTo('/employees', $this->submit('/employees/create', $fields));
         $list = (string) $this->request('GET', '/employees?sort=-role')->getBody();
         assertStringContainsString('Employee saved.', $list);
-        assertStringContainsString('<td>Pārbaude, Lapa</td>', $list);
+        assertMatchesRegularExpression('#' . self::cell('Pārbaude, Lapa') . '#', $list);
         $this->resetServices();
         $id = (int) $this->db()->createCommand("SELECT ID FROM EMPLOYEE WHERE FIRST_NAME = N'Lapa' AND LAST_NAME = N'Pārbaude'")->queryScalar();
 
@@ -304,7 +304,7 @@ final class AdminPagesTest extends IntegrationTestCase
 
         $body = (string) $this->request('GET', '/employees')->getBody();
 
-        assertStringContainsString('<td>Bērziņš, Jānis <span class="text-secondary">(you)</span></td>', $body);
+        assertStringContainsString('<td class="text-nowrap"><span class="d-inline-block text-truncate align-bottom list-truncate" title="Bērziņš, Jānis">Bērziņš, Jānis</span> <span class="text-secondary">(you)</span></td>', $body);
         assertSame(1, substr_count($body, '(you)'));
     }
 
@@ -436,8 +436,8 @@ final class AdminPagesTest extends IntegrationTestCase
         assertStringContainsString('New setup code', $again);
 
         $list = (string) $this->request('GET', '/employees?sort=-role')->getBody();
-        assertStringContainsString('<td>Pārbaude, Lapa</td>', $list);
-        assertStringContainsString('<td>Pending setup</td>', $list);
+        assertMatchesRegularExpression('#' . self::cell('Pārbaude, Lapa') . '#', $list);
+        assertMatchesRegularExpression('#' . self::cell('Pending setup') . '#', $list);
     }
 
     public function testNewSetupCodeForALoginWithAPasswordShowsTheReason(): void

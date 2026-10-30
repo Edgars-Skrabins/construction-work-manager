@@ -6,4 +6,4 @@
 <div class="mb-3">
     {% include 'Web/Shared/Calendar/month-nav.twig' with {calendar: calendar, route: 'my-assignments.calendar', query: {}} %}
 </div>
-{% include 'Web/Shared/Calendar/month.twig' with {weeks: weeks, statuses: statuses, showEmployee: false} %}
+{% include 'Web/Shared/Calendar/month.twig' with {weeks: weeks, entries: entries, statuses: statuses, showEmployee: false} %}

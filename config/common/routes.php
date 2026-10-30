@@ -7,6 +7,7 @@ use App\Api;
 use App\Web;
 use App\Web\Shared\Access\RequirePermission;
 use App\Web\Shared\Caching\NoStore;
+use App\Web\Shared\Modal\ModalRedirect;
 use Yiisoft\Auth\Middleware\Authentication;
 use Yiisoft\Http\Method;
 use Yiisoft\Router\Group;
@@ -15,6 +16,7 @@ use Yiisoft\Router\Route;
 return [
     Group::create()
         ->middleware(NoStore::class)
+        ->middleware(ModalRedirect::class)
         ->routes(
             Route::methods([Method::GET, Method::POST], '/login')
                 ->action(Web\Login\Action::class)
@@ -110,7 +112,7 @@ return [
                         ->middleware(RequirePermission::for(Permission::AssignmentUpdate))
                         ->action(Web\AssignmentForm\Action::class)
                         ->name('assignment.edit'),
-                    Route::post('/assignments/{id:\d+}/delete')
+                    Route::methods([Method::GET, Method::POST], '/assignments/{id:\d+}/delete')
                         ->middleware(RequirePermission::for(Permission::AssignmentDelete))
                         ->action(Web\AssignmentDelete\Action::class)
                         ->name('assignment.delete'),
