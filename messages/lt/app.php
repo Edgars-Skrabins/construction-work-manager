@@ -129,6 +129,9 @@ return [
     'Show' => 'Rodyti',
     'Status legend' => 'Būsenų paaiškinimas',
     'No assigned work this month.' => 'Šį mėnesį priskirtų darbų nėra.',
+    'My work calendar' => 'Mano darbų kalendorius',
+    'Calendar' => 'Kalendorius',
+    'List' => 'Sąrašas',
 
     'Setup code for {name}' => 'Aktyvinimo kodas – {name}',
     'Give this code to the employee. It is shown only once and is valid for 72 hours. They enter it on the Set password page.' => 'Perduokite šį kodą darbuotojui. Jis rodomas tik vieną kartą ir galioja 72 valandas. Darbuotojas jį įveda puslapyje „Nustatyti slaptažodį“.',

@@ -1,0 +1,6 @@
+<nav class="d-flex align-items-center gap-2" aria-label="{{ t('Months') }}">
+    <a class="btn btn-sm btn-outline-primary" href="{{ urlGenerator.generate(route, [], {month: calendar.previousMonth()}|merge(query)) }}">‹ {{ t('Previous') }}</a>
+    <h2 class="h5 mb-0 text-nowrap">{{ month_year(calendar.month()) }}</h2>
+    <a class="btn btn-sm btn-outline-primary" href="{{ urlGenerator.generate(route, [], {month: calendar.nextMonth()}|merge(query)) }}">{{ t('Next') }} ›</a>
+    <a class="btn btn-sm btn-link" href="{{ urlGenerator.generate(route, [], {month: calendar.currentMonth()}|merge(query)) }}">{{ t('Today') }}</a>
+</nav>

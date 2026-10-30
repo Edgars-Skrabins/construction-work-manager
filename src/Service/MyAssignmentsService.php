@@ -6,10 +6,13 @@ namespace App\Service;
 
 use App\Access\AccessChecker;
 use App\Access\Permission;
+use App\Access\Scope;
 use App\Entity\AssignedSite;
+use App\Entity\AssignmentListItem;
 use App\Entity\AssignmentStatus;
 use App\Repository\AssignmentRepositoryInterface;
 use App\Repository\EmployeeRepositoryInterface;
+use DateTimeImmutable;
 
 final readonly class MyAssignmentsService
 {
@@ -44,5 +47,15 @@ final readonly class MyAssignmentsService
             history: $history,
             managerName: $this->employees->managerNameOf($employeeId),
         );
+    }
+
+    /**
+     * @return list<AssignmentListItem>
+     */
+    public function calendar(int $employeeId, DateTimeImmutable $from, DateTimeImmutable $to): array
+    {
+        $this->accessChecker->ensure($employeeId, Permission::AssignmentReadOwn);
+
+        return $this->assignments->listInPeriod($employeeId, Scope::Own, $from, $to, null);
     }
 }

@@ -7,6 +7,7 @@ namespace App\Web\EmployeeCalendar;
 use App\Entity\AssignmentDisplayStatus;
 use App\Entity\Employee;
 use App\Service\AssignmentService;
+use App\Web\Shared\Calendar\MonthCalendar;
 use Psr\Clock\ClockInterface;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
@@ -40,7 +41,7 @@ final readonly class Action
             'weeks' => $calendar->weeks($this->assignments->calendar($actorId, $calendar->from(), $calendar->to(), $employeeId)),
             'team' => $team,
             'employeeId' => $employeeId,
-            'statuses' => [AssignmentDisplayStatus::Planned, AssignmentDisplayStatus::InProgress, AssignmentDisplayStatus::Overdue, AssignmentDisplayStatus::Done],
+            'statuses' => AssignmentDisplayStatus::calendarStatuses(),
         ]);
     }
 }

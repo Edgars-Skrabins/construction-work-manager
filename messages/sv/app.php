@@ -129,6 +129,9 @@ return [
     'Show' => 'Visa',
     'Status legend' => 'Statusförklaring',
     'No assigned work this month.' => 'Inga tilldelade uppdrag den här månaden.',
+    'My work calendar' => 'Min arbetskalender',
+    'Calendar' => 'Kalender',
+    'List' => 'Lista',
 
     'Setup code for {name}' => 'Aktiveringskod – {name}',
     'Give this code to the employee. It is shown only once and is valid for 72 hours. They enter it on the Set password page.' => 'Ge koden till medarbetaren. Den visas bara en gång och gäller i 72 timmar. Medarbetaren anger den på sidan ”Välj lösenord”.',
