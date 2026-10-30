@@ -38,6 +38,7 @@ return [
     'Search' => 'Hae',
     'Clear' => 'Tyhjennä',
     'No results for “{query}”.' => 'Haulla ”{query}” ei löytynyt tuloksia.',
+    'No matches' => 'Ei osumia',
     '{count, plural, one{# result} other{# results}}' => '{count, plural, one{# tulos} other{# tulosta}}',
     'Name or email' => 'Nimi tai sähköposti',
     'Name or description' => 'Nimi tai kuvaus',
