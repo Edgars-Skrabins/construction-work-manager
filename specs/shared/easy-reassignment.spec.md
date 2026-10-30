@@ -1,7 +1,7 @@
 # Easy reassignment — Spec
 
 **Type:** feature
-**Status:** ready for implementation
+**Status:** done
 **Last updated:** 2026-10-30
 
 # Part 1 — Business logic and usage
@@ -100,24 +100,24 @@ Baseline before starting: `make check` green on `main` at `c93fa82`.
 
 ### A. Reassignment
 
-- [ ] A1. Repository: rename `updatePeriodAndStatus()` to `update()` with `$employeeId` in `AssignmentRepositoryInterface`, `AssignmentRepository` and the anonymous class in `AssignmentLockingTest`.
-- [ ] A2. Service: `AssignmentService::update()` with `$employeeId`, the lock order and the rules from 2.2. Update every caller.
-- [ ] A3. Service tests from 2.2, and the reassignment locking test.
-- [ ] A4. Edit form: Employee select on the edit page, `fromAssignment()` and the edit rules, the action passing options and the employee, the level error under the select, the `#employee` focus in `assignment.js`. Web test posting a new employee.
+- [x] A1. Repository: rename `updatePeriodAndStatus()` to `update()` with `$employeeId` in `AssignmentRepositoryInterface`, `AssignmentRepository` and the anonymous class in `AssignmentLockingTest`.
+- [x] A2. Service: `AssignmentService::update()` with `$employeeId`, the lock order and the rules from 2.2. Update every caller.
+- [x] A3. Service tests from 2.2, and the reassignment locking test.
+- [x] A4. Edit form: Employee select on the edit page, `fromAssignment()` and the edit rules, the action passing options and the employee, the level error under the select, the `#employee` focus in `assignment.js`. Web test posting a new employee.
 
 ### B. Filters and Reassign button
 
-- [ ] B1. `ListParams` filters and their unit tests.
-- [ ] B2. Repository and service filters, with service tests for each dimension and scope.
-- [ ] B3. Listing partials keep `filters`; the list action passes filters and chips; the template shows chips, the filtered empty state and the Reassign button. Web tests.
+- [x] B1. `ListParams` filters and their unit tests.
+- [x] B2. Repository and service filters, with service tests for each dimension and scope.
+- [x] B3. Listing partials keep `filters`; the list action passes filters and chips; the template shows chips, the filtered empty state and the Reassign button. Web tests.
 
 ### C. View assignments and translations
 
-- [ ] C1. "View assignments" on the three delete pages and the role error, with web tests.
-- [ ] C2. The new messages in all six `messages/*/app.php` files.
+- [x] C1. "View assignments" on the three delete pages and the role error, with web tests.
+- [x] C2. The new messages in all six `messages/*/app.php` files.
 
 ### Z. Wrap-up
 
-- [ ] Z1. `make check` green.
-- [ ] Z2. Update README "Running the app" (reassigning and the filters) and `CLAUDE.md` (the `ListParams` description and the assignment rules).
-- [ ] Z3. Manual check in the running app: as `manager@mail.test`, reassign an assignment from the list's Reassign button, try a too-low level, filter by employee from a row, clear the chip; as the admin, delete a work item in use and follow "View assignments".
+- [x] Z1. `make check` green.
+- [x] Z2. Update README "Running the app" (reassigning and the filters) and `CLAUDE.md` (the `ListParams` description and the assignment rules).
+- [x] Z3. Manual check in the running app: as `manager@mail.test`, reassign an assignment from the list's Reassign button, try a too-low level, filter by employee from a row, clear the chip; as the admin, delete a work item in use and follow "View assignments".
