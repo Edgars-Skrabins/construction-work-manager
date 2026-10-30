@@ -1,7 +1,7 @@
 # UI modals — Spec
 
 **Type:** feature
-**Status:** ready for implementation
+**Status:** in progress
 **Last updated:** 2026-10-30
 
 # Part 1 — Business logic and usage
@@ -62,10 +62,10 @@ A PSR-15 middleware. When the request has the header `X-Modal: 1` and the respon
     <div class="modal-dialog modal-lg modal-dialog-scrollable modal-fullscreen-sm-down">
         <div class="modal-content">
             <div class="modal-header">
-                <h2 class="modal-title fs-5" id="app-modal-title" data-modal-title></h2>
+                <h2 class="modal-title fs-5" id="app-modal-title"></h2>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="{{ t('Close') }}"></button>
             </div>
-            <div class="modal-body" data-modal-body></div>
+            <div class="modal-body"></div>
         </div>
     </div>
 </div>
@@ -82,6 +82,7 @@ A PSR-15 middleware. When the request has the header `X-Modal: 1` and the respon
     3. Anything else, and any `fetch` error, calls `window.location.assign(url)`.
   - A delegated `click` on `[data-modal-cancel]` inside the modal: `preventDefault()` and hide the modal.
   - On `hidden.bs.modal`: when the list was marked changed, reload; otherwise empty the body and return focus to the trigger if it is still in the document.
+- The script finds the modal's own title and body by Bootstrap's `.modal-title` and `.modal-body` classes, so `data-modal-title` only ever marks the fetched page's heading.
 - No styles of its own: Bootstrap's modal classes cover the look.
 
 ### Page scripts on modal content
@@ -111,7 +112,7 @@ In `src/Web/EmployeeList/`, `SiteList/`, `WorkItemList/` and `AssignmentList/tem
 ```
 
   Row names: the employee's "Last, First", the site's and work item's name, and on Assignments "<employee> – <work item>".
-- Text cells use `src/Web/Shared/Listing/truncated-text.twig` (new): `<span class="d-inline-block text-truncate align-bottom list-truncate{% if wide ?? false %} list-truncate-wide{% endif %}" title="{{ text }}">{{ text }}</span>`. Employees: name (with the "(you)" mark after the span) and manager; Sites: name and city; Work items: name and description (`wide`); Assignments: employee, work item and construction site. Code, date and number cells get `text-nowrap`.
+- Text cells use `src/Web/Shared/Listing/truncated-text.twig` (new): `<span class="d-inline-block text-truncate align-bottom list-truncate{% if wide ?? false %} list-truncate-wide{% endif %}" title="{{ text }}">{{ text }}</span>`. Employees: name (with the "(you)" mark after the span) and manager; Sites: name, city and country; Work items: name and description (`wide`); Assignments: employee, work item and construction site. Code, date and number cells get `text-nowrap`.
 - The empty and no-results paragraphs use `src/Web/Shared/Listing/empty-state.twig` (new): `<p class="text-secondary text-center border rounded py-4 px-3 mb-0">{{ message }}</p>`.
 - `{% include 'Web/Shared/Modal/modal.twig' %}` at the end, outside `data-list-results`.
 
@@ -154,7 +155,8 @@ New messages in all six `messages/*/app.php` files at the same position: `Loadin
   - A modal-marked request after logout answers `204` with `X-Modal-Location: /login`.
 - `tests/Unit/Web/Shared/Modal/ModalRedirectTest.php` (new): non-redirect and unmarked responses pass through; a marked redirect keeps `Set-Cookie`.
 - `AssignmentPagesTest`: GET `/assignments/{id}/delete` shows the confirmation with the row's names and a POST form; it answers 404 for a row outside the manager's scope.
-- List design: a test per list that the managers' team list has no Actions column, and that the work item description is rendered in full in `title` instead of the 100-character slice.
+- `tests/Integration/Web/ListDesignTest.php` (new): every list has the Actions column, the row action group and truncated cells, and the shared empty state for an unmatched search; the managers' team list has no Actions column and no modal links; a long work item description is rendered in full, cut by width, with the full text in `title`, instead of the 100-character slice.
+- `WebClient::request()` and `submit()` take optional request headers.
 - Existing tests that read the old empty-state markup (`InstantSearchTest`) or the assignments `data-confirm` form are updated.
 
 ## 2.3 Decisions
@@ -185,21 +187,21 @@ Read Part 1 and Part 2 before starting. Work through the tasks in order and tick
 Baseline before starting: `make check` green on `main` at `0dd23e5`.
 
 ### A. Server side
-- [ ] A1. Add `ModalRedirect`, register it in the outer web group in `config/common/routes.php`, and add `ModalRedirectTest`.
-- [ ] A2. Add the assignment delete confirmation (route, `Action` GET, template) and its tests in `AssignmentPagesTest`.
-- [ ] A3. Mark the content, title and cancel link of every form, delete and setup-code template.
-- [ ] A4. Add the four messages to all six message files.
+- [x] A1. Add `ModalRedirect`, register it in the outer web group in `config/common/routes.php`, and add `ModalRedirectTest`.
+- [x] A2. Add the assignment delete confirmation (route, `Action` GET, template) and its tests in `AssignmentPagesTest`.
+- [x] A3. Mark the content, title and cancel link of every form, delete and setup-code template.
+- [x] A4. Add the four messages to all six message files.
 
 ### B. Script
-- [ ] B1. Add `modal.twig`, `ModalAsset` and `assets/modal/modal.js` as described in 2.2.
-- [ ] B2. Move `assignment.js` and `employee.js` setup into root-taking init functions run on `DOMContentLoaded` and `app:content-loaded`, and delete the `data-confirm` handler.
+- [x] B1. Add `modal.twig`, `ModalAsset` and `assets/modal/modal.js` as described in 2.2.
+- [x] B2. Move `assignment.js` and `employee.js` setup into root-taking init functions run on `DOMContentLoaded` and `app:content-loaded`, and delete the `data-confirm` handler.
 
 ### C. Lists
-- [ ] C1. Add `row-actions.twig`, `truncated-text.twig`, `empty-state.twig` and `listing.css`.
-- [ ] C2. Rework the four list templates as described in 2.2, include the modal partial, and register `EmployeeAsset` on the Employees list.
+- [x] C1. Add `row-actions.twig`, `truncated-text.twig`, `empty-state.twig` and `listing.css`.
+- [x] C2. Rework the four list templates as described in 2.2, include the modal partial, and register `EmployeeAsset` on the Employees list.
 - [ ] C3. Add `ModalTest` and the list design tests, and update `InstantSearchTest` and other tests broken by the markup.
 
 ### Z. Wrap-up
 - [ ] Z1. `make check` green.
 - [ ] Z2. Manual check in the running app at 375, 768 and 1280 px, on every list: create, edit, reassign and delete open in the modal; a validation error stays in it; a successful save and a delete reload the list with its search kept and the flash shown; a refused delete shows "still in use"; Esc, ×, Cancel close it and focus returns; site filtering and the manager lock work in the modal; a new employee login shows the setup code in the modal; long text is truncated with a tooltip; no page-level horizontal scroll; no console errors.
-- [ ] Z3. Update `CLAUDE.md` (the `src/Web/Shared/` description, the modal flow) and the README if it describes these pages.
+- [x] Z3. Update `CLAUDE.md` (the `src/Web/Shared/` description, the modal flow) and the README if it describes these pages.

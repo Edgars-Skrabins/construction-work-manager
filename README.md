@@ -19,7 +19,7 @@ This repository contains the whole app, which runs in Docker Compose:
 - `SQL/`: T-SQL scripts that define the schema and seed data, run in numbered order by the migrations. `SQL/down/` holds the matching rollback scripts. The roles, permissions and which role has which permission are reference data in `SQL/008_create_rbac_items.sql`. The scripts also run unchanged in SSMS or sqlcmd.
 - `messages/`: the UI translations, one PHP file per language.
 - `public/`: web root with the front controller `index.php`. The app is served at `http://localhost:8080`.
-- `assets/`: CSS and JavaScript published by the asset manager. `assets/assignment/assignment.js` filters the construction sites by the chosen employee's access level and confirms deletes on the assignment pages; the pages have no inline JavaScript, because the Content-Security-Policy only allows scripts from the app itself.
+- `assets/`: CSS and JavaScript published by the asset manager. `assets/assignment/assignment.js` filters the construction sites by the chosen employee's access level, and `assets/modal/modal.js` opens the create, edit and delete pages of the lists in a modal; the pages have no inline JavaScript, because the Content-Security-Policy only allows scripts from the app itself.
 - `tests/`: `Unit/` tests without a database and `Integration/` tests against SQL Server. `tests/FixedClock.php` is a fixed clock for tests that depend on the current time.
 - `docker/`: Dockerfile, Caddyfile, PHP settings, SQL Server init script and the dev environment file.
 - `docs/`: `openapi.yaml`, the OpenAPI 3.1 description of the pass-system API.
