@@ -34,7 +34,7 @@
     top: 100%;
     left: 0;
     width: 100%;
-    min-width: 0;
+    min-width: min(12rem, calc(100vw - 2rem));
     margin-top: var(--bs-dropdown-spacer);
 }
 

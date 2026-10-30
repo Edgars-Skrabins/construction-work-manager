@@ -156,9 +156,19 @@
         const place = () => {
             wrapper.classList.remove('select-picker-up');
             toggle.scrollIntoView({block: 'nearest'});
+            let top = 0;
+            let bottom = window.innerHeight;
+            for (let node = wrapper.parentElement; node !== null; node = node.parentElement) {
+                if (getComputedStyle(node).overflowY !== 'visible') {
+                    const area = node.getBoundingClientRect();
+                    top = Math.max(top, area.top);
+                    bottom = Math.min(bottom, area.bottom);
+                }
+            }
             const bounds = toggle.getBoundingClientRect();
-            const below = window.innerHeight - bounds.bottom;
-            if (below < menu.offsetHeight && bounds.top > below) {
+            const below = bottom - bounds.bottom;
+            const above = bounds.top - top;
+            if (below < menu.offsetHeight && above >= menu.offsetHeight) {
                 wrapper.classList.add('select-picker-up');
             }
         };
@@ -169,6 +179,9 @@
             }
             if (search !== null) {
                 search.value = typed;
+            }
+            for (const closeOther of [...pickers.values()]) {
+                closeOther();
             }
             menu.classList.add('show');
             toggle.setAttribute('aria-expanded', 'true');
@@ -196,7 +209,7 @@
         }
 
         const refresh = () => {
-            const classes = [...select.classList].filter((name) => name !== 'visually-hidden');
+            const classes = [...select.classList].filter((name) => name !== 'visually-hidden' && !name.startsWith('w-'));
             toggle.className = [...classes, 'select-picker-toggle'].join(' ');
             toggle.disabled = select.disabled;
             if (select.classList.contains('is-invalid')) {
@@ -310,7 +323,7 @@
             }
         });
         list.addEventListener('scroll', () => {
-            if (pending.length > 0 && list.scrollTop + 2 * list.clientHeight >= list.scrollHeight) {
+            if (isOpen() && pending.length > 0 && list.scrollTop + 2 * list.clientHeight >= list.scrollHeight) {
                 appendItems(pageSize);
             }
         });
@@ -357,6 +370,8 @@
             }
         }, true);
     };
+
+    document.addEventListener('app:content-loaded', (event) => enhanceWithin(event.target));
 
     if (document.readyState === 'loading') {
         document.addEventListener('DOMContentLoaded', start);
