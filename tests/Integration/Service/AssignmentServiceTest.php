@@ -94,6 +94,9 @@ final class AssignmentServiceTest extends IntegrationTestCase
         yield 'form options' => [static function (AssignmentService $s): void {
             $s->formOptions(4);
         }];
+        yield 'edit options' => [static function (AssignmentService $s): void {
+            $s->editOptions(4);
+        }];
         yield 'create' => [static function (AssignmentService $s): void {
             $s->create(4, 4, 1, 1, '2026-11-10', '2026-11-20');
         }];
@@ -263,6 +266,21 @@ final class AssignmentServiceTest extends IntegrationTestCase
         assertSame(6, $this->assignments()->find(2, $assignment->id)?->assignment->employeeId);
     }
 
+    public function testAFormOpenedForAnotherEmployeeIsRefused(): void
+    {
+        $assignment = $this->existing(5, 1, 2, '2026-11-10', '2026-11-20');
+        $this->assignments()->update(2, $assignment->id, 6, '2026-11-10', '2026-11-20', 'active');
+
+        $this->assertErrors(
+            fn() => $this->assignments()->update(2, $assignment->id, 4, '2026-11-10', '2026-11-20', 'done', 5),
+            ['employee' => "The assignment couldn't be saved because of a change made at the same time. Try again."],
+        );
+        assertSame(6, $this->assignments()->find(2, $assignment->id)?->assignment->employeeId);
+
+        $this->assignments()->update(2, $assignment->id, 4, '2026-11-10', '2026-11-20', 'done', 6);
+        assertSame(4, $this->assignments()->find(2, $assignment->id)?->assignment->employeeId);
+    }
+
     public function testADeadlockedSaveAsksToTryAgain(): void
     {
         $assignment = $this->existing(5, 1, 2, '2026-11-10', '2026-11-20');
@@ -380,6 +398,17 @@ final class AssignmentServiceTest extends IntegrationTestCase
         assertSame([], $this->assignments()->formOptions(15)->employees);
         assertCount(11, $manager->sites);
         assertCount(25, $manager->workItems);
+    }
+
+    public function testEditOptionsOfferOnlyAssignableEmployeesWithoutSitesOrWorkItems(): void
+    {
+        $this->db()->createCommand("DELETE FROM RBAC_ITEM_CHILD WHERE parent = N'manager' AND child = N'assignment.create'")->execute();
+
+        $options = $this->assignments()->editOptions(2);
+
+        assertSame([4, 5, 6, ...range(59, 70)], self::sortedIds($options->employees));
+        assertSame([], $options->sites);
+        assertSame([], $options->workItems);
     }
 
     public function testCalendarShowsTheTeamOfTheActorsStoredRole(): void
