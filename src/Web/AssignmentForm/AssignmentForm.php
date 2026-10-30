@@ -47,6 +47,7 @@ final class AssignmentForm implements RulesProviderInterface
     public static function fromAssignment(Assignment $assignment): self
     {
         $form = new self(true);
+        $form->employee = (string) $assignment->employeeId;
         $form->startDate = $assignment->startDate->format('Y-m-d');
         $form->endDate = $assignment->endDate->format('Y-m-d');
         $form->status = $assignment->status->value;
@@ -56,15 +57,16 @@ final class AssignmentForm implements RulesProviderInterface
 
     public function getRules(): iterable
     {
+        $employee = ['employee' => [new Required(message: 'Choose an employee.')]];
         $rules = [
             'startDate' => [new Required(message: 'Enter a start date.')],
             'endDate' => [new Required(message: 'Enter an end date.')],
         ];
 
         return $this->editing
-            ? [...$rules, 'status' => [new Required(message: 'Choose a status.')]]
+            ? [...$employee, ...$rules, 'status' => [new Required(message: 'Choose a status.')]]
             : [
-                'employee' => [new Required(message: 'Choose an employee.')],
+                ...$employee,
                 'workItem' => [new Required(message: 'Choose a work item.')],
                 'constructionSite' => [new Required(message: 'Choose a construction site.')],
                 ...$rules,

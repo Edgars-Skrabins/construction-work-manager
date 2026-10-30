@@ -21,6 +21,12 @@ final readonly class AssignmentRepository implements AssignmentRepositoryInterfa
 {
     private const string DATE_FORMAT = 'Y-m-d';
 
+    private const array FILTER_COLUMNS = [
+        'employee' => 'a.EMPLOYEE_ID',
+        'workItem' => 'a.WORK_ITEM_ID',
+        'site' => 'a.CONSTRUCTION_SITE_ID',
+    ];
+
     private const array COLUMNS = [
         'a.ID',
         'a.EMPLOYEE_ID',
@@ -55,7 +61,7 @@ final readonly class AssignmentRepository implements AssignmentRepositoryInterfa
         return $this->listQuery($viewerId, $scope)->andWhere(['a.ID' => $id])->one();
     }
 
-    public function listPaginator(int $viewerId, Scope $scope, string $sort, string $search): OffsetPaginator
+    public function listPaginator(int $viewerId, Scope $scope, string $sort, string $search, array $filters = []): OffsetPaginator
     {
         $config = [
             'employee' => ListSort::columns(['e.LAST_NAME', 'e.FIRST_NAME'], 'a.ID'),
@@ -72,6 +78,9 @@ final readonly class AssignmentRepository implements AssignmentRepositoryInterfa
             'w.NAME',
             's.NAME',
         ]);
+        foreach (array_intersect_key($filters, self::FILTER_COLUMNS) as $name => $id) {
+            $query->andWhere([self::FILTER_COLUMNS[$name] => $id]);
+        }
 
         /** @var QueryDataReader<int, AssignmentListItem> $reader */
         $reader = new QueryDataReader($query, ListSort::create($config, $sort, '-startDate'));
@@ -171,10 +180,11 @@ final readonly class AssignmentRepository implements AssignmentRepositoryInterfa
         return (int) $keys['ID'];
     }
 
-    public function updatePeriodAndStatus(int $id, DateTimeImmutable $startDate, DateTimeImmutable $endDate, AssignmentStatus $status): void
+    public function update(int $id, int $employeeId, DateTimeImmutable $startDate, DateTimeImmutable $endDate, AssignmentStatus $status): void
     {
         $this->db->createCommand()
             ->update('ASSIGNMENT', [
+                'EMPLOYEE_ID' => $employeeId,
                 'START_DATE' => $startDate->format(self::DATE_FORMAT),
                 'END_DATE' => $endDate->format(self::DATE_FORMAT),
                 'STATUS' => $status->value,
