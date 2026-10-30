@@ -55,8 +55,12 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         const location = response.status === 204 ? response.headers.get('X-Modal-Location') : null;
         if (location !== null) {
-            changed = true;
             const target = new URL(location, window.location.href);
+            if (!location.startsWith('/') || location.startsWith('//') || target.origin !== window.location.origin) {
+                window.location.assign(url);
+                return;
+            }
+            changed = true;
             if (target.pathname === window.location.pathname) {
                 window.location.reload();
             } else if (followed) {
@@ -64,6 +68,11 @@ document.addEventListener('DOMContentLoaded', () => {
             } else {
                 await request(target.href, {}, current, false, true);
             }
+            return;
+        }
+
+        if (!response.ok && response.status !== 409) {
+            window.location.assign(url);
             return;
         }
 
