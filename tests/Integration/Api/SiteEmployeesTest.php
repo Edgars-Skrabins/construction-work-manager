@@ -42,7 +42,8 @@ final class SiteEmployeesTest extends IntegrationTestCase
 
     public function testListsEmployeesWithAnActiveAssignmentToday(): void
     {
-        $this->insertAssignments($this->service(ClockInterface::class)->now());
+        $today = $this->service(ClockInterface::class)->now();
+        $this->insertAssignments($today);
 
         $response = $this->get('/api/v1/construction-sites/DGP-SCH-01/employees');
 
@@ -52,6 +53,7 @@ final class SiteEmployeesTest extends IntegrationTestCase
         assertFalse($response->hasHeader('Set-Cookie'));
         assertSame(
             '{"site":{"id":2,"code":"DGP-SCH-01","name":"Daugavpils School Renovation","requiredAccessLevel":{"id":2,"name":"Restricted"}},'
+            . '"period":{"from":"' . $today->format('Y-m-d') . '","to":"' . $today->format('Y-m-d') . '"},'
             . '"employees":['
             . '{"id":8,"firstName":"Roberts","lastName":"Kalējs","accessLevel":{"id":2,"name":"Restricted"}},'
             . '{"id":5,"firstName":"Laura","lastName":"Krūmiņa","accessLevel":{"id":2,"name":"Restricted"}},'
@@ -83,11 +85,14 @@ final class SiteEmployeesTest extends IntegrationTestCase
 
     public function testSiteWithoutActiveAssignmentsHasNoEmployees(): void
     {
+        $today = $this->service(ClockInterface::class)->now()->format('Y-m-d');
+
         $response = $this->get('/api/v1/construction-sites/RIX-TEC-01/employees');
 
         assertSame(200, $response->getStatusCode());
         assertSame(
-            '{"site":{"id":3,"code":"RIX-TEC-01","name":"Rīga Thermal Power Plant Upgrade","requiredAccessLevel":{"id":3,"name":"Critical infrastructure"}},"employees":[]}',
+            '{"site":{"id":3,"code":"RIX-TEC-01","name":"Rīga Thermal Power Plant Upgrade","requiredAccessLevel":{"id":3,"name":"Critical infrastructure"}},'
+            . '"period":{"from":"' . $today . '","to":"' . $today . '"},"employees":[]}',
             (string) $response->getBody(),
         );
     }
@@ -102,12 +107,100 @@ final class SiteEmployeesTest extends IntegrationTestCase
             new FixedClock($day),
         );
 
-        $access = $service->forSite(self::CODE);
+        $access = $service->forSite(self::CODE, $service->period(null, null));
 
         assertNotNull($access);
+        assertSame(['2030-06-15', '2030-06-15'], [$access->from->format('Y-m-d'), $access->to->format('Y-m-d')]);
         assertSame([8, 5, 6], array_map(static fn($employee): int => $employee->employeeId, $access->employees));
         assertSame([], $this->employeeIds($this->get('/api/v1/construction-sites/DGP-SCH-01/employees')));
-        assertNull($service->forSite('XXX-000-99'));
+        assertNull($service->forSite('XXX-000-99', $service->period(null, null)));
+    }
+
+    public function testAPeriodListsEveryoneWithAnAssignmentOverlappingIt(): void
+    {
+        $today = $this->service(ClockInterface::class)->now();
+        $this->insertAssignments($today);
+        $from = $today->modify('+1 day')->format('Y-m-d');
+        $to = $today->modify('+7 days')->format('Y-m-d');
+
+        $response = $this->get('/api/v1/construction-sites/DGP-SCH-01/employees?from=' . $from . '&to=' . $to);
+
+        assertSame(200, $response->getStatusCode());
+        assertSame(['from' => $from, 'to' => $to], $this->period($response));
+        assertSame([5, 6, 7], $this->employeeIds($response));
+    }
+
+    /**
+     * @param list<int> $expected
+     */
+    #[DataProvider('oneDateParameters')]
+    public function testOneDateIsAOneDayPeriod(string $parameter, string $offset, array $expected): void
+    {
+        $today = $this->service(ClockInterface::class)->now();
+        $this->insertAssignments($today);
+        $day = $today->modify($offset)->format('Y-m-d');
+
+        $response = $this->get('/api/v1/construction-sites/DGP-SCH-01/employees?' . $parameter . '=' . $day);
+
+        assertSame(['from' => $day, 'to' => $day], $this->period($response));
+        assertSame($expected, $this->employeeIds($response));
+    }
+
+    /**
+     * @return iterable<string, array{string, string, list<int>}>
+     */
+    public static function oneDateParameters(): iterable
+    {
+        yield 'only from, tomorrow' => ['from', '+1 day', [5, 6, 7]];
+        yield 'only to, in four days' => ['to', '+4 days', [6, 7]];
+    }
+
+    #[DataProvider('invalidPeriods')]
+    public function testInvalidPeriodGivesUnprocessableProblem(string $query, string $detail): void
+    {
+        $response = $this->get('/api/v1/construction-sites/DGP-SCH-01/employees?' . $query);
+
+        assertSame(422, $response->getStatusCode());
+        assertSame('application/problem+json; charset=utf-8', $response->getHeaderLine('Content-Type'));
+        assertSame(
+            '{"type":"about:blank","title":"Unprocessable entity","status":422,"detail":"' . $detail . '"}',
+            (string) $response->getBody(),
+        );
+    }
+
+    /**
+     * @return iterable<string, array{string, string}>
+     */
+    public static function invalidPeriods(): iterable
+    {
+        $format = 'The from and to dates must be valid dates in YYYY-MM-DD format.';
+
+        yield 'malformed from' => ['from=02.11.2030', $format];
+        yield 'non-existent date' => ['from=2031-02-30', $format];
+        yield 'empty to' => ['to=', $format];
+        yield 'array from' => ['from[]=2030-11-02', $format];
+        yield 'from before today' => ['from=2020-01-01', "The period can't start before today."];
+        yield 'to before from' => ['from=2030-11-05&to=2030-11-04', "The to date can't be before the from date."];
+        yield 'longer than 12 months' => ['from=2030-11-01&to=2031-11-01', "The period can't be longer than 12 months."];
+    }
+
+    public function testExactlyTwelveMonthsIsAllowed(): void
+    {
+        $response = $this->get('/api/v1/construction-sites/DGP-SCH-01/employees?from=2030-11-01&to=2031-10-31');
+
+        assertSame(200, $response->getStatusCode());
+        assertSame(['from' => '2030-11-01', 'to' => '2031-10-31'], $this->period($response));
+    }
+
+    public function testMalformedSiteCodeIsCheckedBeforeThePeriod(): void
+    {
+        $response = $this->get('/api/v1/construction-sites/ab/employees?from=2020-01-01');
+
+        assertSame(422, $response->getStatusCode());
+        assertSame(
+            '{"type":"about:blank","title":"Unprocessable entity","status":422,"detail":"The site code must be 3 to 30 letters, digits or hyphens, starting with a letter or digit."}',
+            (string) $response->getBody(),
+        );
     }
 
     #[DataProvider('unknownCodes')]
@@ -200,6 +293,17 @@ final class SiteEmployeesTest extends IntegrationTestCase
         $body = json_decode((string) $response->getBody(), true, flags: JSON_THROW_ON_ERROR);
 
         return array_map(static fn(array $employee): int => $employee['id'], $body['employees']);
+    }
+
+    /**
+     * @return array{from: string, to: string}
+     */
+    private function period(ResponseInterface $response): array
+    {
+        /** @var array{period: array{from: string, to: string}} $body */
+        $body = json_decode((string) $response->getBody(), true, flags: JSON_THROW_ON_ERROR);
+
+        return $body['period'];
     }
 
     private function insertAssignments(DateTimeImmutable $today): void

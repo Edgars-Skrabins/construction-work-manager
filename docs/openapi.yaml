@@ -1,0 +1,272 @@
+openapi: 3.1.0
+info:
+  title: Construction Work Manager pass-system API
+  version: 1.0.0
+  description: >-
+    Tells an external pass system which employees need access to a construction
+    site over a period of days. An employee is listed when they have an active
+    assignment at the site that overlaps the period and their current access level
+    is at least the site's required level.
+servers:
+  - url: http://localhost:8080
+security:
+  - apiKey: []
+paths:
+  /api/v1/construction-sites/{code}/employees:
+    get:
+      operationId: listSiteEmployees
+      summary: Employees who need access to a site
+      parameters:
+        - name: code
+          in: path
+          required: true
+          description: The site code, for example RIX-AGK-01. Lowercase is accepted.
+          schema:
+            type: string
+            pattern: '^[A-Za-z0-9][A-Za-z0-9-]{2,29}$'
+          example: RIX-AGK-01
+        - name: from
+          in: query
+          required: false
+          description: >-
+            First day of the period. Defaults to today in Europe/Riga, or to `to` when
+            only `to` is given. Can't be before today.
+          schema:
+            type: string
+            format: date
+          example: '2026-11-02'
+        - name: to
+          in: query
+          required: false
+          description: >-
+            Last day of the period, inclusive. Defaults to `from`. Must be earlier
+            than `from` plus one year.
+          schema:
+            type: string
+            format: date
+          example: '2026-11-08'
+      responses:
+        '200':
+          description: The site, the resolved period and the employees who need access.
+          headers:
+            Cache-Control:
+              $ref: '#/components/headers/CacheControl'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SiteEmployees'
+              example:
+                site:
+                  id: 1
+                  code: RIX-AGK-01
+                  name: Āgenskalns Residential Block
+                  requiredAccessLevel:
+                    id: 1
+                    name: General
+                period:
+                  from: '2026-11-02'
+                  to: '2026-11-08'
+                employees:
+                  - id: 4
+                    firstName: Mārtiņš
+                    lastName: Liepiņš
+                    accessLevel:
+                      id: 1
+                      name: General
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '405':
+          $ref: '#/components/responses/MethodNotAllowed'
+        '422':
+          $ref: '#/components/responses/UnprocessableEntity'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+components:
+  securitySchemes:
+    apiKey:
+      type: http
+      scheme: bearer
+      description: >-
+        A per-client API key created with `./yii api-key:create`, sent as
+        `Authorization: Bearer <key>`.
+  headers:
+    CacheControl:
+      description: API responses are never cached.
+      schema:
+        type: string
+        const: no-store
+  schemas:
+    SiteEmployees:
+      type: object
+      additionalProperties: false
+      required: [site, period, employees]
+      properties:
+        site:
+          $ref: '#/components/schemas/Site'
+        period:
+          $ref: '#/components/schemas/Period'
+        employees:
+          type: array
+          items:
+            $ref: '#/components/schemas/Employee'
+    Site:
+      type: object
+      additionalProperties: false
+      required: [id, code, name, requiredAccessLevel]
+      properties:
+        id:
+          type: integer
+        code:
+          type: string
+          pattern: '^[A-Z0-9][A-Z0-9-]{2,29}$'
+        name:
+          type: string
+        requiredAccessLevel:
+          $ref: '#/components/schemas/AccessLevel'
+    Period:
+      type: object
+      additionalProperties: false
+      required: [from, to]
+      properties:
+        from:
+          type: string
+          format: date
+        to:
+          type: string
+          format: date
+    Employee:
+      type: object
+      additionalProperties: false
+      required: [id, firstName, lastName, accessLevel]
+      properties:
+        id:
+          type: integer
+        firstName:
+          type: string
+        lastName:
+          type: string
+        accessLevel:
+          $ref: '#/components/schemas/AccessLevel'
+    AccessLevel:
+      type: object
+      additionalProperties: false
+      required: [id, name]
+      properties:
+        id:
+          type: integer
+          minimum: 1
+          maximum: 4
+        name:
+          type: string
+    Problem:
+      type: object
+      description: An RFC 9457 problem detail.
+      additionalProperties: false
+      required: [type, title, status]
+      properties:
+        type:
+          type: string
+          const: about:blank
+        title:
+          type: string
+        status:
+          type: integer
+        detail:
+          type: string
+  responses:
+    Unauthorized:
+      description: The API key is missing, wrong, revoked or expired.
+      headers:
+        WWW-Authenticate:
+          required: true
+          schema:
+            type: string
+            const: Bearer
+        Cache-Control:
+          $ref: '#/components/headers/CacheControl'
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/Problem'
+          example:
+            type: about:blank
+            title: Unauthorized
+            status: 401
+    NotFound:
+      description: No construction site has this code, or the path doesn't exist.
+      headers:
+        Cache-Control:
+          $ref: '#/components/headers/CacheControl'
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/Problem'
+          example:
+            type: about:blank
+            title: Not Found
+            status: 404
+            detail: Construction site not found.
+    MethodNotAllowed:
+      description: Only GET is allowed.
+      headers:
+        Allow:
+          required: true
+          schema:
+            type: string
+            const: GET
+        Cache-Control:
+          $ref: '#/components/headers/CacheControl'
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/Problem'
+          example:
+            type: about:blank
+            title: Method Not Allowed
+            status: 405
+    UnprocessableEntity:
+      description: >-
+        The site code or the period is invalid. The site code is checked first. The
+        detail is one of the messages below.
+      headers:
+        Cache-Control:
+          $ref: '#/components/headers/CacheControl'
+      content:
+        application/problem+json:
+          schema:
+            allOf:
+              - $ref: '#/components/schemas/Problem'
+              - required: [detail]
+                properties:
+                  detail:
+                    enum:
+                      - 'The site code must be 3 to 30 letters, digits or hyphens, starting with a letter or digit.'
+                      - 'The from and to dates must be valid dates in YYYY-MM-DD format.'
+                      - "The period can't start before today."
+                      - "The to date can't be before the from date."
+                      - "The period can't be longer than 12 months."
+          example:
+            type: about:blank
+            title: Unprocessable entity
+            status: 422
+            detail: "The period can't start before today."
+    TooManyRequests:
+      description: Too many rejected requests from this IP address. Retry after the given number of seconds.
+      headers:
+        Retry-After:
+          required: true
+          schema:
+            type: integer
+            minimum: 1
+        Cache-Control:
+          $ref: '#/components/headers/CacheControl'
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/Problem'
+          example:
+            type: about:blank
+            title: Too Many Requests
+            status: 429

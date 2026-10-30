@@ -281,6 +281,39 @@ final class AssignmentRepositoryTest extends IntegrationTestCase
         yield 'the day after the end' => ['2026-11-21', []];
     }
 
+    /**
+     * @param list<int> $expected
+     */
+    #[DataProvider('accessPeriods')]
+    public function testNeedsAccessIncludesAssignmentsOverlappingThePeriod(string $from, string $to, array $expected): void
+    {
+        $this->insert(5, 1, 2, '2026-11-10', '2026-11-20');
+
+        assertSame($expected, $this->employeeIdsNeedingAccess(2, $from, $to));
+    }
+
+    /**
+     * @return iterable<string, array{string, string, list<int>}>
+     */
+    public static function accessPeriods(): iterable
+    {
+        yield 'the assignment ends on from' => ['2026-11-20', '2026-11-25', [5]];
+        yield 'the assignment starts on to' => ['2026-11-05', '2026-11-10', [5]];
+        yield 'the assignment ends the day before from' => ['2026-11-21', '2026-11-25', []];
+        yield 'the assignment starts the day after to' => ['2026-11-05', '2026-11-09', []];
+        yield 'the period covers the assignment' => ['2026-11-01', '2026-11-30', [5]];
+        yield 'the assignment covers the period' => ['2026-11-12', '2026-11-14', [5]];
+    }
+
+    public function testNeedsAccessOverAPeriodListsEachEmployeeOnceAndStillChecksLevels(): void
+    {
+        $this->insert(5, 1, 2, '2026-11-02', '2026-11-03');
+        $this->insert(5, 2, 2, '2026-11-06', '2026-11-08');
+        $this->insert(4, 1, 2, '2026-11-02', '2026-11-08');
+
+        assertSame([5], $this->employeeIdsNeedingAccess(2, '2026-11-01', '2026-11-30'));
+    }
+
     public function testNeedsAccessExcludesDoneAndCancelledAndOtherSites(): void
     {
         $done = $this->insert(5, 1, 2, '2026-11-10', '2026-11-20');
@@ -315,7 +348,7 @@ final class AssignmentRepositoryTest extends IntegrationTestCase
         $this->insert(4, 2, 1, '2026-11-01', '2026-11-30');
         $this->insert(5, 1, 1, '2026-11-15', '2026-11-15');
 
-        $employees = $this->repository()->findEmployeesNeedingAccess(1, new DateTimeImmutable('2026-11-15'));
+        $employees = $this->repository()->findEmployeesNeedingAccess(1, new DateTimeImmutable('2026-11-15'), new DateTimeImmutable('2026-11-15'));
 
         assertEquals(
             [
@@ -459,11 +492,11 @@ final class AssignmentRepositoryTest extends IntegrationTestCase
      * @phpstan-impure
      * @return list<int>
      */
-    private function employeeIdsNeedingAccess(int $siteId, string $date): array
+    private function employeeIdsNeedingAccess(int $siteId, string $from, ?string $to = null): array
     {
         return array_map(
             static fn(EmployeeNeedingAccess $employee): int => $employee->employeeId,
-            $this->repository()->findEmployeesNeedingAccess($siteId, new DateTimeImmutable($date)),
+            $this->repository()->findEmployeesNeedingAccess($siteId, new DateTimeImmutable($from), new DateTimeImmutable($to ?? $from)),
         );
     }
 }

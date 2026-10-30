@@ -61,5 +61,5 @@ interface AssignmentRepositoryInterface
     /**
      * @return list<EmployeeNeedingAccess>
      */
-    public function findEmployeesNeedingAccess(int $constructionSiteId, DateTimeImmutable $date): array;
+    public function findEmployeesNeedingAccess(int $constructionSiteId, DateTimeImmutable $from, DateTimeImmutable $to): array;
 }
