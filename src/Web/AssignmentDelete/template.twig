@@ -1,0 +1,21 @@
+{% do this.setTitle(t('Delete this assignment?')) %}
+<div class="row justify-content-center">
+    <div class="col-lg-8" data-modal-content>
+        <h1 class="h3 mb-4" data-modal-title>{{ t('Delete this assignment?') }}</h1>
+        <dl class="row">
+            <dt class="col-sm-4">{{ t('Employee') }}</dt>
+            <dd class="col-sm-8">{{ item.employeeName }}</dd>
+            <dt class="col-sm-4">{{ t('Work item') }}</dt>
+            <dd class="col-sm-8">{{ item.workItemName }}</dd>
+            <dt class="col-sm-4">{{ t('Construction site') }}</dt>
+            <dd class="col-sm-8">{{ item.constructionSiteName }}</dd>
+            <dt class="col-sm-4">{{ t('Period') }}</dt>
+            <dd class="col-sm-8 text-nowrap">{{ item.assignment.startDate|date('Y-m-d') }} – {{ item.assignment.endDate|date('Y-m-d') }}</dd>
+        </dl>
+        <form method="post" action="{{ urlGenerator.generate('assignment.delete', {id: item.assignment.id}) }}" class="d-inline">
+            {{ csrf.hiddenInput()|raw }}
+            <button type="submit" class="btn btn-danger">{{ t('Delete') }}</button>
+        </form>
+        <a class="btn btn-link" href="{{ urlGenerator.generate('assignment.list') }}" data-modal-cancel>{{ t('Cancel') }}</a>
+    </div>
+</div>

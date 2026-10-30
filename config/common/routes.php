@@ -112,7 +112,7 @@ return [
                         ->middleware(RequirePermission::for(Permission::AssignmentUpdate))
                         ->action(Web\AssignmentForm\Action::class)
                         ->name('assignment.edit'),
-                    Route::post('/assignments/{id:\d+}/delete')
+                    Route::methods([Method::GET, Method::POST], '/assignments/{id:\d+}/delete')
                         ->middleware(RequirePermission::for(Permission::AssignmentDelete))
                         ->action(Web\AssignmentDelete\Action::class)
                         ->name('assignment.delete'),

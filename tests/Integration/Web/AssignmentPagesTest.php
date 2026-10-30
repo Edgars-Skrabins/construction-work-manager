@@ -42,7 +42,7 @@ final class AssignmentPagesTest extends IntegrationTestCase
             assertStringNotContainsString($name, $body);
         }
         assertStringNotContainsString('page=4"', $body);
-        assertStringContainsString('data-confirm="Delete this assignment?"', $body);
+        assertStringContainsString('data-modal-link>Delete</a>', $body);
     }
 
     public function testManagerSearchFindsOnlyTheirEmployeesAssignments(): void
@@ -158,6 +158,23 @@ final class AssignmentPagesTest extends IntegrationTestCase
         assertSame(0, (int) $this->db()->createCommand('SELECT COUNT(*) FROM ASSIGNMENT WHERE ID = :id', [':id' => $id])->queryScalar());
     }
 
+    public function testDeleteAsksForConfirmation(): void
+    {
+        $this->logIn('admin@mail.test', '123123123');
+
+        $workItem = (string) $this->db()->createCommand('SELECT W.NAME FROM ASSIGNMENT A JOIN WORK_ITEM W ON W.ID = A.WORK_ITEM_ID WHERE A.ID = 1')->queryScalar();
+        $site = (string) $this->db()->createCommand('SELECT S.NAME FROM ASSIGNMENT A JOIN CONSTRUCTION_SITE S ON S.ID = A.CONSTRUCTION_SITE_ID WHERE A.ID = 1')->queryScalar();
+        $response = $this->request('GET', '/assignments/1/delete');
+        $body = (string) $response->getBody();
+
+        assertSame(200, $response->getStatusCode());
+        assertStringContainsString('<h1 class="h3 mb-4" data-modal-title>Delete this assignment?</h1>', $body);
+        assertStringContainsString(htmlspecialchars($workItem, ENT_QUOTES), $body);
+        assertStringContainsString(htmlspecialchars($site, ENT_QUOTES), $body);
+        assertStringContainsString('<form method="post" action="/assignments/1/delete"', $body);
+        assertSame(1, (int) $this->db()->createCommand('SELECT COUNT(*) FROM ASSIGNMENT WHERE ID = 1')->queryScalar());
+    }
+
     public function testRejectedCreateShowsTheErrors(): void
     {
         $this->logIn('manager@mail.test', '123123123');
@@ -209,6 +226,7 @@ final class AssignmentPagesTest extends IntegrationTestCase
 
         assertSame(404, $this->request('GET', '/assignments/4/edit')->getStatusCode());
         assertSame(404, $this->request('GET', '/assignments/9999/edit')->getStatusCode());
+        assertSame(404, $this->request('GET', '/assignments/4/delete')->getStatusCode());
         assertSame(404, $this->deleteAssignment(4)->getStatusCode());
         assertSame(1, (int) $this->db()->createCommand('SELECT COUNT(*) FROM ASSIGNMENT WHERE ID = 4')->queryScalar());
     }
