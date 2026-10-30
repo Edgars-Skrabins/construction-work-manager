@@ -132,6 +132,13 @@ return [
     'My work calendar' => 'Mano darbų kalendorius',
     'Calendar' => 'Kalendorius',
     'List' => 'Sąrašas',
+    'Go to month' => 'Eiti į mėnesį',
+    'Month' => 'Mėnuo',
+    'Year' => 'Metai',
+    'Go' => 'Eiti',
+    'Assignment details' => 'Užduoties informacija',
+    'Close' => 'Uždaryti',
+    '{count, plural, other{+# more}}' => '{count, plural, one{dar +#} few{dar +#} many{dar +#} other{dar +#}}',
 
     'Setup code for {name}' => 'Aktyvinimo kodas – {name}',
     'Give this code to the employee. It is shown only once and is valid for 72 hours. They enter it on the Set password page.' => 'Perduokite šį kodą darbuotojui. Jis rodomas tik vieną kartą ir galioja 72 valandas. Darbuotojas jį įveda puslapyje „Nustatyti slaptažodį“.',

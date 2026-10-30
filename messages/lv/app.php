@@ -132,6 +132,13 @@ return [
     'My work calendar' => 'Mans darbu kalendārs',
     'Calendar' => 'Kalendārs',
     'List' => 'Saraksts',
+    'Go to month' => 'Pāriet uz mēnesi',
+    'Month' => 'Mēnesis',
+    'Year' => 'Gads',
+    'Go' => 'Atvērt',
+    'Assignment details' => 'Uzdevuma informācija',
+    'Close' => 'Aizvērt',
+    '{count, plural, other{+# more}}' => '{count, plural, zero{vēl +#} one{vēl +#} other{vēl +#}}',
 
     'Setup code for {name}' => 'Aktivizācijas kods — {name}',
     'Give this code to the employee. It is shown only once and is valid for 72 hours. They enter it on the Set password page.' => 'Nododiet šo kodu darbiniekam. Tas tiek parādīts tikai vienreiz un ir derīgs 72 stundas. Darbinieks to ievada lapā „Iestatīt paroli”.',

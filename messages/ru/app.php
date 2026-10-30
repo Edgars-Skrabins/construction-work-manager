@@ -132,6 +132,13 @@ return [
     'My work calendar' => 'Мой календарь работ',
     'Calendar' => 'Календарь',
     'List' => 'Список',
+    'Go to month' => 'Перейти к месяцу',
+    'Month' => 'Месяц',
+    'Year' => 'Год',
+    'Go' => 'Перейти',
+    'Assignment details' => 'Сведения о задании',
+    'Close' => 'Закрыть',
+    '{count, plural, other{+# more}}' => '{count, plural, one{ещё +#} few{ещё +#} many{ещё +#} other{ещё +#}}',
 
     'Setup code for {name}' => 'Код активации — {name}',
     'Give this code to the employee. It is shown only once and is valid for 72 hours. They enter it on the Set password page.' => 'Передайте этот код сотруднику. Он показывается только один раз и действует 72 часа. Сотрудник вводит его на странице «Задать пароль».',
