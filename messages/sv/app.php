@@ -137,6 +137,13 @@ return [
     'My work calendar' => 'Min arbetskalender',
     'Calendar' => 'Kalender',
     'List' => 'Lista',
+    'Go to month' => 'Gå till månad',
+    'Month' => 'Månad',
+    'Year' => 'År',
+    'Go' => 'Gå',
+    'Assignment details' => 'Uppdragsdetaljer',
+    'Close' => 'Stäng',
+    '{count, plural, other{+# more}}' => '{count, plural, one{+# till} other{+# till}}',
 
     'Setup code for {name}' => 'Aktiveringskod – {name}',
     'Give this code to the employee. It is shown only once and is valid for 72 hours. They enter it on the Set password page.' => 'Ge koden till medarbetaren. Den visas bara en gång och gäller i 72 timmar. Medarbetaren anger den på sidan ”Välj lösenord”.',

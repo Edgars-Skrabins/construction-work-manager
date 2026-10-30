@@ -40,15 +40,30 @@ final class MyAssignmentsCalendarPageTest extends IntegrationTestCase
         assertSame(200, $response->getStatusCode());
         assertStringContainsString('<title>My work calendar</title>', $body);
         assertStringContainsString('<h2 class="h5 mb-0 text-nowrap">March 2030</h2>', $body);
-        assertSame(3 * 2, substr_count($body, '<span class="fw-semibold">Electrical installation</span>'));
+        assertSame(3 * 2, substr_count($body, '<span class="calendar-entry-line fw-semibold">Electrical installation</span>'));
         assertMatchesRegularExpression(
-            '#<span class="badge rounded-pill text-bg-info" title="Planned">&nbsp;</span><span class="visually-hidden">Planned:</span>\s*<span class="fw-semibold">Electrical installation</span>\s*<span class="d-block text-secondary">Daugavpils School Renovation</span>#u',
+            '#<span class="visually-hidden">Planned:</span>\s*<span class="calendar-entry-line fw-semibold">Electrical installation</span>\s*<span class="calendar-entry-line">Daugavpils School Renovation</span>#u',
             $body,
         );
-        assertStringNotContainsString('<span class="fw-semibold">Mārtiņš Liepiņš</span>', $body);
+        assertStringNotContainsString('<span class="calendar-entry-line fw-semibold">Mārtiņš Liepiņš</span>', $body);
         assertStringNotContainsString('Welding', $body);
         assertStringNotContainsString('Scaffolding assembly', $body);
-        assertStringNotContainsString('<select', $body);
+        assertStringNotContainsString('name="employee"', $body);
+    }
+
+    public function testDetailsTemplatesHaveNoEmployeeAndThePickerHasNoHiddenFields(): void
+    {
+        $this->insertMarchWork();
+        $this->logIn('employee@mail.test', '123123123');
+
+        $body = (string) $this->request('GET', '/my-assignments/calendar?year=2030&monthOfYear=03')->getBody();
+
+        assertStringContainsString('<h2 class="h5 mb-0 text-nowrap">March 2030</h2>', $body);
+        assertSame(1, substr_count($body, '<template id="calendar-entry-'));
+        assertMatchesRegularExpression('#<h3 class="h6 fw-semibold mb-2">Electrical installation</h3>\s*<dl class="row mb-0">\s*<dt class="col-sm-5 fw-normal text-body-secondary">Construction site</dt>\s*<dd class="col-sm-7">Daugavpils School Renovation</dd>#u', $body);
+        assertStringNotContainsString('<dt class="col-sm-5 fw-normal text-body-secondary">Employee</dt>', $body);
+        assertMatchesRegularExpression('#data-calendar-picker>\s*<label class="visually-hidden" for="calendar-month">#', $body);
+        assertSame(3, substr_count($body, ' calendar-entry-full"'));
     }
 
     public function testPhoneDayListHasADayHeadingPerDayWithWork(): void
@@ -91,7 +106,7 @@ final class MyAssignmentsCalendarPageTest extends IntegrationTestCase
             $body,
         );
         assertSame(1, substr_count($body, '<td class="calendar-today" aria-current="date">'));
-        assertStringContainsString('<span class="fw-semibold">Concrete works</span>', $body);
+        assertStringContainsString('<span class="calendar-entry-line fw-semibold">Concrete works</span>', $body);
     }
 
     public function testMonthFarFromTodayHasNoHighlight(): void

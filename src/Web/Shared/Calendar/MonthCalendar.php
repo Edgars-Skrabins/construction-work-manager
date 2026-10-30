@@ -24,6 +24,22 @@ final readonly class MonthCalendar
         return new self(self::parse($month) ?? $today->modify('first day of this month'), $today);
     }
 
+    /**
+     * @param array<mixed> $query
+     */
+    public static function requestedMonth(array $query): ?string
+    {
+        if (array_key_exists('year', $query) || array_key_exists('monthOfYear', $query)) {
+            $year = $query['year'] ?? null;
+            $monthOfYear = $query['monthOfYear'] ?? null;
+
+            return is_string($year) && is_string($monthOfYear) ? $year . '-' . $monthOfYear : null;
+        }
+        $month = $query['month'] ?? null;
+
+        return is_string($month) ? $month : null;
+    }
+
     public function month(): DateTimeImmutable
     {
         return $this->month;
@@ -58,14 +74,23 @@ final readonly class MonthCalendar
 
     /**
      * @param list<AssignmentListItem> $items
+     * @return list<CalendarEntry>
+     */
+    public function entries(array $items): array
+    {
+        return array_map(
+            fn(AssignmentListItem $item): CalendarEntry => new CalendarEntry($item, $item->assignment->displayStatus($this->today)),
+            $items,
+        );
+    }
+
+    /**
+     * @param list<AssignmentListItem> $items
      * @return list<list<CalendarDay>>
      */
     public function weeks(array $items): array
     {
-        $entries = array_map(
-            fn(AssignmentListItem $item): CalendarEntry => new CalendarEntry($item, $item->assignment->displayStatus($this->today)),
-            $items,
-        );
+        $entries = $this->entries($items);
 
         $days = [];
         for ($day = $this->from(); $day <= $this->to(); $day = $day->modify('+1 day')) {

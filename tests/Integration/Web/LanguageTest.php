@@ -250,6 +250,7 @@ final class LanguageTest extends IntegrationTestCase
         preg_match_all('#<th scope="col" class="text-center">([^<]+)</th>#u', $body, $matches);
 
         assertStringContainsString('<h2 class="h5 mb-0 text-nowrap">' . $month . '</h2>', $body);
+        assertStringContainsString('<option value="03" selected>' . explode(' ', $month)[0] . '</option>', $body);
         assertSame($weekdays, $matches[1]);
     }
 

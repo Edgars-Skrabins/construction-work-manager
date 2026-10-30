@@ -24,13 +24,13 @@ final readonly class Action
 
     public function __invoke(ServerRequestInterface $request): ResponseInterface
     {
-        $month = $request->getQueryParams()['month'] ?? null;
-        $calendar = MonthCalendar::create(is_string($month) ? $month : null, $this->clock->now());
+        $calendar = MonthCalendar::create(MonthCalendar::requestedMonth($request->getQueryParams()), $this->clock->now());
         $items = $this->myAssignments->calendar((int) $this->currentUser->getId(), $calendar->from(), $calendar->to());
 
         return $this->viewRenderer->render(__DIR__ . '/template', [
             'calendar' => $calendar,
             'weeks' => $calendar->weeks($items),
+            'entries' => $calendar->entries($items),
             'statuses' => AssignmentDisplayStatus::calendarStatuses(),
         ]);
     }

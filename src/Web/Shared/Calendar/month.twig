@@ -1,67 +1,101 @@
-<ul class="list-inline small mb-3" aria-label="{{ t('Status legend') }}">
-    {% for status in statuses %}
-        <li class="list-inline-item"><span class="badge rounded-pill {{ status.badgeClass() }}">&nbsp;</span> {{ t(status.label()) }}</li>
-    {% endfor %}
-</ul>
-{% macro entry(entry, showEmployee) %}
-    <li class="mb-1">
-        <span class="badge rounded-pill {{ entry.status.badgeClass() }}" title="{{ t(entry.status.label()) }}">&nbsp;</span><span class="visually-hidden">{{ t(entry.status.label()) }}:</span>
+{% do assetManager.register('App\\Web\\Shared\\Layout\\Main\\CalendarAsset') %}
+{% macro entry(entry, showEmployee, class) %}
+    <button type="button" class="calendar-entry {{ entry.status.stripeClass() }}{{ class }}" data-bs-toggle="modal" data-bs-target="#calendar-modal" data-calendar-entries="{{ entry.item.assignment.id }}" data-calendar-title="{{ t('Assignment details') }}">
+        <span class="visually-hidden">{{ t(entry.status.label()) }}:</span>
         {% if showEmployee %}
-            <span class="fw-semibold">{{ entry.item.employeeName }}</span>
-            <span class="d-block text-secondary">{{ entry.item.workItemName }} · {{ entry.item.constructionSiteName }}</span>
+            <span class="calendar-entry-line fw-semibold">{{ entry.item.employeeName }}</span>
+            <span class="calendar-entry-line">{{ entry.item.workItemName }} · {{ entry.item.constructionSiteName }}</span>
         {% else %}
-            <span class="fw-semibold">{{ entry.item.workItemName }}</span>
-            <span class="d-block text-secondary">{{ entry.item.constructionSiteName }}</span>
+            <span class="calendar-entry-line fw-semibold">{{ entry.item.workItemName }}</span>
+            <span class="calendar-entry-line">{{ entry.item.constructionSiteName }}</span>
         {% endif %}
-    </li>
+    </button>
 {% endmacro %}
-<div class="d-none d-md-block">
-    <table class="table table-bordered small work-calendar">
-        <thead>
-            <tr>
-                {% for weekday in weekday_names() %}
-                    <th scope="col" class="text-center">{{ weekday }}</th>
-                {% endfor %}
-            </tr>
-        </thead>
-        <tbody>
-            {% for week in weeks %}
+<div class="calendar" data-calendar>
+    <ul class="list-inline small mb-3" aria-label="{{ t('Status legend') }}">
+        {% for status in statuses %}
+            <li class="list-inline-item"><span class="calendar-swatch {{ status.stripeClass() }}" aria-hidden="true"></span> {{ t(status.label()) }}</li>
+        {% endfor %}
+    </ul>
+    <div class="d-none d-md-block">
+        <table class="table table-bordered small work-calendar">
+            <thead>
                 <tr>
-                    {% for day in week %}
-                        <td class="{% if day.isToday %}calendar-today{% elseif not day.inMonth %}bg-body text-secondary{% endif %}"{% if day.isToday %} aria-current="date"{% endif %}>
-                            <div class="fw-semibold mb-1">{{ day.date|date('j') }}{% if day.isToday %}<span class="visually-hidden"> {{ t('Today') }}</span>{% endif %}</div>
-                            {% if day.entries is not empty %}
-                                <ul class="list-unstyled mb-0">
-                                    {% for entry in day.entries %}
-                                        {{ _self.entry(entry, showEmployee) }}
-                                    {% endfor %}
-                                </ul>
-                            {% endif %}
-                        </td>
+                    {% for weekday in weekday_names() %}
+                        <th scope="col" class="text-center">{{ weekday }}</th>
                     {% endfor %}
                 </tr>
-            {% endfor %}
-        </tbody>
-    </table>
-</div>
-<div class="d-md-none">
-    {% set shown = 0 %}
-    {% for week in weeks %}
-        {% for day in week %}
-            {% if day.inMonth and day.entries is not empty %}
-                {% set shown = shown + 1 %}
-                <section class="card mb-2{% if day.isToday %} border-primary{% endif %}"{% if day.isToday %} aria-current="date"{% endif %}>
-                    <h3 class="card-header h6{% if day.isToday %} text-bg-primary{% endif %}">{{ weekday_name(day.date) }}, {{ day.date|date('Y-m-d') }}{% if day.isToday %} · {{ t('Today') }}{% endif %}</h3>
-                    <ul class="list-unstyled card-body small mb-0">
-                        {% for entry in day.entries %}
-                            {{ _self.entry(entry, showEmployee) }}
+            </thead>
+            <tbody>
+                {% for week in weeks %}
+                    <tr>
+                        {% for day in week %}
+                            <td class="{% if day.isToday %}calendar-today{% elseif not day.inMonth %}bg-body text-secondary{% endif %}"{% if day.isToday %} aria-current="date"{% endif %}>
+                                <div class="fw-semibold mb-1">{{ day.date|date('j') }}{% if day.isToday %}<span class="visually-hidden"> {{ t('Today') }}</span>{% endif %}</div>
+                                {% for entry in day.entries %}
+                                    {{ _self.entry(entry, showEmployee, loop.index > day.visibleCount() ? ' calendar-entry-extra' : '') }}
+                                {% endfor %}
+                                {% if day.hiddenCount() > 0 %}
+                                    <button type="button" class="btn btn-link btn-sm p-0 calendar-more" data-bs-toggle="modal" data-bs-target="#calendar-modal" data-calendar-entries="{{ day.entries|map(entry => entry.item.assignment.id)|join(' ') }}" data-calendar-title="{{ weekday_name(day.date) }}, {{ day.date|date('Y-m-d') }}">{{ t('{count, plural, other{+# more}}', {count: day.hiddenCount()}) }}</button>
+                                {% endif %}
+                            </td>
                         {% endfor %}
-                    </ul>
-                </section>
-            {% endif %}
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    <div class="d-md-none">
+        {% set shown = 0 %}
+        {% for week in weeks %}
+            {% for day in week %}
+                {% if day.inMonth and day.entries is not empty %}
+                    {% set shown = shown + 1 %}
+                    <section class="card mb-2{% if day.isToday %} border-primary{% endif %}"{% if day.isToday %} aria-current="date"{% endif %}>
+                        <h3 class="card-header h6{% if day.isToday %} text-bg-primary{% endif %}">{{ weekday_name(day.date) }}, {{ day.date|date('Y-m-d') }}{% if day.isToday %} · {{ t('Today') }}{% endif %}</h3>
+                        <div class="card-body p-2">
+                            {% for entry in day.entries %}
+                                {{ _self.entry(entry, showEmployee, ' calendar-entry-full') }}
+                            {% endfor %}
+                        </div>
+                    </section>
+                {% endif %}
+            {% endfor %}
         {% endfor %}
+        {% if shown == 0 %}
+            <p class="text-secondary">{{ t('No assigned work this month.') }}</p>
+        {% endif %}
+    </div>
+    {% for entry in entries %}
+        <template id="calendar-entry-{{ entry.item.assignment.id }}">
+            <section class="calendar-detail">
+                <h3 class="h6 fw-semibold mb-2">{{ entry.item.workItemName }}</h3>
+                <dl class="row mb-0">
+                    {% if showEmployee %}
+                        <dt class="col-sm-5 fw-normal text-body-secondary">{{ t('Employee') }}</dt>
+                        <dd class="col-sm-7">{{ entry.item.employeeName }}</dd>
+                    {% endif %}
+                    <dt class="col-sm-5 fw-normal text-body-secondary">{{ t('Construction site') }}</dt>
+                    <dd class="col-sm-7">{{ entry.item.constructionSiteName }}</dd>
+                    <dt class="col-sm-5 fw-normal text-body-secondary">{{ t('Start date') }}</dt>
+                    <dd class="col-sm-7">{{ entry.item.assignment.startDate|date('Y-m-d') }}</dd>
+                    <dt class="col-sm-5 fw-normal text-body-secondary">{{ t('End date') }}</dt>
+                    <dd class="col-sm-7">{{ entry.item.assignment.endDate|date('Y-m-d') }}</dd>
+                    <dt class="col-sm-5 fw-normal text-body-secondary">{{ t('Status') }}</dt>
+                    <dd class="col-sm-7 mb-0"><span class="calendar-swatch {{ entry.status.stripeClass() }}" aria-hidden="true"></span> {{ t(entry.status.label()) }}</dd>
+                </dl>
+            </section>
+        </template>
     {% endfor %}
-    {% if shown == 0 %}
-        <p class="text-secondary">{{ t('No assigned work this month.') }}</p>
-    {% endif %}
+    <div class="modal fade" id="calendar-modal" tabindex="-1" aria-labelledby="calendar-modal-title" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h2 class="modal-title h5" id="calendar-modal-title">{{ t('Assignment details') }}</h2>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="{{ t('Close') }}"></button>
+                </div>
+                <div class="modal-body"></div>
+            </div>
+        </div>
+    </div>
 </div>

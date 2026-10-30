@@ -28,7 +28,7 @@ final readonly class Action
     {
         $query = $request->getQueryParams();
         $actorId = (int) $this->currentUser->getId();
-        $calendar = MonthCalendar::create(is_string($query['month'] ?? null) ? $query['month'] : null, $this->clock->now());
+        $calendar = MonthCalendar::create(MonthCalendar::requestedMonth($query), $this->clock->now());
         $team = $this->assignments->teamEmployees($actorId);
         $employeeId = is_string($query['employee'] ?? null) && preg_match(ListParams::POSITIVE_INT_PATTERN, $query['employee']) === 1
             ? (int) $query['employee']
@@ -37,9 +37,12 @@ final readonly class Action
             $employeeId = null;
         }
 
+        $items = $this->assignments->calendar($actorId, $calendar->from(), $calendar->to(), $employeeId);
+
         return $this->viewRenderer->render(__DIR__ . '/template', [
             'calendar' => $calendar,
-            'weeks' => $calendar->weeks($this->assignments->calendar($actorId, $calendar->from(), $calendar->to(), $employeeId)),
+            'weeks' => $calendar->weeks($items),
+            'entries' => $calendar->entries($items),
             'team' => $team,
             'employeeId' => $employeeId,
             'statuses' => AssignmentDisplayStatus::calendarStatuses(),
