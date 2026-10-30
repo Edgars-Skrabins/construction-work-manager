@@ -12,6 +12,7 @@ use Psr\Http\Message\ResponseInterface;
 
 use function PHPUnit\Framework\assertDoesNotMatchRegularExpression;
 use function PHPUnit\Framework\assertMatchesRegularExpression;
+use function PHPUnit\Framework\assertNull;
 use function PHPUnit\Framework\assertSame;
 use function PHPUnit\Framework\assertStringContainsString;
 use function PHPUnit\Framework\assertStringNotContainsString;
@@ -156,6 +157,54 @@ final class AssignmentPagesTest extends IntegrationTestCase
         assertSame(302, $deleted->getStatusCode());
         assertStringContainsString('Assignment deleted.', (string) $this->request('GET', '/assignments')->getBody());
         assertSame(0, (int) $this->db()->createCommand('SELECT COUNT(*) FROM ASSIGNMENT WHERE ID = :id', [':id' => $id])->queryScalar());
+    }
+
+    public function testManagerWritesADescriptionOnTheNewAndEditForms(): void
+    {
+        $this->logIn('manager@mail.test', '123123123');
+
+        $form = (string) $this->request('GET', '/assignments/create')->getBody();
+        assertStringContainsString('<textarea class="form-control" id="description" name="description" rows="4" maxlength="1000" aria-describedby="description-count"></textarea>', $form);
+        assertStringContainsString('<div class="form-text text-end" id="description-count" data-char-count="description">0 / 1000</div>', $form);
+
+        $this->submit('/assignments/create', [
+            'employee' => '4',
+            'workItem' => '2',
+            'constructionSite' => '1',
+            'startDate' => '2027-03-01',
+            'endDate' => '2027-03-10',
+            'description' => " Stāvs 2.\r\n<b>Kāpnes</b> ",
+        ]);
+        $id = $this->lastCreatedId();
+        assertSame("Stāvs 2.\r\n<b>Kāpnes</b>", $this->description($id));
+
+        $edit = (string) $this->request('GET', "/assignments/$id/edit")->getBody();
+        assertStringContainsString("maxlength=\"1000\" aria-describedby=\"description-count\">Stāvs 2.\r\n&lt;b&gt;Kāpnes&lt;/b&gt;</textarea>", $edit);
+        assertStringContainsString('data-char-count="description">23 / 1000</div>', $edit);
+        assertStringNotContainsString('Kāpnes', (string) $this->request('GET', '/assignments?q=' . urlencode('Mārtiņš'))->getBody());
+
+        $this->submit("/assignments/$id/edit", ['employee' => '4', 'startDate' => '2027-03-01', 'endDate' => '2027-03-10', 'status' => 'active', 'description' => '']);
+        assertNull($this->description($id));
+    }
+
+    public function testTooLongDescriptionShowsTheError(): void
+    {
+        $this->logIn('manager@mail.test', '123123123');
+
+        $response = $this->submit('/assignments/create', [
+            'employee' => '4',
+            'workItem' => '2',
+            'constructionSite' => '1',
+            'startDate' => '2027-03-01',
+            'endDate' => '2027-03-10',
+            'description' => str_repeat('a', 1001),
+        ]);
+        $body = (string) $response->getBody();
+
+        assertSame(200, $response->getStatusCode());
+        assertStringContainsString('<textarea class="form-control is-invalid" id="description"', $body);
+        assertStringContainsString('<div class="invalid-feedback">Description must contain at most 1,000 characters.</div>', $body);
+        assertSame(0, (int) $this->db()->createCommand('SELECT COUNT(*) FROM ASSIGNMENT WHERE ID > :id', [':id' => self::LAST_SEED_ID])->queryScalar());
     }
 
     public function testDeleteAsksForConfirmation(): void
@@ -422,5 +471,12 @@ final class AssignmentPagesTest extends IntegrationTestCase
     private function lastCreatedId(): int
     {
         return (int) $this->db()->createCommand('SELECT MAX(ID) FROM ASSIGNMENT')->queryScalar();
+    }
+
+    private function description(int $id): ?string
+    {
+        $description = $this->db()->createCommand('SELECT DESCRIPTION FROM ASSIGNMENT WHERE ID = :id', [':id' => $id])->queryScalar();
+
+        return $description === null ? null : (string) $description;
     }
 }

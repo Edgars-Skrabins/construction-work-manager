@@ -1,4 +1,19 @@
+const initCharCounts = (root) => {
+    for (const count of root.querySelectorAll('[data-char-count]')) {
+        const field = document.getElementById(count.dataset.charCount);
+        if (field === null) {
+            continue;
+        }
+        const update = () => {
+            count.textContent = `${field.value.length} / ${field.maxLength}`;
+        };
+        field.addEventListener('input', update);
+        update();
+    }
+};
+
 const initAssignmentForm = (root) => {
+    initCharCounts(root);
     const employee = root.querySelector('#employee');
     const site = root.querySelector('#constructionSite');
     if (employee === null || site === null) {

@@ -77,6 +77,12 @@
                     {% include 'Web/Shared/Form/field-errors.twig' with {errors: errors.status ?? []} %}
                 </div>
             {% endif %}
+            <div class="mb-3">
+                <label for="description" class="form-label">{{ t('Description') }}</label>
+                <textarea class="form-control{% if errors.description is defined %} is-invalid{% endif %}" id="description" name="description" rows="4" maxlength="1000" aria-describedby="description-count">{{ form.description }}</textarea>
+                <div class="form-text text-end" id="description-count" data-char-count="description">{{ form.description|length }} / 1000</div>
+                {% include 'Web/Shared/Form/field-errors.twig' with {errors: errors.description ?? []} %}
+            </div>
             <button type="submit" class="btn btn-primary">{{ t('Save') }}</button>
             <a class="btn btn-link" href="{{ urlGenerator.generate('assignment.list') }}" data-modal-cancel>{{ t('Cancel') }}</a>
         </form>
