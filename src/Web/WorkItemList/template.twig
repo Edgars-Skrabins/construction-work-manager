@@ -6,37 +6,39 @@
     {% endif %}
 </div>
 {% include 'Web/Shared/Listing/search-form.twig' with {route: 'workItem.list', placeholder: t('Name or description')} %}
-{% if paginator.getTotalItems() == 0 and q != '' %}
-    <p class="text-secondary">{{ t('No results for “{query}”.', {query: q}) }}</p>
-{% elseif paginator.getTotalItems() == 0 %}
-    <p class="text-secondary">{{ t('No work items yet.') }}</p>
-{% else %}
-    <div class="table-responsive">
-        <table class="table table-striped align-middle">
-            <thead>
-                <tr>
-                    <th scope="col">{% include 'Web/Shared/Listing/sort-link.twig' with {label: t('Name'), key: 'name', route: 'workItem.list'} %}</th>
-                    <th scope="col">{{ t('Description') }}</th>
-                    <th scope="col" class="text-end">{{ t('Actions') }}</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for workItem in paginator.read() %}
+<div data-list-results>
+    {% if paginator.getTotalItems() == 0 and q != '' %}
+        <p class="text-secondary">{{ t('No results for “{query}”.', {query: q}) }}</p>
+    {% elseif paginator.getTotalItems() == 0 %}
+        <p class="text-secondary">{{ t('No work items yet.') }}</p>
+    {% else %}
+        <div class="table-responsive">
+            <table class="table table-striped align-middle">
+                <thead>
                     <tr>
-                        <td>{{ workItem.name }}</td>
-                        <td>{{ workItem.description|length > 100 ? workItem.description|slice(0, 100) ~ '…' : workItem.description }}</td>
-                        <td class="text-end text-nowrap">
-                            {% if access.can('workItem.update') %}
-                                <a class="btn btn-sm btn-outline-primary" href="{{ urlGenerator.generate('workItem.edit', {id: workItem.id}) }}">{{ t('Edit') }}</a>
-                            {% endif %}
-                            {% if access.can('workItem.delete') %}
-                                <a class="btn btn-sm btn-outline-danger" href="{{ urlGenerator.generate('workItem.delete', {id: workItem.id}) }}">{{ t('Delete') }}</a>
-                            {% endif %}
-                        </td>
+                        <th scope="col">{% include 'Web/Shared/Listing/sort-link.twig' with {label: t('Name'), key: 'name', route: 'workItem.list'} %}</th>
+                        <th scope="col">{{ t('Description') }}</th>
+                        <th scope="col" class="text-end">{{ t('Actions') }}</th>
                     </tr>
-                {% endfor %}
-            </tbody>
-        </table>
-    </div>
-    {% include 'Web/Shared/Listing/pagination.twig' with {route: 'workItem.list'} %}
-{% endif %}
+                </thead>
+                <tbody>
+                    {% for workItem in paginator.read() %}
+                        <tr>
+                            <td>{{ workItem.name }}</td>
+                            <td>{{ workItem.description|length > 100 ? workItem.description|slice(0, 100) ~ '…' : workItem.description }}</td>
+                            <td class="text-end text-nowrap">
+                                {% if access.can('workItem.update') %}
+                                    <a class="btn btn-sm btn-outline-primary" href="{{ urlGenerator.generate('workItem.edit', {id: workItem.id}) }}">{{ t('Edit') }}</a>
+                                {% endif %}
+                                {% if access.can('workItem.delete') %}
+                                    <a class="btn btn-sm btn-outline-danger" href="{{ urlGenerator.generate('workItem.delete', {id: workItem.id}) }}">{{ t('Delete') }}</a>
+                                {% endif %}
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% include 'Web/Shared/Listing/pagination.twig' with {route: 'workItem.list'} %}
+    {% endif %}
+</div>
