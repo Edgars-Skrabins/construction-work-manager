@@ -1,7 +1,7 @@
 # My assignments calendar — Spec
 
 **Type:** feature
-**Status:** ready for implementation
+**Status:** done
 **Last updated:** 2026-10-30
 
 # Part 1 — Business logic and usage
@@ -80,17 +80,17 @@ Baseline before starting: 265 unit tests and 759 integration tests, all green.
 
 ### A. Shared calendar pieces
 
-- [ ] A1. Move `MonthCalendar`, `CalendarDay` and `CalendarEntry` to `src/Web/Shared/Calendar/` and `MonthCalendarTest` to `tests/Unit/Web/Shared/Calendar/`, updating namespaces and imports.
-- [ ] A2. Extract `src/Web/Shared/Calendar/month.twig` from `src/Web/EmployeeCalendar/template.twig` with the `showEmployee` flag, and include it there with `showEmployee: true`. The existing `ManagerTeamPagesTest` and `LanguageTest` calendar tests stay green unchanged.
+- [x] A1. Move `MonthCalendar`, `CalendarDay` and `CalendarEntry` to `src/Web/Shared/Calendar/` and `MonthCalendarTest` to `tests/Unit/Web/Shared/Calendar/`, updating namespaces and imports.
+- [x] A2. Extract `src/Web/Shared/Calendar/month.twig` from `src/Web/EmployeeCalendar/template.twig` with the `showEmployee` flag, and include it there with `showEmployee: true`. The existing `ManagerTeamPagesTest` and `LanguageTest` calendar tests stay green unchanged.
 
 ### B. Employee calendar
 
-- [ ] B1. `MyAssignmentsService::calendar()`. Integration tests in a new `tests/Integration/Service/MyAssignmentsServiceTest.php` (or the existing one): the employee gets only their own Active and Done assignments overlapping the range, not cancelled ones and not other employees'; a manager and an admin get `ForbiddenException`.
-- [ ] B2. `src/Web/MyAssignmentsCalendar/Action.php`, `template.twig`, the `my-assignments.calendar` route, the "Calendar" button on My assignments and the navbar active state. Page tests in a new `tests/Integration/Web/MyAssignmentsCalendarPageTest.php`: the employee sees only their own entries in the month, with work item and site and no employee name; managers and admins get 403; an invalid month shows the current month with today's cell highlighted and `aria-current="date"`, and a month far from today has no highlight; month links across a year; a cancelled assignment is left out; the day list for phones is rendered with its weekday and date headings; the navbar link is active and both pages link to each other.
-- [ ] B3. Translations of "My work calendar", "Calendar" and "List" in all six message files; add the calendar page to `LanguageTest::everyPage()`.
+- [x] B1. `MyAssignmentsService::calendar()`. Integration tests in a new `tests/Integration/Service/MyAssignmentsServiceTest.php` (or the existing one): the employee gets only their own Active and Done assignments overlapping the range, not cancelled ones and not other employees'; a manager and an admin get `ForbiddenException`.
+- [x] B2. `src/Web/MyAssignmentsCalendar/Action.php`, `template.twig`, the `my-assignments.calendar` route, the "Calendar" button on My assignments and the navbar active state. Page tests in a new `tests/Integration/Web/MyAssignmentsCalendarPageTest.php`: the employee sees only their own entries in the month, with work item and site and no employee name; managers and admins get 403; an invalid month shows the current month with today's cell highlighted and `aria-current="date"`, and a month far from today has no highlight; month links across a year; a cancelled assignment is left out; the day list for phones is rendered with its weekday and date headings; the navbar link is active and both pages link to each other.
+- [x] B3. Translations of "My work calendar", "Calendar" and "List" in all six message files; add the calendar page to `LanguageTest::everyPage()`.
 
 ### Z. Wrap-up
 
-- [ ] Z1. `make check` green.
-- [ ] Z2. Update `README.md` (Running the app, step 4: the employee's calendar) and `CLAUDE.md` (`assignment.readOwn` guards My assignments and its calendar; `src/Web/Shared/Calendar/` in the layout).
-- [ ] Z3. Manual check in the running app as `employee@mail.test`, at 375 and 1280 px on the dark theme: open My assignments, the Calendar button, page to the next month and back, the List button; check managers get 403.
+- [x] Z1. `make check` green.
+- [x] Z2. Update `README.md` (Running the app, step 4: the employee's calendar) and `CLAUDE.md` (`assignment.readOwn` guards My assignments and its calendar; `src/Web/Shared/Calendar/` in the layout).
+- [x] Z3. Manual check in the running app as `employee@mail.test`, at 375 and 1280 px on the dark theme: open My assignments, the Calendar button, page to the next month and back, the List button; check managers get 403.
