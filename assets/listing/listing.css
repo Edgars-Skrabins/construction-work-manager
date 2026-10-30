@@ -61,8 +61,12 @@
     }
 }
 
-@media (max-width: 991.98px) {
-    .list-compact .list-actions {
+.list-row-chevron {
+    display: none;
+}
+
+@media (max-width: 1199.98px) {
+    .list-compact .list-row-actions {
         position: absolute;
         width: 1px;
         height: 1px;
@@ -74,12 +78,22 @@
         border: 0;
     }
 
+    .list-compact .list-row-chevron {
+        display: inline-block;
+        color: var(--bs-secondary-color);
+    }
+
+    .list-compact > thead .list-actions {
+        font-size: 0;
+    }
+
     .list-compact > tbody > tr:has(.list-row-actions) {
         cursor: pointer;
     }
 
     .list-compact > tbody > tr:has(.list-row-actions) .list-filter-link {
         pointer-events: none;
+        text-decoration: none;
     }
 
     .list-compact > tbody > tr:has(.list-row-actions):focus-visible {

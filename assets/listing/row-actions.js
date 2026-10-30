@@ -4,7 +4,7 @@
         return;
     }
 
-    const compact = window.matchMedia('(max-width: 991.98px)');
+    const compact = window.matchMedia('(max-width: 1199.98px)');
     const sheet = bootstrap.Modal.getOrCreateInstance(element);
     const title = element.querySelector('.modal-title');
     const body = element.querySelector('.modal-body');
@@ -56,7 +56,7 @@
         const group = row.querySelector('.list-row-actions');
         lastRow = row;
         title.textContent = group.getAttribute('aria-label');
-        const actions = Array.from(group.querySelectorAll('a'), (link) => choice(link, `${link.className.replace('btn-sm', '')} w-100`, link.textContent));
+        const actions = Array.from(group.querySelectorAll('a'), (link) => choice(link, `${link.className.replace(' btn-sm', '')} w-100`, link.textContent));
         const filters = Array.from(row.querySelectorAll('.list-filter-link'), (link) => choice(link, 'btn btn-outline-secondary w-100 text-start text-truncate', link.dataset.filterLabel));
         body.replaceChildren(...actions, ...(filters.length > 0 ? [document.createElement('hr'), ...filters] : []));
         sheet.show();
