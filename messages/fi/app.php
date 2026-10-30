@@ -36,6 +36,11 @@ return [
     'Name or email' => 'Nimi tai sähköposti',
     'Name or description' => 'Nimi tai kuvaus',
     'Employee, work item or site' => 'Työntekijä, työlaji tai työmaa',
+    'Reassign' => 'Siirrä toiselle',
+    'View assignments' => 'Näytä työtehtävät',
+    'Clear filter' => 'Poista suodatin',
+    'No assignments match the filter.' => 'Suodatinta vastaavia työtehtäviä ei ole.',
+    '{label}: {name}' => '{label}: {name}',
 
     'Log in' => 'Kirjaudu sisään',
     'Email' => 'Sähköposti',

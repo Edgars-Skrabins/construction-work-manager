@@ -137,7 +137,7 @@ final class AssignmentPagesTest extends IntegrationTestCase
         assertStringContainsString('Assignment saved.', (string) $this->request('GET', '/assignments')->getBody());
 
         $id = $this->lastCreatedId();
-        $edited = $this->submit("/assignments/$id/edit", ['startDate' => '2027-03-01', 'endDate' => '2027-03-12', 'status' => 'done']);
+        $edited = $this->submit("/assignments/$id/edit", ['employee' => '4', 'startDate' => '2027-03-01', 'endDate' => '2027-03-12', 'status' => 'done']);
         assertSame(302, $edited->getStatusCode());
         $status = $this->db()->createCommand('SELECT CONCAT(END_DATE, N\' \', STATUS) FROM ASSIGNMENT WHERE ID = :id', [':id' => $id])->queryScalar();
         assertSame('2027-03-12 done', $status);
@@ -232,6 +232,98 @@ final class AssignmentPagesTest extends IntegrationTestCase
         ), $body);
         assertDoesNotMatchRegularExpression('#<script(?![^>]*\ssrc=)[^>]*>#', $body);
         assertMatchesRegularExpression('#<script src="/assets/assignment/[^"]*assignment\.js[^"]*"#', $body);
+    }
+
+    public function testManagerReassignsAnAssignmentOnTheEditPage(): void
+    {
+        $id = $this->service(AssignmentRepositoryInterface::class)->create(5, 1, 2, new DateTimeImmutable('2027-03-01'), new DateTimeImmutable('2027-03-10'), 2);
+        $this->logIn('manager@mail.test', '123123123');
+
+        $page = (string) $this->request('GET', "/assignments/$id/edit")->getBody();
+        assertMatchesRegularExpression('#<select class="form-select" id="employee" name="employee" required>#', $page);
+        assertStringContainsString('<option value="5" data-access-level="2" selected>', $page);
+        assertStringNotContainsString('<option value="7" data-access-level', $page);
+
+        $tooLow = $this->submit("/assignments/$id/edit", ['employee' => '4', 'startDate' => '2027-03-01', 'endDate' => '2027-03-10', 'status' => 'active']);
+        $body = (string) $tooLow->getBody();
+        assertSame(200, $tooLow->getStatusCode());
+        assertMatchesRegularExpression('#is-invalid" id="employee"#', $body);
+        assertStringContainsString('The site requires access level 2; the employee has level 1.', $body);
+
+        assertSame(403, $this->submit("/assignments/$id/edit", ['employee' => '7', 'startDate' => '2027-03-01', 'endDate' => '2027-03-10', 'status' => 'active'])->getStatusCode());
+
+        $saved = $this->submit("/assignments/$id/edit", ['employee' => '6', 'startDate' => '2027-03-01', 'endDate' => '2027-03-10', 'status' => 'active']);
+        assertSame(302, $saved->getStatusCode());
+        assertSame(6, (int) $this->db()->createCommand('SELECT EMPLOYEE_ID FROM ASSIGNMENT WHERE ID = :id', [':id' => $id])->queryScalar());
+    }
+
+    public function testRowsHaveAReassignButtonThatFocusesTheEmployeeSelect(): void
+    {
+        $this->logIn('manager@mail.test', '123123123');
+
+        $body = (string) $this->request('GET', '/assignments')->getBody();
+
+        assertMatchesRegularExpression('#<a class="btn btn-sm btn-outline-secondary" href="/assignments/\d+/edit\#employee">Reassign</a>#', $body);
+    }
+
+    public function testListIsFilteredByEmployeeWithAChipThatClearsIt(): void
+    {
+        $this->logIn('manager@mail.test', '123123123');
+
+        $body = (string) $this->request('GET', '/assignments?employee=5&q=Krūmiņa&sort=employee')->getBody();
+
+        assertStringContainsString('Employee: Laura Krūmiņa', $body);
+        assertStringNotContainsString('Mārtiņš Liepiņš', $body);
+        assertStringContainsString('<a class="link-light text-decoration-none" href="/assignments?sort=employee&amp;q=Kr%C5%ABmi%C5%86a"', $body);
+        assertStringContainsString('<input type="hidden" name="employee" value="5">', $body);
+        assertStringContainsString('href="/assignments?sort=-employee&amp;q=Kr%C5%ABmi%C5%86a&amp;employee=5"', $body);
+    }
+
+    /**
+     * @return iterable<string, array{string, string, string}>
+     */
+    public static function filters(): iterable
+    {
+        yield 'work item' => ['/assignments?workItem=7', 'Work item: Piling', 'workItem=7'];
+        yield 'site' => ['/assignments?site=9', 'Construction site: Vilnius Office Campus', 'site=9'];
+    }
+
+    #[DataProvider('filters')]
+    public function testFiltersAreKeptInTheSortAndPageLinks(string $path, string $chip, string $filter): void
+    {
+        $this->logIn('admin@mail.test', '123123123');
+
+        $body = (string) $this->request('GET', $path)->getBody();
+
+        assertStringContainsString($chip, $body);
+        assertStringContainsString("href=\"/assignments?sort=employee&amp;$filter\"", $body);
+        if ($filter === 'site=9') {
+            assertStringContainsString("href=\"/assignments?sort=-startDate&amp;page=2&amp;$filter\"", $body);
+            assertStringNotContainsString('page=3', $body);
+        }
+    }
+
+    public function testManagerFilteringByAnotherTeamsEmployeeSeesNothing(): void
+    {
+        $this->logIn('manager@mail.test', '123123123');
+
+        $response = $this->request('GET', '/assignments?employee=7');
+        $body = (string) $response->getBody();
+
+        assertSame(200, $response->getStatusCode());
+        assertStringContainsString('No assignments match the filter.', $body);
+        assertStringContainsString('Employee: #7', $body);
+        assertStringNotContainsString('Anna Zariņa', $body);
+    }
+
+    public function testInvalidFilterIsIgnored(): void
+    {
+        $this->logIn('manager@mail.test', '123123123');
+
+        $body = (string) $this->request('GET', '/assignments?employee=abc')->getBody();
+
+        assertStringNotContainsString('Employee: ', $body);
+        assertStringContainsString('page=3"', $body);
     }
 
     private function deleteAssignment(int $id): ResponseInterface

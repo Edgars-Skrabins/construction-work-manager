@@ -36,6 +36,11 @@ return [
     'Name or email' => 'Vārds vai e-pasts',
     'Name or description' => 'Nosaukums vai apraksts',
     'Employee, work item or site' => 'Darbinieks, darba veids vai būvobjekts',
+    'Reassign' => 'Piešķirt citam',
+    'View assignments' => 'Skatīt uzdevumus',
+    'Clear filter' => 'Noņemt filtru',
+    'No assignments match the filter.' => 'Neviens uzdevums neatbilst filtram.',
+    '{label}: {name}' => '{label}: {name}',
 
     'Log in' => 'Pieteikties',
     'Email' => 'E-pasts',

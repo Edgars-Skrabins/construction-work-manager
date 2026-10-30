@@ -36,6 +36,11 @@ return [
     'Name or email' => 'Имя или эл. почта',
     'Name or description' => 'Название или описание',
     'Employee, work item or site' => 'Сотрудник, вид работ или объект',
+    'Reassign' => 'Переназначить',
+    'View assignments' => 'Посмотреть задания',
+    'Clear filter' => 'Сбросить фильтр',
+    'No assignments match the filter.' => 'Нет заданий, соответствующих фильтру.',
+    '{label}: {name}' => '{label}: {name}',
 
     'Log in' => 'Войти',
     'Email' => 'Эл. почта',

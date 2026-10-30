@@ -36,6 +36,11 @@ return [
     'Name or email' => 'Vardas arba el. paštas',
     'Name or description' => 'Pavadinimas arba aprašymas',
     'Employee, work item or site' => 'Darbuotojas, darbo rūšis arba statybos objektas',
+    'Reassign' => 'Perskirti',
+    'View assignments' => 'Peržiūrėti užduotis',
+    'Clear filter' => 'Pašalinti filtrą',
+    'No assignments match the filter.' => 'Nėra filtrą atitinkančių užduočių.',
+    '{label}: {name}' => '{label}: {name}',
 
     'Log in' => 'Prisijungti',
     'Email' => 'El. paštas',
