@@ -5,6 +5,7 @@ declare(strict_types=1);
 return [
     'Language' => 'Keel',
     'Toggle navigation' => 'Näita või peida menüü',
+    'Dark mode' => 'Tume režiim',
     'My assignments' => 'Minu tööülesanded',
     'Employees' => 'Töötajad',
     'Construction sites' => 'Ehitusobjektid',
