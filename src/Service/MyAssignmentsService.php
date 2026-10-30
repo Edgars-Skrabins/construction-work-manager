@@ -8,11 +8,15 @@ use App\Access\AccessChecker;
 use App\Access\Permission;
 use App\Access\Scope;
 use App\Entity\AssignedSite;
-use App\Entity\AssignmentListItem;
+use App\Entity\AssignedWork;
+use App\Entity\Assignment;
+use App\Entity\AssignmentDisplayStatus;
 use App\Entity\AssignmentStatus;
 use App\Repository\AssignmentRepositoryInterface;
 use App\Repository\EmployeeRepositoryInterface;
 use DateTimeImmutable;
+
+use function sprintf;
 
 final readonly class MyAssignmentsService
 {
@@ -49,14 +53,27 @@ final readonly class MyAssignmentsService
         );
     }
 
+    public function find(int $employeeId, int $id): AssignedWork
+    {
+        $this->accessChecker->ensure($employeeId, Permission::AssignmentReadOwn);
+
+        return $this->assignments->findAssignedWorkItem($employeeId, $id)
+            ?? throw new NotFoundException(sprintf('Assignment %d is not assigned to employee %d.', $id, $employeeId));
+    }
+
+    public function displayStatus(Assignment $assignment): AssignmentDisplayStatus
+    {
+        return $this->assignmentService->displayStatus($assignment);
+    }
+
     /**
-     * @return list<AssignmentListItem>
+     * @return list<AssignedWork>
      */
     public function calendar(int $employeeId, DateTimeImmutable $from, DateTimeImmutable $to): array
     {
         $this->accessChecker->ensure($employeeId, Permission::AssignmentReadOwn);
 
-        return $this->assignments->listInPeriod($employeeId, Scope::Own, $from, $to, null);
+        return $this->assignments->findAssignedWorkInPeriod($employeeId, $from, $to);
     }
 
     /**

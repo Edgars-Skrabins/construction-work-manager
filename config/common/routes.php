@@ -44,6 +44,10 @@ return [
                         ->middleware(RequirePermission::for(Permission::AssignmentReadOwn))
                         ->action(Web\MyAssignmentsCalendar\Action::class)
                         ->name('my-assignments.calendar'),
+                    Route::get('/my-assignments/{id:\d+}')
+                        ->middleware(RequirePermission::for(Permission::AssignmentReadOwn))
+                        ->action(Web\MyAssignmentDetails\Action::class)
+                        ->name('my-assignments.view'),
                     Route::get('/employees')
                         ->middleware(RequirePermission::for(Permission::EmployeeList))
                         ->action(Web\EmployeeList\Action::class)

@@ -442,6 +442,41 @@ final class AssignmentRepositoryTest extends IntegrationTestCase
         assertSame([$active, $done], $this->idsInPeriod(1, Scope::All, null));
     }
 
+    public function testAssignedWorkItemHasTheCreatorAndOnlyTheEmployeesOwnRow(): void
+    {
+        $id = $this->repository()->create(6, 1, 1, new DateTimeImmutable('2026-11-01'), new DateTimeImmutable('2026-11-05'), 2, 'Bring the ladder.');
+        $other = $this->insert(7, 1, 1, '2026-11-01', '2026-11-05');
+
+        $work = $this->repository()->findAssignedWorkItem(6, $id);
+
+        assertNotNull($work);
+        assertSame('Ilze Kalniņa', $work->assignedByName);
+        assertSame('Bring the ladder.', $work->item->assignment->description);
+        assertSame('Mazā Nometņu iela 12, Rīga, Latvia', $work->address());
+        assertSame('Jānis Bērziņš', $this->repository()->findAssignedWork(7)[0]->assignedByName);
+        assertNull($this->repository()->findAssignedWorkItem(6, $other));
+        assertNull($this->repository()->findAssignedWorkItem(6, 999999));
+    }
+
+    public function testAssignedWorkInPeriodMatchesTheCalendarListing(): void
+    {
+        $concrete = $this->insert(6, 1, 1, '2026-11-10', '2026-11-20');
+        $electrical = $this->insert(6, 2, 1, '2026-11-01', '2026-11-05');
+        $welding = $this->insert(6, 3, 3, '2026-11-15', '2026-11-16');
+        $this->insert(6, 4, 3, '2026-12-10', '2026-12-12');
+        $cancelled = $this->insert(6, 5, 2, '2026-11-10', '2026-11-20');
+        $this->repository()->update($cancelled, 6, new DateTimeImmutable('2026-11-10'), new DateTimeImmutable('2026-11-20'), AssignmentStatus::Cancelled, null);
+        $this->insert(7, 1, 1, '2026-11-10', '2026-11-20');
+        $from = new DateTimeImmutable('2026-10-26');
+        $to = new DateTimeImmutable('2026-12-06');
+
+        $work = array_map(static fn(AssignedWork $row): int => $row->item->assignment->id, $this->repository()->findAssignedWorkInPeriod(6, $from, $to));
+        $listed = array_map(static fn(AssignmentListItem $item): int => $item->assignment->id, $this->repository()->listInPeriod(6, Scope::Own, $from, $to, null));
+
+        assertSame([$concrete, $electrical, $welding], $work);
+        assertSame($listed, $work);
+    }
+
     /**
      * @param list<int> $visible
      */

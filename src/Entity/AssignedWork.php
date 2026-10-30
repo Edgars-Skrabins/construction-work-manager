@@ -12,6 +12,7 @@ final readonly class AssignedWork
         public string $city,
         public string $country,
         public ?string $workItemDescription,
+        public string $assignedByName,
     ) {}
 
     public function address(): string
