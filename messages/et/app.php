@@ -129,6 +129,7 @@ return [
     "You can't remove your own login." => 'Sa ei saa oma kontot eemaldada.',
     "You can't deactivate your own login." => 'Sa ei saa oma kontot deaktiveerida.',
     "Finish or cancel this employee's active assignments first." => 'Lõpeta või tühista kõigepealt selle töötaja aktiivsed tööülesanded.',
+    'Only employees can have active assignments.' => 'Aktiivsed tööülesanded saavad olla ainult töötajatel.',
     'This email is already used by another login.' => 'See e-posti aadress on juba teise konto kasutuses.',
 
     'Work calendar' => 'Töökalender',
