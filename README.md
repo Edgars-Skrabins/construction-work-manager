@@ -68,18 +68,6 @@ The other employees have no login, so the admin can try giving them one.
 
 Like the database passwords, these are dev-only credentials for the local seed data and must never exist in a deployment.
 
-## Running the app
-
-1. Make sure the containers are running (`make up`), then open `http://localhost:8080`. Every page except the login page needs a logged-in user, so you land on the login page first. Log in with one of the demo accounts from Setup. To use another port, start them with `APP_PORT=9000 make up`.
-2. As an admin (`admin@mail.test`), you land on Employees after login, and the navbar links to Employees, Construction sites and Work items, where you can list, sort, add, edit and delete them. Managers and employees don't see the Construction sites and Work items pages.
-3. As a manager (`manager@mail.test`), you land on Assignments after login, the work items given to your own employees at construction sites. You can sort the list, add an assignment (only sites your chosen employee's access level allows are offered), change its dates or mark it Done or Cancelled, give it to another of your employees (Reassign on the row, or the Employee select on its edit page; an active assignment still needs a high enough access level and no overlapping duplicate), and delete it. `/assignments?employee=ID`, `?workItem=ID` and `?site=ID` show only the assignments of one employee, work item or site, shown as a chip above the table whose × clears it; the "View assignments" buttons on the refused deletes and on the refused role change lead there. The admin sees and manages every employee's assignments. A badge marks an active assignment whose employee's access level is now too low for its site; hovering, focusing or tapping it shows the site's required level and the employee's level, for example "Restricted (2)". Managers also have Employees in the navbar: a read-only list of their own employees, and its Work calendar (`/employees/calendar`), a month grid of the team's assigned work with today highlighted, previous and next month links and a filter for one employee. On a phone it becomes a list of the days with work. The admin sees everyone in both.
-4. As an employee (`employee@mail.test`), you land on My assignments after login, which names your manager under the heading: one section per construction site with its address, required access level and a Google Maps link, listing your current work with its dates and status, each as its own block with a stripe in its status color. Finished and cancelled work is under History. The Calendar button next to the heading opens My work calendar (`/my-assignments/calendar`), a month grid of your own work with today highlighted and previous and next month links, which becomes a list of the days with work on a phone; its List button goes back. Only employees have the My assignments link and page, because work is only assigned to employees.
-5. An employee the admin gives a login email gets a one-time setup code, shown to the admin once and valid for 72 hours. The employee opens "First login? Set your password" on the login page (`/set-password`), enters the email, the code and a new password, and is logged in.
-6. After 5 failed attempts for one email within 15 minutes, or 20 from one IP address, the login page and the set-password page answer "Too many attempts. Try again in N minutes." until the 15 minutes are over. A successful login clears that email's failures. The limits are the `authThrottle` params in `config/common/params.php`.
-7. The language selector at the right of the navbar, also on the login page, switches the UI between English, Latvian, Lithuanian, Estonian, Russian, Finnish and Swedish. The choice is kept in a cookie for a year. Names of employees, sites, work items and access levels are shown as stored, dates stay `YYYY-MM-DD`, and the API stays English.
-8. External pass systems use the JSON API under `/api/v1`. Each client needs its own API key, sent as `Authorization: Bearer <key>`. Create one with `make api-key:create CLIENT="North Gate"` (optionally with `EXPIRES=YYYY-MM-DD`). The key is shown only once and only its hash is stored. `GET /api/v1/construction-sites/{code}/employees` returns the site, addressed by its site code (for example `RIX-AGK-01`, set on the site form), and the employees who need access to it: those with an active assignment there during the period whose access level is still high enough. The period is today unless the optional `from` and `to` query parameters (`YYYY-MM-DD`) say otherwise; with only one of them it is that single day. A period can't start before today and can be at most 12 months long, and the response echoes it as `period`. For example, `curl -H "Authorization: Bearer <key>" "http://localhost:8080/api/v1/construction-sites/RIX-AGK-01/employees?from=2026-11-02&to=2026-11-08"`. Errors are JSON problem details: a missing, wrong, revoked or expired key gets `401`, an unknown site code `404`, and a malformed site code or period `422`. After 20 rejected requests from one IP address within 15 minutes, that address gets `429` with a `Retry-After` header until the 15 minutes are over. The API is described in `docs/openapi.yaml` (OpenAPI 3.1); to browse it, import or paste the file into [editor.swagger.io](https://editor.swagger.io).
-9. Stop the containers with `make down` (`docker compose down`). `docker compose down -v` also deletes the database volume. A database created before the migrations were renumbered into a gap-free sequence must be recreated with `docker compose down -v` and then `make up`, because its migration history still names the old migrations.
-
 ## Running tests
 
 - All tests: `make test` (`docker compose exec app composer test`). This runs the unit suite, recreates the `construction_work_manager_test` database, applies the migrations to it and runs the integration suite.
@@ -88,7 +76,9 @@ Like the database passwords, these are dev-only credentials for the local seed d
 
 ## Commands
 
-Run these from the repository root, with the containers running:
+Run these from the repository root, with the containers running.
+
+### App
 
 - `make migrate` (`docker compose exec app ./yii migrate:up`) applies pending migrations. `docker compose exec app ./yii migrate:down` reverts the latest one, and `./yii migrate:history` lists the applied ones.
 - `make check` (`docker compose exec app composer check`) runs code style, static analysis and all tests, the same checks as CI.
@@ -96,7 +86,10 @@ Run these from the repository root, with the containers running:
 - `docker compose exec app composer stan` runs PHPStan.
 - `make composer <args>` (`docker compose exec app composer <args>`) runs Composer in the app container.
 - `make shell` (`docker compose exec app bash`) opens a shell in the app container.
+- `make help` lists all make targets.
+
+### API
+
 - `make api-key:create CLIENT="North Gate" [EXPIRES=YYYY-MM-DD]` (`docker compose exec app ./yii api-key:create <client> [--expires=YYYY-MM-DD]`) creates an API key for an external client and shows it once.
 - `make api-key:list` (`docker compose exec app ./yii api-key:list`) lists the API keys with their key ID, client, dates and status, never the secret.
 - `make api-key:revoke ID=<key-id>` (`docker compose exec app ./yii api-key:revoke <key-id>`) revokes an API key, so it gets `401` from then on.
-- `make help` lists all make targets.
