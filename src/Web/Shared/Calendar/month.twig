@@ -17,7 +17,7 @@
             <li class="list-inline-item"><span class="calendar-swatch {{ status.stripeClass() }}" aria-hidden="true"></span> {{ t(status.label()) }}</li>
         {% endfor %}
     </ul>
-    <div class="d-none d-md-block">
+    <div class="d-none d-lg-block">
         <table class="table table-bordered small work-calendar">
             <thead>
                 <tr>
@@ -45,7 +45,7 @@
             </tbody>
         </table>
     </div>
-    <div class="d-md-none">
+    <div class="d-lg-none">
         {% set shown = 0 %}
         {% for week in weeks %}
             {% for day in week %}

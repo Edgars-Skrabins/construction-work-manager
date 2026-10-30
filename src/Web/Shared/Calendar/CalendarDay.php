@@ -8,7 +8,7 @@ use DateTimeImmutable;
 
 final readonly class CalendarDay
 {
-    public const int VISIBLE_ENTRIES = 3;
+    public const int VISIBLE_ENTRIES = 4;
 
     /**
      * @param list<CalendarEntry> $entries

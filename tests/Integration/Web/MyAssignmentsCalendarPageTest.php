@@ -73,12 +73,22 @@ final class MyAssignmentsCalendarPageTest extends IntegrationTestCase
 
         $body = (string) $this->request('GET', '/my-assignments/calendar?month=2030-03')->getBody();
 
-        assertStringContainsString('<div class="d-md-none">', $body);
+        assertStringContainsString('<div class="d-lg-none">', $body);
         foreach (['Sun, 2030-03-10', 'Mon, 2030-03-11', 'Tue, 2030-03-12'] as $heading) {
             assertStringContainsString('<h3 class="card-header h6">' . $heading . '</h3>', $body);
         }
         assertSame(3, substr_count($body, '<section class="card mb-2"'));
         assertStringNotContainsString('No assigned work this month.', $body);
+    }
+
+    public function testYearPickerOffersTheYearsOfTheEmployeesOwnAssignments(): void
+    {
+        $this->insertMarchWork();
+        $this->logIn('employee@mail.test', '123123123');
+
+        $body = (string) $this->request('GET', '/my-assignments/calendar')->getBody();
+
+        assertStringContainsString('<option value="2030">2030</option>', $body);
     }
 
     public function testMonthNavigationHasOnlyThePicker(): void

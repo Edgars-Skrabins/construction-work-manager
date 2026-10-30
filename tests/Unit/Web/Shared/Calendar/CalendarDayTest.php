@@ -26,12 +26,13 @@ final class CalendarDayTest extends TestCase
         yield 'no entries' => [0, 0, 0];
         yield 'one entry' => [1, 1, 0];
         yield 'three entries fit' => [3, 3, 0];
-        yield 'four entries show two and two more' => [4, 2, 2];
-        yield 'seven entries show two and five more' => [7, 2, 5];
+        yield 'four entries fit' => [4, 4, 0];
+        yield 'five entries show three and two more' => [5, 3, 2];
+        yield 'eight entries show three and five more' => [8, 3, 5];
     }
 
     #[DataProvider('counts')]
-    public function testABusyDayShowsTwoEntriesAndCountsTheRest(int $entries, int $visible, int $hidden): void
+    public function testABusyDayShowsThreeEntriesAndCountsTheRest(int $entries, int $visible, int $hidden): void
     {
         $ids = $entries === 0 ? [] : range(1, $entries);
         $day = new CalendarDay(new DateTimeImmutable('2030-03-12'), true, false, array_map(self::entry(...), $ids));
