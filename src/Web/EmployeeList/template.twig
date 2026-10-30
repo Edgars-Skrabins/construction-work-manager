@@ -32,7 +32,7 @@
             <tbody>
                 {% for employee in paginator.read() %}
                     <tr>
-                        <td>{{ employee.lastName }}, {{ employee.firstName }}</td>
+                        <td>{{ employee.lastName }}, {{ employee.firstName }}{% if employee.id ~ '' == currentUser.getId() %} <span class="text-secondary">{{ t('(you)') }}</span>{% endif %}</td>
                         <td class="text-nowrap">{{ employee.birthDate|date('Y-m-d') }}</td>
                         <td>{{ employee.accessLevelName }}</td>
                         <td>{{ t(employee.role.value) }}</td>

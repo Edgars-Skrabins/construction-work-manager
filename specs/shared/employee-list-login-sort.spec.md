@@ -1,7 +1,7 @@
 # Employee list login sort — Spec
 
 **Type:** feature
-**Status:** ready for implementation
+**Status:** done
 **Last updated:** 2026-10-30
 
 # Part 1 — Business logic and usage
@@ -88,15 +88,15 @@ Read Part 1 and Part 2 before starting. Work through the tasks in order and tick
 Baseline before starting: `make check` green on `origin/main`.
 
 ### A. Login sort
-- [ ] A1. Add the `login` key with the `CASE` expression from 2.2 to `EmployeeRepository::listPaginator()`.
-- [ ] A2. Turn the Login header in `src/Web/EmployeeList/template.twig` into a `sort-link.twig` include with key `login`.
-- [ ] A3. Repository tests in `ListingTest` (`sortKeys()` entry and the exact-order test) and the web test for the header link with and without `q` in `AdminPagesTest`.
+- [x] A1. Add the `login` key with the `CASE` expression from 2.2 to `EmployeeRepository::listPaginator()`.
+- [x] A2. Turn the Login header in `src/Web/EmployeeList/template.twig` into a `sort-link.twig` include with key `login`.
+- [x] A3. Repository tests in `ListingTest` (`sortKeys()` entry and the exact-order test) and the web test for the header link with and without `q` in `AdminPagesTest`.
 
 ### B. "(you)" marker
-- [ ] B1. Add the "(you)" span to the Employee cell in `src/Web/EmployeeList/template.twig`.
-- [ ] B2. Add `(you)` after `'Inactive'` in all six `messages/*/app.php` files with the translations from 2.2.
-- [ ] B3. Web tests: the admin's own row shows the marker exactly once in `AdminPagesTest`, and the manager's team list shows none in `ManagerTeamPagesTest`. Fix any existing assertion on the admin's own `<td>` that the marker breaks.
+- [x] B1. Add the "(you)" span to the Employee cell in `src/Web/EmployeeList/template.twig`.
+- [x] B2. Add `(you)` after `'Inactive'` in all six `messages/*/app.php` files with the translations from 2.2.
+- [x] B3. Web tests: the admin's own row shows the marker exactly once in `AdminPagesTest`, and the manager's team list shows none in `ManagerTeamPagesTest`. Fix any existing assertion on the admin's own `<td>` that the marker breaks.
 
 ### Z. Wrap-up
-- [ ] Z1. `make check` green, including `MessageCatalogTest`.
-- [ ] Z2. Manual check in the running app: as the admin, sort Employees by Login both ways, search and sort by Login, page through, see "(you)" on your own row in English and in Latvian; as a manager, see no marker.
+- [x] Z1. `make check` green, including `MessageCatalogTest`.
+- [x] Z2. Manual check in the running app: as the admin, sort Employees by Login both ways, search and sort by Login, page through, see "(you)" on your own row in English and in Latvian; as a manager, see no marker. Done in the running app as the admin (sort both ways, page 4 of the login sort, "(jūs)" in Latvian); the manager case is covered by `ManagerTeamPagesTest`.

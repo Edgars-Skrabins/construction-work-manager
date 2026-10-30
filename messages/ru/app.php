@@ -85,6 +85,7 @@ return [
     '—' => '—',
     'Pending setup' => 'Ожидает активации',
     'Inactive' => 'Неактивно',
+    '(you)' => '(вы)',
     'No manager' => 'Без руководителя',
     "Login pending: the employee hasn't set a password yet." => 'Вход не активирован: сотрудник ещё не задал пароль.',
     'New setup code' => 'Новый код активации',

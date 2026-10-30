@@ -85,6 +85,7 @@ return [
     '—' => '—',
     'Pending setup' => 'Laukiama aktyvinimo',
     'Inactive' => 'Neaktyvi',
+    '(you)' => '(jūs)',
     'No manager' => 'Be vadovo',
     "Login pending: the employee hasn't set a password yet." => 'Paskyra dar neaktyvinta: darbuotojas dar nenustatė slaptažodžio.',
     'New setup code' => 'Naujas aktyvinimo kodas',
