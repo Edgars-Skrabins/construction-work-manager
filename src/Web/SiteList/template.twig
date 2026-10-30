@@ -6,45 +6,47 @@
     {% endif %}
 </div>
 {% include 'Web/Shared/Listing/search-form.twig' with {route: 'site.list', placeholder: t('Code, name or address')} %}
-{% if paginator.getTotalItems() == 0 and q != '' %}
-    <p class="text-secondary">{{ t('No results for “{query}”.', {query: q}) }}</p>
-{% elseif paginator.getTotalItems() == 0 %}
-    <p class="text-secondary">{{ t('No construction sites yet.') }}</p>
-{% else %}
-    <div class="table-responsive">
-        <table class="table table-striped align-middle">
-            <thead>
-                <tr>
-                    <th scope="col">{% include 'Web/Shared/Listing/sort-link.twig' with {label: t('Code'), key: 'code', route: 'site.list'} %}</th>
-                    <th scope="col">{% include 'Web/Shared/Listing/sort-link.twig' with {label: t('Name'), key: 'name', route: 'site.list'} %}</th>
-                    <th scope="col">{% include 'Web/Shared/Listing/sort-link.twig' with {label: t('City'), key: 'city', route: 'site.list'} %}</th>
-                    <th scope="col">{% include 'Web/Shared/Listing/sort-link.twig' with {label: t('Country'), key: 'country', route: 'site.list'} %}</th>
-                    <th scope="col" class="text-end">{% include 'Web/Shared/Listing/sort-link.twig' with {label: t('Area (m²)'), key: 'area', route: 'site.list'} %}</th>
-                    <th scope="col">{% include 'Web/Shared/Listing/sort-link.twig' with {label: t('Required access level'), key: 'accessLevel', route: 'site.list'} %}</th>
-                    <th scope="col" class="text-end">{{ t('Actions') }}</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for site in paginator.read() %}
+<div data-list-results>
+    {% if paginator.getTotalItems() == 0 and q != '' %}
+        <p class="text-secondary">{{ t('No results for “{query}”.', {query: q}) }}</p>
+    {% elseif paginator.getTotalItems() == 0 %}
+        <p class="text-secondary">{{ t('No construction sites yet.') }}</p>
+    {% else %}
+        <div class="table-responsive">
+            <table class="table table-striped align-middle">
+                <thead>
                     <tr>
-                        <td class="text-nowrap">{{ site.code }}</td>
-                        <td>{{ site.name }}</td>
-                        <td>{{ site.city }}</td>
-                        <td>{{ site.country }}</td>
-                        <td class="text-end">{{ site.areaM2 }}</td>
-                        <td>{{ site.requiredAccessLevelName }}</td>
-                        <td class="text-end text-nowrap">
-                            {% if access.can('site.update') %}
-                                <a class="btn btn-sm btn-outline-primary" href="{{ urlGenerator.generate('site.edit', {id: site.id}) }}">{{ t('Edit') }}</a>
-                            {% endif %}
-                            {% if access.can('site.delete') %}
-                                <a class="btn btn-sm btn-outline-danger" href="{{ urlGenerator.generate('site.delete', {id: site.id}) }}">{{ t('Delete') }}</a>
-                            {% endif %}
-                        </td>
+                        <th scope="col">{% include 'Web/Shared/Listing/sort-link.twig' with {label: t('Code'), key: 'code', route: 'site.list'} %}</th>
+                        <th scope="col">{% include 'Web/Shared/Listing/sort-link.twig' with {label: t('Name'), key: 'name', route: 'site.list'} %}</th>
+                        <th scope="col">{% include 'Web/Shared/Listing/sort-link.twig' with {label: t('City'), key: 'city', route: 'site.list'} %}</th>
+                        <th scope="col">{% include 'Web/Shared/Listing/sort-link.twig' with {label: t('Country'), key: 'country', route: 'site.list'} %}</th>
+                        <th scope="col" class="text-end">{% include 'Web/Shared/Listing/sort-link.twig' with {label: t('Area (m²)'), key: 'area', route: 'site.list'} %}</th>
+                        <th scope="col">{% include 'Web/Shared/Listing/sort-link.twig' with {label: t('Required access level'), key: 'accessLevel', route: 'site.list'} %}</th>
+                        <th scope="col" class="text-end">{{ t('Actions') }}</th>
                     </tr>
-                {% endfor %}
-            </tbody>
-        </table>
-    </div>
-    {% include 'Web/Shared/Listing/pagination.twig' with {route: 'site.list'} %}
-{% endif %}
+                </thead>
+                <tbody>
+                    {% for site in paginator.read() %}
+                        <tr>
+                            <td class="text-nowrap">{{ site.code }}</td>
+                            <td>{{ site.name }}</td>
+                            <td>{{ site.city }}</td>
+                            <td>{{ site.country }}</td>
+                            <td class="text-end">{{ site.areaM2 }}</td>
+                            <td>{{ site.requiredAccessLevelName }}</td>
+                            <td class="text-end text-nowrap">
+                                {% if access.can('site.update') %}
+                                    <a class="btn btn-sm btn-outline-primary" href="{{ urlGenerator.generate('site.edit', {id: site.id}) }}">{{ t('Edit') }}</a>
+                                {% endif %}
+                                {% if access.can('site.delete') %}
+                                    <a class="btn btn-sm btn-outline-danger" href="{{ urlGenerator.generate('site.delete', {id: site.id}) }}">{{ t('Delete') }}</a>
+                                {% endif %}
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% include 'Web/Shared/Listing/pagination.twig' with {route: 'site.list'} %}
+    {% endif %}
+</div>
