@@ -115,6 +115,20 @@ final class AssignmentPagesTest extends IntegrationTestCase
         foreach ([1 => 1, 2 => 2, 3 => 3, 4 => 4, 10 => 4, 11 => 2] as $id => $level) {
             assertStringContainsString(sprintf('<option value="%d" data-required-level="%d"', $id, $level), $body);
         }
+        assertStringContainsString('>Mārtiņš Liepiņš – access level General (1)</option>', $body);
+        assertStringContainsString('>Laura Krūmiņa – access level Restricted (2)</option>', $body);
+        assertStringContainsString('>Āgenskalns Residential Block – requires General (1)</option>', $body);
+        assertStringContainsString('>Rīga Thermal Power Plant Upgrade – requires Critical infrastructure (3)</option>', $body);
+    }
+
+    public function testEditFormLabelsTheEmployeesAccessLevels(): void
+    {
+        $this->logIn('manager@mail.test', '123123123');
+
+        $body = (string) $this->request('GET', '/assignments/1/edit')->getBody();
+
+        assertStringContainsString('>Mārtiņš Liepiņš – access level General (1)</option>', $body);
+        assertStringContainsString('>Kristaps Vītols – access level Restricted (2)</option>', $body);
     }
 
     public function testManagerCreatesEditsAndDeletesAnAssignment(): void
@@ -171,7 +185,7 @@ final class AssignmentPagesTest extends IntegrationTestCase
 
         assertSame(200, $response->getStatusCode());
         assertStringContainsString('The end date can&#039;t be before the start date.', $body);
-        assertStringContainsString('The site requires access level 3; the employee has level 2.', $body);
+        assertStringContainsString('The site requires Critical infrastructure (3); the employee has Restricted (2).', $body);
     }
 
     public function testTamperedAssigneeIsForbidden(): void
@@ -220,7 +234,14 @@ final class AssignmentPagesTest extends IntegrationTestCase
         $body = (string) $this->request('GET', '/assignments?sort=-startDate')->getBody();
 
         assertStringContainsString('<table class="table align-middle assignment-table">', $body);
-        assertMatchesRegularExpression(sprintf('#<tr class="status-planned">(?:(?!</tr>).)*<span class="badge border border-danger text-danger">Access level too low</span>(?:(?!</tr>).)*/assignments/%d/edit#s', $id), $body);
+        $explanation = 'Rīga Thermal Power Plant Upgrade requires Critical infrastructure (3). Laura Krūmiņa has Restricted (2).';
+        assertMatchesRegularExpression(sprintf(
+            '#<tr class="status-planned">(?:(?!</tr>).)*<span class="badge border border-danger text-danger" tabindex="0" data-bs-toggle="tooltip" data-bs-title="%1$s">Access level too low<span class="visually-hidden">: %1$s</span></span>(?:(?!</tr>).)*/assignments/%2$d/edit#su',
+            preg_quote($explanation, '#'),
+            $id,
+        ), $body);
+        assertDoesNotMatchRegularExpression('#<script(?![^>]*\ssrc=)[^>]*>#', $body);
+        assertMatchesRegularExpression('#<script src="/assets/assignment/[^"]*assignment\.js[^"]*"#', $body);
     }
 
     public function testManagerReassignsAnAssignmentOnTheEditPage(): void
@@ -237,7 +258,7 @@ final class AssignmentPagesTest extends IntegrationTestCase
         $body = (string) $tooLow->getBody();
         assertSame(200, $tooLow->getStatusCode());
         assertMatchesRegularExpression('#is-invalid" id="employee"#', $body);
-        assertStringContainsString('The site requires access level 2; the employee has level 1.', $body);
+        assertStringContainsString('The site requires Restricted (2); the employee has General (1).', $body);
 
         assertSame(403, $this->submit("/assignments/$id/edit", ['employee' => '7', 'startDate' => '2027-03-01', 'endDate' => '2027-03-10', 'status' => 'active'])->getStatusCode());
 

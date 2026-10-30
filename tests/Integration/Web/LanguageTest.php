@@ -201,7 +201,7 @@ final class LanguageTest extends IntegrationTestCase
         ])->getBody();
 
         assertStringContainsString('Beigu datums nevar būt agrāks par sākuma datumu.', $body);
-        assertStringContainsString('Būvobjektam nepieciešams piekļuves līmenis 3, bet darbiniekam ir līmenis 2.', $body);
+        assertStringContainsString('Būvobjektam nepieciešams Critical infrastructure (3), bet darbiniekam ir Restricted (2).', $body);
     }
 
     /**

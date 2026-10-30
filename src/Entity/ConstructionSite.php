@@ -17,4 +17,9 @@ final readonly class ConstructionSite
         public int $requiredAccessLevelId,
         public string $requiredAccessLevelName,
     ) {}
+
+    public function requiredAccessLevel(): AccessLevel
+    {
+        return new AccessLevel($this->requiredAccessLevelId, $this->requiredAccessLevelName);
+    }
 }

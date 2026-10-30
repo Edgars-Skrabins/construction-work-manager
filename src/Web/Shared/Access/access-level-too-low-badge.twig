@@ -1,0 +1,2 @@
+{% set explanation = t('{site} requires {required}. {employee} has {actual}.', {site: item.constructionSiteName, required: item.siteLevel().label(), employee: item.employeeName, actual: item.employeeLevel().label()}) %}
+<span class="badge border border-danger text-danger" tabindex="0" data-bs-toggle="tooltip" data-bs-title="{{ explanation }}">{{ t('Access level too low') }}<span class="visually-hidden">: {{ explanation }}</span></span>

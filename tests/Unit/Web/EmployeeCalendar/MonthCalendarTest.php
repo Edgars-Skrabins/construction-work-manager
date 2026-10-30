@@ -164,9 +164,11 @@ final class MonthCalendarTest extends TestCase
             assignment: new Assignment($id, 4, 1, 1, new DateTimeImmutable($start), new DateTimeImmutable($end), $status, 2, $now, $now),
             employeeName: 'Mārtiņš Liepiņš',
             employeeAccessLevel: 1,
+            employeeAccessLevelName: 'General',
             workItemName: 'Concrete works',
             constructionSiteName: 'Āgenskalns Residential Block',
             siteRequiredAccessLevel: 1,
+            siteRequiredAccessLevelName: 'General',
         );
     }
 }

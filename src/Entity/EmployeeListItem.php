@@ -14,9 +14,15 @@ final readonly class EmployeeListItem
         public string $firstName,
         public string $lastName,
         public DateTimeImmutable $birthDate,
+        public int $accessLevelId,
         public string $accessLevelName,
         public Role $role,
         public ?string $managerName,
         public LoginStatus $loginStatus,
     ) {}
+
+    public function accessLevel(): AccessLevel
+    {
+        return new AccessLevel($this->accessLevelId, $this->accessLevelName);
+    }
 }

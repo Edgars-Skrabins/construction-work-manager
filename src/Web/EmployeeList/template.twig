@@ -35,7 +35,7 @@
                         <tr>
                             <td>{{ employee.lastName }}, {{ employee.firstName }}{% if employee.id ~ '' == currentUser.getId() %} <span class="text-secondary">{{ t('(you)') }}</span>{% endif %}</td>
                             <td class="text-nowrap">{{ employee.birthDate|date('Y-m-d') }}</td>
-                            <td>{{ employee.accessLevelName }}</td>
+                            <td>{{ employee.accessLevel().label() }}</td>
                             <td>{{ t(employee.role.value) }}</td>
                             <td>{{ employee.managerName ?? '—' }}</td>
                             <td>{{ t(employee.loginStatus.value) }}</td>

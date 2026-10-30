@@ -111,10 +111,8 @@ final readonly class AssignmentRepository implements AssignmentRepositoryInterfa
                 'SITE_STREET' => 's.STREET',
                 'SITE_CITY' => 's.CITY',
                 'SITE_COUNTRY' => 's.COUNTRY',
-                'SITE_REQUIRED_ACCESS_LEVEL_NAME' => 'l.NAME',
                 'WORK_ITEM_DESCRIPTION' => 'w.DESCRIPTION',
             ])
-            ->innerJoin(['l' => 'ACCESS_LEVEL'], 'l.ID = s.REQUIRED_ACCESS_LEVEL_ID')
             ->orderBy(['s.NAME' => SORT_ASC, 'w.NAME' => SORT_ASC, 'a.START_DATE' => SORT_ASC, 'a.ID' => SORT_ASC])
             ->resultCallback(static fn(array $rows): array => array_map(self::assignedWorkFromRow(...), $rows))
             ->all();
@@ -238,12 +236,16 @@ final readonly class AssignmentRepository implements AssignmentRepositoryInterfa
                 'EMPLOYEE_FIRST_NAME' => 'e.FIRST_NAME',
                 'EMPLOYEE_LAST_NAME' => 'e.LAST_NAME',
                 'EMPLOYEE_ACCESS_LEVEL_ID' => 'e.ACCESS_LEVEL_ID',
+                'EMPLOYEE_ACCESS_LEVEL_NAME' => 'el.NAME',
                 'WORK_ITEM_NAME' => 'w.NAME',
                 'SITE_NAME' => 's.NAME',
                 'SITE_REQUIRED_ACCESS_LEVEL_ID' => 's.REQUIRED_ACCESS_LEVEL_ID',
+                'SITE_REQUIRED_ACCESS_LEVEL_NAME' => 'sl.NAME',
             ])
             ->innerJoin(['w' => 'WORK_ITEM'], 'w.ID = a.WORK_ITEM_ID')
             ->innerJoin(['s' => 'CONSTRUCTION_SITE'], 's.ID = a.CONSTRUCTION_SITE_ID')
+            ->innerJoin(['el' => 'ACCESS_LEVEL'], 'el.ID = e.ACCESS_LEVEL_ID')
+            ->innerJoin(['sl' => 'ACCESS_LEVEL'], 'sl.ID = s.REQUIRED_ACCESS_LEVEL_ID')
             ->resultCallback(static fn(array $rows): array => array_map(self::listItemFromRow(...), $rows));
     }
 
@@ -285,14 +287,16 @@ final readonly class AssignmentRepository implements AssignmentRepositoryInterfa
      */
     private static function listItemFromRow(array $row): AssignmentListItem
     {
-        /** @var array{EMPLOYEE_FIRST_NAME: string, EMPLOYEE_LAST_NAME: string, EMPLOYEE_ACCESS_LEVEL_ID: int|string, WORK_ITEM_NAME: string, SITE_NAME: string, SITE_REQUIRED_ACCESS_LEVEL_ID: int|string} $row */
+        /** @var array{EMPLOYEE_FIRST_NAME: string, EMPLOYEE_LAST_NAME: string, EMPLOYEE_ACCESS_LEVEL_ID: int|string, EMPLOYEE_ACCESS_LEVEL_NAME: string, WORK_ITEM_NAME: string, SITE_NAME: string, SITE_REQUIRED_ACCESS_LEVEL_ID: int|string, SITE_REQUIRED_ACCESS_LEVEL_NAME: string} $row */
         return new AssignmentListItem(
             assignment: self::assignmentFromRow($row),
             employeeName: $row['EMPLOYEE_FIRST_NAME'] . ' ' . $row['EMPLOYEE_LAST_NAME'],
             employeeAccessLevel: (int) $row['EMPLOYEE_ACCESS_LEVEL_ID'],
+            employeeAccessLevelName: $row['EMPLOYEE_ACCESS_LEVEL_NAME'],
             workItemName: $row['WORK_ITEM_NAME'],
             constructionSiteName: $row['SITE_NAME'],
             siteRequiredAccessLevel: (int) $row['SITE_REQUIRED_ACCESS_LEVEL_ID'],
+            siteRequiredAccessLevelName: $row['SITE_REQUIRED_ACCESS_LEVEL_NAME'],
         );
     }
 
@@ -301,13 +305,12 @@ final readonly class AssignmentRepository implements AssignmentRepositoryInterfa
      */
     private static function assignedWorkFromRow(array $row): AssignedWork
     {
-        /** @var array{SITE_STREET: string, SITE_CITY: string, SITE_COUNTRY: string, SITE_REQUIRED_ACCESS_LEVEL_NAME: string, WORK_ITEM_DESCRIPTION: string|null} $row */
+        /** @var array{SITE_STREET: string, SITE_CITY: string, SITE_COUNTRY: string, WORK_ITEM_DESCRIPTION: string|null} $row */
         return new AssignedWork(
             item: self::listItemFromRow($row),
             street: $row['SITE_STREET'],
             city: $row['SITE_CITY'],
             country: $row['SITE_COUNTRY'],
-            requiredAccessLevelName: $row['SITE_REQUIRED_ACCESS_LEVEL_NAME'],
             workItemDescription: $row['WORK_ITEM_DESCRIPTION'],
         );
     }

@@ -9,7 +9,7 @@
     <section class="mb-4">
         <h2 class="h6 text-secondary text-uppercase mb-1">{{ first.item.constructionSiteName }}</h2>
         <p class="small text-secondary mb-2">
-            {{ first.address() }} · {{ t('Required access level: {level}', {level: first.requiredAccessLevelName}) }} ·
+            {{ first.address() }} · {{ t('Required access level: {level}', {level: first.item.siteLevel().label()}) }} ·
             <a href="https://www.google.com/maps/search/?api=1&amp;query={{ first.address()|url_encode }}" target="_blank" rel="noopener noreferrer">{{ t('Open in Google Maps') }}</a>
         </p>
         {% for row in site.rows %}
