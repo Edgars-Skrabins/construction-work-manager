@@ -38,7 +38,7 @@
                 </thead>
                 <tbody>
                     {% for employee in paginator.read() %}
-                        {% set name = employee.lastName ~ ', ' ~ employee.firstName %}
+                        {% set name = employee.firstName ~ ' ' ~ employee.lastName %}
                         <tr>
                             <td class="text-nowrap">{% include 'Web/Shared/Listing/truncated-text.twig' with {text: name} %}{% if employee.id ~ '' == currentUser.getId() %} <span class="text-secondary">{{ t('(you)') }}</span>{% endif %}</td>
                             <td class="text-nowrap">{{ employee.birthDate|date('Y-m-d') }}</td>

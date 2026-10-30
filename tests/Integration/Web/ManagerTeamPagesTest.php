@@ -21,8 +21,8 @@ final class ManagerTeamPagesTest extends IntegrationTestCase
 {
     use WebClient;
 
-    private const array FIRST_TEAM = ['Liepiņš, Mārtiņš', 'Krūmiņa, Laura', 'Vītols, Kristaps'];
-    private const array SECOND_TEAM = ['Zariņa, Anna', 'Kalējs, Roberts'];
+    private const array FIRST_TEAM = ['Mārtiņš Liepiņš', 'Laura Krūmiņa', 'Kristaps Vītols'];
+    private const array SECOND_TEAM = ['Anna Zariņa', 'Roberts Kalējs'];
     private const int LAST_SEED_ID = 177;
 
     protected function tearDown(): void
@@ -43,10 +43,10 @@ final class ManagerTeamPagesTest extends IntegrationTestCase
         foreach (self::FIRST_TEAM as $name) {
             assertMatchesRegularExpression('#' . self::cell($name) . '#', $body);
         }
-        foreach ([...self::SECOND_TEAM, 'Bērziņš, Jānis', 'Kalniņa, Ilze', 'Ozoliņš, Andris'] as $name) {
+        foreach ([...self::SECOND_TEAM, 'Jānis Bērziņš', 'Andris Ozoliņš'] as $name) {
             assertDoesNotMatchRegularExpression('#' . self::cell($name) . '#', $body);
         }
-        assertMatchesRegularExpression('#' . self::cell('Liepiņš, Mārtiņš') . '(?:(?!</tr>).)*' . self::cell('General (1)') . '#su', $body);
+        assertMatchesRegularExpression('#' . self::cell('Mārtiņš Liepiņš') . '(?:(?!</tr>).)*' . self::cell('General (1)') . '#su', $body);
         assertStringNotContainsString('href="/employees/create"', $body);
         assertStringNotContainsString('(you)', $body);
         assertStringNotContainsString('/edit"', $body);
@@ -105,8 +105,8 @@ final class ManagerTeamPagesTest extends IntegrationTestCase
         assertStringContainsString('<h3 class="card-header h6">Sun, 2030-03-10</h3>', $body);
         assertStringNotContainsString('Anna Zariņa', $body);
         assertStringNotContainsString('Laura Krūmiņa</span>', $body);
-        assertStringContainsString('<option value="5">Krūmiņa, Laura</option>', $body);
-        assertStringNotContainsString('Zariņa, Anna', $body);
+        assertStringContainsString('<option value="5">Laura Krūmiņa</option>', $body);
+        assertStringNotContainsString('Anna Zariņa', $body);
     }
 
     public function testAdminCalendarShowsEveryone(): void
@@ -119,7 +119,7 @@ final class ManagerTeamPagesTest extends IntegrationTestCase
         foreach (['Mārtiņš Liepiņš', 'Kristaps Vītols', 'Anna Zariņa'] as $name) {
             assertStringContainsString("<span class=\"calendar-entry-line fw-semibold\">$name</span>", $body);
         }
-        assertStringContainsString('<option value="8">Kalējs, Roberts</option>', $body);
+        assertStringContainsString('<option value="8">Roberts Kalējs</option>', $body);
     }
 
     public function testEmployeeFilterShowsOneTeamMemberAndIgnoresOthers(): void
@@ -130,7 +130,7 @@ final class ManagerTeamPagesTest extends IntegrationTestCase
         $filtered = (string) $this->request('GET', '/employees/calendar?month=2030-03&employee=4')->getBody();
         $foreign = (string) $this->request('GET', '/employees/calendar?month=2030-03&employee=7')->getBody();
 
-        assertStringContainsString('<option value="4" selected>Liepiņš, Mārtiņš</option>', $filtered);
+        assertStringContainsString('<option value="4" selected>Mārtiņš Liepiņš</option>', $filtered);
         assertStringContainsString('<span class="calendar-entry-line fw-semibold">Mārtiņš Liepiņš</span>', $filtered);
         assertStringNotContainsString('<span class="calendar-entry-line fw-semibold">Kristaps Vītols</span>', $filtered);
         assertMatchesRegularExpression('#data-calendar-picker>\s*<input type="hidden" name="employee" value="4">#', $filtered);
@@ -155,12 +155,27 @@ final class ManagerTeamPagesTest extends IntegrationTestCase
         assertSame(12, substr_count($select[1] ?? '', '<option '));
         preg_match('#<select class="form-select form-select-sm w-auto" id="calendar-year" name="year" data-select-plain>(.*?)</select>#s', $body, $years);
         $current = (int) $this->today()->format('Y');
-        assertStringContainsString('<option value="' . ($current - 5) . '">', $years[1] ?? '');
-        assertStringContainsString('<option value="' . ($current + 5) . '"', $years[1] ?? '');
+        assertStringContainsString('<option value="' . ($current - 1) . '">', $years[1] ?? '');
+        assertStringContainsString('<option value="' . ($current + 1) . '"', $years[1] ?? '');
         assertStringContainsString('<option value="2030" selected>2030</option>', $years[1] ?? '');
         assertStringContainsString('<button type="submit" class="btn btn-sm btn-outline-primary calendar-picker-submit">Go</button>', $body);
         assertStringContainsString('<button type="submit" class="btn btn-sm btn-primary calendar-picker-submit">Show</button>', $body);
         assertMatchesRegularExpression('#<form class="d-flex align-items-center gap-2" method="get" action="/employees/calendar" data-calendar-picker>\s*<input type="hidden" name="month" value="2030-03">#', $body);
+    }
+
+    public function testYearPickerOffersTheYearsOfTheTeamsAssignments(): void
+    {
+        $assignments = $this->service(AssignmentRepositoryInterface::class);
+        $assignments->create(4, 1, 1, new DateTimeImmutable('2044-05-01'), new DateTimeImmutable('2045-02-01'), 2);
+        $assignments->create(7, 1, 1, new DateTimeImmutable('2048-05-01'), new DateTimeImmutable('2048-06-01'), 1);
+        $this->logIn('manager@mail.test', '123123123');
+
+        $team = (string) $this->request('GET', '/employees/calendar')->getBody();
+        $filtered = (string) $this->request('GET', '/employees/calendar?employee=5')->getBody();
+
+        assertStringContainsString('<option value="2045">2045</option>', $team);
+        assertStringNotContainsString('<option value="2048">', $team);
+        assertStringNotContainsString('<option value="2045">', $filtered);
     }
 
     public function testPickerOpensTheChosenMonthWithTheEmployeeFilter(): void
@@ -186,17 +201,17 @@ final class ManagerTeamPagesTest extends IntegrationTestCase
         assertStringContainsString('<option value="' . $this->today()->format('m') . '" selected>', $body);
     }
 
-    public function testBusyDayShowsTwoEntriesAndAMoreButtonForTheWholeDay(): void
+    public function testBusyDayShowsThreeEntriesAndAMoreButtonForTheWholeDay(): void
     {
         $assignments = $this->service(AssignmentRepositoryInterface::class);
         $day = new DateTimeImmutable('2030-03-20');
-        $ids = array_map(static fn(int $workItem): int => $assignments->create(4, $workItem, $workItem, $day, $day, 2), [1, 2, 3, 4]);
+        $ids = array_map(static fn(int $workItem): int => $assignments->create(4, $workItem, $workItem, $day, $day, 2), [1, 2, 3, 4, 5]);
         $this->logIn('manager@mail.test', '123123123');
 
         $body = (string) $this->request('GET', '/employees/calendar?month=2030-03')->getBody();
 
         assertSame(2, substr_count($body, ' calendar-entry-extra"'));
-        assertSame(4, substr_count($body, ' calendar-entry-full"'));
+        assertSame(5, substr_count($body, ' calendar-entry-full"'));
         preg_match_all('#<button type="button" class="btn btn-link btn-sm p-0 calendar-more" data-bs-toggle="modal" data-bs-target="\#calendar-modal" data-calendar-entries="([\d ]+)" data-calendar-title="Wed, 2030-03-20">\+2 more</button>#', $body, $more);
         assertCount(1, $more[1]);
         $dayIds = array_map(intval(...), explode(' ', $more[1][0]));
