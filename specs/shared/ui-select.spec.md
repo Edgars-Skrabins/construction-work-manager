@@ -1,7 +1,7 @@
 # Searchable select — Spec
 
 **Type:** feature
-**Status:** in progress
+**Status:** done
 **Last updated:** 2026-10-30
 
 # Part 1 — Business logic and usage
@@ -118,5 +118,5 @@ Baseline before starting: the unit and integration suites pass on `main` (`make 
 
 ### Z. Wrap-up
 - [x] Z1. Update `CLAUDE.md` (2.2 Docs).
-- [ ] Z2. `make check`.
-- [ ] Z3. Manual check in the running app at 375 px, 768 px and 1280 px: the assignment form (search an employee without diacritics, keyboard choose, see only allowed sites after choosing an employee, submit empty for validation errors, open `/assignments/create#employee`), the employee form (role admin disables Manager), the site form, the work calendar filter; the dropdown stays inside the screen on the phone.
+- [x] Z2. `make check`.
+- [x] Z3. Manual check in the running app at 375 px, 768 px and 1280 px: the assignment form (search an employee without diacritics, keyboard choose, see only allowed sites after choosing an employee, submit empty for validation errors, open `/assignments/create#employee`), the employee form (role admin disables Manager), the site form, the work calendar filter; the dropdown stays inside the screen on the phone.
