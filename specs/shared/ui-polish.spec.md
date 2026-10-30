@@ -15,7 +15,8 @@ After the UI shell, calendar and modal work, a review of every web page (screens
 5. **Focus states are inconsistent.** After a mouse click the navbar toggler keeps a thick near-black ring (Bootstrap's `:focus` box-shadow in `currentColor`), while text links, the sort links and the History disclosure show the browser's default blue outline instead of the amber focus ring every other control has.
 6. **Sort indicators are Unicode triangles** (`▲`/`▼`) glued to the label, they say nothing to screen readers, and an unsorted column gives no hint that it can be sorted.
 7. **Hierarchy on My assignments is upside down.** The construction site, the "where" an employee most needs, is a small grey uppercase label above bold work item names, so it reads like a caption rather than the section heading it is. The History disclosure is an unstyled native `<summary>`.
-8. **Small inconsistencies:** the login and set-password titles are weight 500 while every other page title is 600; the "Login pending" alert on the employee form doesn't wrap, so on phones its text is squeezed beside the button; table numbers (dates, areas) use proportional digits, so columns of dates don't line up; text selection and native checkboxes/radios use the browser's blue.
+8. **Two palette values fail WCAG.** Form field borders (`--bs-border-color`, `#34322e` dark, `#d9d4cb` light) are about 1.5:1 against the page and card, below the 3:1 that WCAG 1.4.11 asks of a component's boundary, so an empty input on a card is barely visible. In the dark theme Bootstrap's red `#dc3545`, used as text by the Delete row buttons and the "Access level too low" badge, is 3.76:1 on the card surface, below AA's 4.5:1.
+9. **Small inconsistencies:** the login and set-password titles are weight 500 while every other page title is 600; the "Login pending" alert on the employee form doesn't wrap, so on phones its text is squeezed beside the button; table numbers (dates, areas) use proportional digits, so columns of dates don't line up; text selection and native checkboxes/radios use the browser's blue.
 
 What should happen instead:
 
@@ -29,8 +30,9 @@ What should happen instead:
   6. Every focusable element shows the same amber focus ring when focused from the keyboard, and none shows a ring after a mouse click: links (including sort links), the navbar toggler, the History summary, buttons and form fields.
   7. Sortable column headers show a small chevron icon: up when sorted ascending, down when descending, and a faint up/down icon on unsorted columns. Screen readers hear "sorted ascending" / "sorted descending" after the label of the sorted column.
   8. On My assignments each construction site is a real section heading in the body text colour and normal case; its address line stays secondary. The History disclosure is a styled toggle with a chevron that turns when open and a 44 px tall target.
-  9. The auth card titles use the same 600 weight as the other page titles. The "Login pending" alert wraps so its button drops below the text on phones. Numbers in tables use tabular digits. Text selection is amber-tinted, and native checkboxes, radios and range controls use the amber accent.
-  10. No page scrolls sideways at 375, 768, 1024 or 1280 px.
+  9. Inputs, selects and checkboxes have a border of at least 3:1 against both the page and the card in both themes; cards, tables and dividers keep their quiet borders. Red text (outline Delete buttons, `text-danger`, the access badge, the Overdue status) is at least 4.5:1 in both themes; filled red buttons keep `#dc3545` with white text (4.53:1).
+  10. The auth card titles use the same 600 weight as the other page titles. The "Login pending" alert wraps so its button drops below the text on phones. Numbers in tables use tabular digits. Text selection is amber-tinted, and native checkboxes, radios and range controls use the amber accent.
+  11. No page scrolls sideways at 375, 768, 1024 or 1280 px.
 - **Rules:**
   - Refinement only: Bootstrap 5.3, the amber/stone identity, the layout of every page and all behaviour stay as they are.
   - Colours are CSS custom properties defined per theme in `assets/main/site.css`; no hard-coded colours in templates.
@@ -58,6 +60,8 @@ No new dependencies. Bootstrap 5.3.8 utilities, colour modes and CSS variables, 
 
 - Status tokens per theme: `--app-status-planned`, `--app-status-in-progress`, `--app-status-overdue`, `--app-status-done`, `--app-status-cancelled` in `[data-bs-theme=dark]` and `[data-bs-theme=light]`, chosen for AA text on their own tint. `.status-*` set `--app-status-color` from them (replacing today's shared hex values).
 - `.status-badge`: `color: var(--app-status-color)`, background `color-mix(in srgb, var(--app-status-color) 14%, transparent)`, border `1px solid color-mix(in srgb, var(--app-status-color) 40%, transparent)`, weight 600.
+- Field border token `--app-input-border` per theme (`#757067` dark, `#8a847a` light) applied to `.form-control`, `.form-select` and `.form-check-input`; Bootstrap's `.is-invalid` and focus borders still win.
+- Danger per theme: `--bs-danger`/`--bs-danger-rgb` set to a text-safe red (`#f0776f` dark, `#b42318` light), `--app-status-overdue` reuses it, and `.btn-outline-danger` takes its text and border from it while its hover and active fill stay `#dc3545` with white text.
 - Info tokens per theme (`--bs-info`, `--bs-info-rgb`, `--bs-info-text-emphasis`, `--bs-info-bg-subtle`, `--bs-info-border-subtle`) set to a muted slate blue.
 - Touch targets: `@media (max-width: 767.98px)` sets `--app-control-height: 2.75rem`, raises `--bs-btn-padding-y` for `.btn` and `.btn-sm`, the padding of `.form-control`, `.form-select` and `.page-link` so each reaches 44 px, and pads `.form-check-label` vertically. `.sort-link` gets matching negative-margin padding so its hit area grows without moving the header.
 - Focus: `.site-navbar .navbar-toggler:focus` drops the box-shadow and `:focus-visible` gets the amber ring; `a:focus-visible` and `summary:focus-visible` get a 2 px amber outline with offset, using a new `--app-focus-outline` token per theme (amber in dark, the darker accent text colour in light, both ≥3:1 against the page).
@@ -106,7 +110,8 @@ All decided by this session on the coordinator's instruction not to interview th
 7. **Focus rings use `:focus-visible`** everywhere, matching Bootstrap's own buttons and fields.
 8. **Sort state for screen readers** is visually hidden text in the link rather than `aria-sort` on the `<th>`, because the sort partial is included inside each list template's `<th>` and the header cells are owned by those templates.
 9. **The 403 and 404 pages, the footer, the calendar grid and the modal frame stay as they are**: the review found them consistent with the rest; they pick up the shared focus, touch-target and token changes.
-10. **No PRODUCT.md or DESIGN.md** is added; `CLAUDE.md` and the specs already describe the design system.
+10. **The colour scheme stays; only measured failures change** (asked by the user mid-review: suggest a different scheme only with an objective reason). Every text pair in both palettes was measured: body, secondary, accent and link text all pass AA (secondary text 5.2–6.8:1, accent text 6.6–7.9:1). The two failures were field borders (1.5:1, WCAG 1.4.11) and dark-theme red text (3.76:1), fixed through tokens. Rejected: warming the dark page background from neutral `#121212` to match the warm surfaces, which changes no measured value and is taste; and raising the card/page separation in dark (1.10:1), because cards also carry borders or stripes.
+11. **No PRODUCT.md or DESIGN.md** is added; `CLAUDE.md` and the specs already describe the design system.
 
 # Part 3 — Implementation TODO
 
@@ -120,7 +125,7 @@ Baseline before starting: record the test counts from `make check` in A0.
 - [ ] A2. Update `LayoutTest` for the new order and the single logout form.
 
 ### B. Tokens, states and touch targets
-- [ ] B1. Add the per-theme status, info and focus tokens, `.status-badge`, the selection, accent and tabular-digit rules, and the focus-visible rules to `site.css`.
+- [ ] B1. Add the per-theme status, info, focus, field border and danger tokens, `.btn-outline-danger`, `.status-badge`, the selection, accent and tabular-digit rules, and the focus-visible rules to `site.css`.
 - [ ] B2. Change `AssignmentDisplayStatus::badgeClass()` and update `AssignmentDisplayStatusTest`, `MyAssignmentsPageTest` and `LanguageTest`.
 - [ ] B3. Add the phone touch-target rules to `site.css`.
 

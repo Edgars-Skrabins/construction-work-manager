@@ -10,7 +10,7 @@ Construction Work Manager is a work management module for construction sites. Ad
 - Microsoft SQL Server 2022 through `yiisoft/db-mssql` and `pdo_sqlsrv`
 - Migrations with `yiisoft/db-migration`
 - Authorization with `yiisoft/rbac` and `yiisoft/rbac-db`
-- Twig views through `yiisoft/view-twig`, styled with Bootstrap 5 color modes: a dark and a light palette as Bootstrap variable overrides per `[data-bs-theme]` in `assets/main/site.css`, plus the shared spacing and type scale variables in `:root`. The server renders `data-bs-theme="dark"`; `assets/main/theme.js` (`ThemeAsset`, loaded in `<head>` by `MainAsset`) switches it before the first paint to the choice stored in `localStorage` (`theme`) or else the system's `prefers-color-scheme`, and drives the navbar's theme toggle
+- Twig views through `yiisoft/view-twig`, styled with Bootstrap 5 color modes: a dark and a light palette as Bootstrap variable overrides per `[data-bs-theme]` in `assets/main/site.css` (including the field border, focus and assignment status colours, `--app-status-*`, that `AssignmentDisplayStatus`'s badge and stripe classes use), plus the shared spacing and type scale variables in `:root`. The server renders `data-bs-theme="dark"`; `assets/main/theme.js` (`ThemeAsset`, loaded in `<head>` by `MainAsset`) switches it before the first paint to the choice stored in `localStorage` (`theme`) or else the system's `prefers-color-scheme`, and drives the navbar's theme toggle
 - PHPUnit, PHPStan and PHP-CS-Fixer
 - Docker Compose for local development, GitHub Actions for CI
 
