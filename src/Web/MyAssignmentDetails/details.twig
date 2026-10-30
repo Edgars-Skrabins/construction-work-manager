@@ -1,0 +1,25 @@
+<section class="assignment-details">
+    {% set level = headingLevel ?? 3 %}
+    <h{{ level }} class="h5 fw-semibold mb-1">{{ work.item.workItemName }}</h{{ level }}>
+    {% if work.workItemDescription is not null %}
+        <p class="small text-secondary mb-3">{{ work.workItemDescription }}</p>
+    {% endif %}
+    <dl class="row mb-0">
+        <dt class="col-sm-4 fw-normal text-body-secondary">{{ t('Construction site') }}</dt>
+        <dd class="col-sm-8">
+            {{ work.item.constructionSiteName }}
+            <span class="d-block small text-secondary">{{ work.address() }}</span>
+            <a class="touch-link small" href="https://www.google.com/maps/search/?api=1&amp;query={{ work.address()|url_encode }}" target="_blank" rel="noopener noreferrer">{{ t('Open in Google Maps') }}</a>
+        </dd>
+        <dt class="col-sm-4 fw-normal text-body-secondary">{{ t('Period') }}</dt>
+        <dd class="col-sm-8 text-nowrap">{{ work.item.assignment.startDate|date('Y-m-d') }} – {{ work.item.assignment.endDate|date('Y-m-d') }}</dd>
+        <dt class="col-sm-4 fw-normal text-body-secondary">{{ t('Status') }}</dt>
+        <dd class="col-sm-8"><span class="badge {{ status.badgeClass() }}">{{ t(status.label()) }}</span></dd>
+        {% if work.item.assignment.description is not null %}
+            <dt class="col-sm-4 fw-normal text-body-secondary">{{ t('Description') }}</dt>
+            <dd class="col-sm-8 text-break">{{ work.item.assignment.description|nl2br }}</dd>
+        {% endif %}
+        <dt class="col-sm-4 fw-normal text-body-secondary">{{ t('Assigned by') }}</dt>
+        <dd class="col-sm-8 mb-0">{{ work.assignedByName }}</dd>
+    </dl>
+</section>

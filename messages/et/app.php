@@ -215,4 +215,6 @@ return [
     'The site requires {required}; the employee has {actual}.' => 'Ehitusobjekt nõuab taset {required}, töötaja tase on {actual}.',
     "The assignment couldn't be saved because of a change made at the same time. Try again." => 'Tööülesannet ei õnnestunud salvestada, sest samal ajal tehti teine muudatus. Proovi uuesti.',
     'The employee already has this work item at this site from {start} to {end}.' => 'Töötajal on see tööliik sellel ehitusobjektil juba ajavahemikus {start} kuni {end}.',
+    'Assigned by' => 'Määras',
+    'Back to my assignments' => 'Tagasi minu tööülesannete juurde',
 ];

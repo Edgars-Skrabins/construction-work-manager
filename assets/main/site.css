@@ -394,6 +394,21 @@ summary:focus-visible {
     margin-bottom: 0.5rem;
 }
 
+.list-filter-link,
+.assignment-link {
+    color: inherit;
+    text-decoration: underline dotted color-mix(in srgb, var(--bs-secondary-color) 60%, transparent);
+    text-underline-offset: 0.25em;
+}
+
+.list-filter-link:hover,
+.list-filter-link:focus-visible,
+.assignment-link:hover,
+.assignment-link:focus-visible {
+    color: var(--bs-link-hover-color);
+    text-decoration: underline solid currentColor;
+}
+
 .assignment-table {
     border-collapse: separate;
     border-spacing: 0 0.5rem;
@@ -563,6 +578,16 @@ details[open] > .history-toggle .history-toggle-icon {
 
     .touch-link {
         padding-block: 0.875rem;
+    }
+
+    .assignment-link {
+        position: relative;
+    }
+
+    .assignment-link::after {
+        content: "";
+        position: absolute;
+        inset: -0.875rem 0;
     }
 }
 

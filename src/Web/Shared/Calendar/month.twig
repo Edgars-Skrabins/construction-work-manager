@@ -1,6 +1,6 @@
 {% do assetManager.register('App\\Web\\Shared\\Layout\\Main\\CalendarAsset') %}
-{% macro entry(entry, showEmployee, class) %}
-    <button type="button" class="calendar-entry {{ entry.status.stripeClass() }}{{ class }}" data-bs-toggle="modal" data-bs-target="#calendar-modal" data-calendar-entries="{{ entry.item.assignment.id }}" data-calendar-title="{{ t('Assignment details') }}">
+{% macro entry(entry, showEmployee, class, href) %}
+    {% if href %}<a href="{{ href }}"{% else %}<button type="button"{% endif %} class="calendar-entry {{ entry.status.stripeClass() }}{{ class }}" data-bs-toggle="modal" data-bs-target="#calendar-modal" data-calendar-entries="{{ entry.item.assignment.id }}" data-calendar-title="{{ t('Assignment details') }}">
         <span class="visually-hidden">{{ t(entry.status.label()) }}:</span>
         {% if showEmployee %}
             <span class="calendar-entry-line fw-semibold">{{ entry.item.employeeName }}</span>
@@ -9,7 +9,7 @@
             <span class="calendar-entry-line fw-semibold">{{ entry.item.workItemName }}</span>
             <span class="calendar-entry-line">{{ entry.item.constructionSiteName }}</span>
         {% endif %}
-    </button>
+    {% if href %}</a>{% else %}</button>{% endif %}
 {% endmacro %}
 <div class="calendar" data-calendar>
     <ul class="list-inline small mb-3" aria-label="{{ t('Status legend') }}">
@@ -33,7 +33,7 @@
                             <td class="{% if day.isToday %}calendar-today{% elseif not day.inMonth %}bg-body text-secondary{% endif %}"{% if day.isToday %} aria-current="date"{% endif %}>
                                 <div class="fw-semibold mb-1">{{ day.date|date('j') }}{% if day.isToday %}<span class="visually-hidden"> {{ t('Today') }}</span>{% endif %}</div>
                                 {% for entry in day.entries %}
-                                    {{ _self.entry(entry, showEmployee, loop.index > day.visibleCount() ? ' calendar-entry-extra' : '') }}
+                                    {{ _self.entry(entry, showEmployee, loop.index > day.visibleCount() ? ' calendar-entry-extra' : '', details is defined ? urlGenerator.generate('my-assignments.view', {id: entry.item.assignment.id}) : null) }}
                                 {% endfor %}
                                 {% if day.hiddenCount() > 0 %}
                                     <button type="button" class="btn btn-link btn-sm p-0 calendar-more" data-bs-toggle="modal" data-bs-target="#calendar-modal" data-calendar-entries="{{ day.entries|map(entry => entry.item.assignment.id)|join(' ') }}" data-calendar-title="{{ weekday_name(day.date) }}, {{ day.date|date('Y-m-d') }}">{{ t('{count, plural, other{+# more}}', {count: day.hiddenCount()}) }}</button>
@@ -55,7 +55,7 @@
                         <h3 class="card-header h6{% if day.isToday %} text-bg-primary{% endif %}">{{ weekday_name(day.date) }}, {{ day.date|date('Y-m-d') }}{% if day.isToday %} · {{ t('Today') }}{% endif %}</h3>
                         <div class="card-body p-2">
                             {% for entry in day.entries %}
-                                {{ _self.entry(entry, showEmployee, ' calendar-entry-full') }}
+                                {{ _self.entry(entry, showEmployee, ' calendar-entry-full', details is defined ? urlGenerator.generate('my-assignments.view', {id: entry.item.assignment.id}) : null) }}
                             {% endfor %}
                         </div>
                     </section>
@@ -68,6 +68,9 @@
     </div>
     {% for entry in entries %}
         <template id="calendar-entry-{{ entry.item.assignment.id }}">
+            {% if details is defined %}
+                {% include 'Web/MyAssignmentDetails/details.twig' with {work: details[entry.item.assignment.id], status: entry.status} %}
+            {% else %}
             <section class="calendar-detail">
                 <h3 class="h6 fw-semibold mb-2">{{ entry.item.workItemName }}</h3>
                 <dl class="row mb-0">
@@ -83,12 +86,13 @@
                     <dd class="col-sm-7">{{ entry.item.assignment.endDate|date('Y-m-d') }}</dd>
                     <dt class="col-sm-5 fw-normal text-body-secondary">{{ t('Status') }}</dt>
                     <dd class="col-sm-7 mb-0"><span class="calendar-swatch {{ entry.status.stripeClass() }}" aria-hidden="true"></span> {{ t(entry.status.label()) }}</dd>
-                    {% if showEmployee and entry.item.assignment.description is not null %}
+                    {% if entry.item.assignment.description is not null %}
                         <dt class="col-12 fw-normal text-body-secondary mt-2">{{ t('Description') }}</dt>
                         <dd class="col-12 mb-0 text-break">{{ entry.item.assignment.description|nl2br }}</dd>
                     {% endif %}
                 </dl>
             </section>
+            {% endif %}
         </template>
     {% endfor %}
     <div class="modal fade" id="calendar-modal" tabindex="-1" aria-labelledby="calendar-modal-title" aria-hidden="true">

@@ -60,8 +60,8 @@ final class MyAssignmentsCalendarPageTest extends IntegrationTestCase
 
         assertStringContainsString('<h2 class="visually-hidden">March 2030</h2>', $body);
         assertSame(1, substr_count($body, '<template id="calendar-entry-'));
-        assertMatchesRegularExpression('#<h3 class="h6 fw-semibold mb-2">Electrical installation</h3>\s*<dl class="row mb-0">\s*<dt class="col-sm-5 fw-normal text-body-secondary">Construction site</dt>\s*<dd class="col-sm-7">Daugavpils School Renovation</dd>#u', $body);
-        assertStringNotContainsString('<dt class="col-sm-5 fw-normal text-body-secondary">Employee</dt>', $body);
+        assertMatchesRegularExpression('#<h3 class="h5 fw-semibold mb-1">Electrical installation</h3>.*?<dl class="row mb-0">\s*<dt class="col-sm-4 fw-normal text-body-secondary">Construction site</dt>\s*<dd class="col-sm-8">\s*Daugavpils School Renovation#su', $body);
+        assertStringNotContainsString('>Employee</dt>', $body);
         assertMatchesRegularExpression('#data-calendar-picker>\s*<label class="visually-hidden" for="calendar-month">#', $body);
         assertSame(3, substr_count($body, ' calendar-entry-full"'));
     }
@@ -166,15 +166,25 @@ final class MyAssignmentsCalendarPageTest extends IntegrationTestCase
         return new DateTimeImmutable('now', new DateTimeZone('Europe/Riga'));
     }
 
-    public function testDetailsDoNotShowTheDescriptionYet(): void
+    public function testCardsLinkToTheDetailsPageAndTemplatesHaveTheFullDetails(): void
     {
-        $this->service(AssignmentRepositoryInterface::class)->create(4, 2, 2, new DateTimeImmutable('2030-03-10'), new DateTimeImmutable('2030-03-12'), 2, 'Bring the ladder.');
+        $id = $this->service(AssignmentRepositoryInterface::class)->create(4, 2, 2, new DateTimeImmutable('2030-03-10'), new DateTimeImmutable('2030-03-12'), 2, "Bring the <b>ladder</b>.\nFloor 2.");
         $this->logIn('employee@mail.test', '123123123');
 
         $body = (string) $this->request('GET', '/my-assignments/calendar?month=2030-03')->getBody();
 
-        assertStringContainsString('<template id="calendar-entry-', $body);
-        assertStringNotContainsString('Bring the ladder.', $body);
+        assertSame(3 * 2, substr_count($body, '<a href="/my-assignments/' . $id . '" class="calendar-entry status-planned'));
+        assertSame(3 * 2, substr_count($body, 'data-bs-target="#calendar-modal" data-calendar-entries="' . $id . '"'));
+        assertStringNotContainsString('<button type="button" class="calendar-entry', $body);
+        assertMatchesRegularExpression(
+            '#<template id="calendar-entry-' . $id . '">\s*<section class="assignment-details">\s*<h3 class="h5 fw-semibold mb-1">Electrical installation</h3>'
+            . '.*?<span class="d-block small text-secondary">[^<]+, [^<]+, [^<]+</span>\s*<a class="touch-link small" href="https://www\.google\.com/maps/search/\?api=1&amp;query=[^"]+" target="_blank" rel="noopener noreferrer">Open in Google Maps</a>'
+            . '.*?<dd class="col-sm-8 text-nowrap">2030-03-10 – 2030-03-12</dd>'
+            . '.*?<span class="badge status-badge status-planned">Planned</span>'
+            . '.*?<dd class="col-sm-8 text-break">Bring the &lt;b&gt;ladder&lt;/b&gt;\.<br />\nFloor 2\.</dd>'
+            . '\s*<dt class="col-sm-4 fw-normal text-body-secondary">Assigned by</dt>\s*<dd class="col-sm-8 mb-0">Ilze Kalniņa</dd>#su',
+            $body,
+        );
     }
 
     private function insertMarchWork(): void

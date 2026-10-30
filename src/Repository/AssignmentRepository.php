@@ -102,11 +102,7 @@ final readonly class AssignmentRepository implements AssignmentRepositoryInterfa
 
     public function listInPeriod(int $viewerId, Scope $scope, DateTimeImmutable $from, DateTimeImmutable $to, ?int $employeeId): array
     {
-        $query = $this->listQuery($viewerId, $scope)
-            ->andWhere(['<=', 'a.START_DATE', $to->format(self::DATE_FORMAT)])
-            ->andWhere(['>=', 'a.END_DATE', $from->format(self::DATE_FORMAT)])
-            ->andWhere(['a.STATUS' => [AssignmentStatus::Active->value, AssignmentStatus::Done->value]])
-            ->orderBy(['e.LAST_NAME' => SORT_ASC, 'e.FIRST_NAME' => SORT_ASC, 'w.NAME' => SORT_ASC, 'a.ID' => SORT_ASC]);
+        $query = $this->inPeriod($this->listQuery($viewerId, $scope), $from, $to);
         if ($employeeId !== null) {
             $query->andWhere(['a.EMPLOYEE_ID' => $employeeId]);
         }
@@ -137,16 +133,21 @@ final readonly class AssignmentRepository implements AssignmentRepositoryInterfa
     public function findAssignedWork(int $employeeId): array
     {
         /** @var list<AssignedWork> */
-        return $this->listQuery($employeeId, Scope::Own)
-            ->addSelect([
-                'SITE_STREET' => 's.STREET',
-                'SITE_CITY' => 's.CITY',
-                'SITE_COUNTRY' => 's.COUNTRY',
-                'WORK_ITEM_DESCRIPTION' => 'w.DESCRIPTION',
-            ])
+        return $this->assignedWorkQuery($employeeId)
             ->orderBy(['s.NAME' => SORT_ASC, 'w.NAME' => SORT_ASC, 'a.START_DATE' => SORT_ASC, 'a.ID' => SORT_ASC])
-            ->resultCallback(static fn(array $rows): array => array_map(self::assignedWorkFromRow(...), $rows))
             ->all();
+    }
+
+    public function findAssignedWorkItem(int $employeeId, int $id): ?AssignedWork
+    {
+        /** @var AssignedWork|null */
+        return $this->assignedWorkQuery($employeeId)->andWhere(['a.ID' => $id])->one();
+    }
+
+    public function findAssignedWorkInPeriod(int $employeeId, DateTimeImmutable $from, DateTimeImmutable $to): array
+    {
+        /** @var list<AssignedWork> */
+        return $this->inPeriod($this->assignedWorkQuery($employeeId), $from, $to)->all();
     }
 
     public function hasActiveForEmployee(int $employeeId): bool
@@ -268,6 +269,30 @@ final readonly class AssignmentRepository implements AssignmentRepositoryInterfa
         );
     }
 
+    private function assignedWorkQuery(int $employeeId): Query
+    {
+        return $this->listQuery($employeeId, Scope::Own)
+            ->addSelect([
+                'SITE_STREET' => 's.STREET',
+                'SITE_CITY' => 's.CITY',
+                'SITE_COUNTRY' => 's.COUNTRY',
+                'WORK_ITEM_DESCRIPTION' => 'w.DESCRIPTION',
+                'ASSIGNED_BY_FIRST_NAME' => 'c.FIRST_NAME',
+                'ASSIGNED_BY_LAST_NAME' => 'c.LAST_NAME',
+            ])
+            ->innerJoin(['c' => 'EMPLOYEE'], 'c.ID = a.CREATED_BY_ID')
+            ->resultCallback(static fn(array $rows): array => array_map(self::assignedWorkFromRow(...), $rows));
+    }
+
+    private function inPeriod(Query $query, DateTimeImmutable $from, DateTimeImmutable $to): Query
+    {
+        return $query
+            ->andWhere(['<=', 'a.START_DATE', $to->format(self::DATE_FORMAT)])
+            ->andWhere(['>=', 'a.END_DATE', $from->format(self::DATE_FORMAT)])
+            ->andWhere(['a.STATUS' => [AssignmentStatus::Active->value, AssignmentStatus::Done->value]])
+            ->orderBy(['e.LAST_NAME' => SORT_ASC, 'e.FIRST_NAME' => SORT_ASC, 'w.NAME' => SORT_ASC, 'a.ID' => SORT_ASC]);
+    }
+
     private function listQuery(int $viewerId, Scope $scope): Query
     {
         return $this->scoped($viewerId, $scope)
@@ -346,13 +371,14 @@ final readonly class AssignmentRepository implements AssignmentRepositoryInterfa
      */
     private static function assignedWorkFromRow(array $row): AssignedWork
     {
-        /** @var array{SITE_STREET: string, SITE_CITY: string, SITE_COUNTRY: string, WORK_ITEM_DESCRIPTION: string|null} $row */
+        /** @var array{SITE_STREET: string, SITE_CITY: string, SITE_COUNTRY: string, WORK_ITEM_DESCRIPTION: string|null, ASSIGNED_BY_FIRST_NAME: string, ASSIGNED_BY_LAST_NAME: string} $row */
         return new AssignedWork(
             item: self::listItemFromRow($row),
             street: $row['SITE_STREET'],
             city: $row['SITE_CITY'],
             country: $row['SITE_COUNTRY'],
             workItemDescription: $row['WORK_ITEM_DESCRIPTION'],
+            assignedByName: $row['ASSIGNED_BY_FIRST_NAME'] . ' ' . $row['ASSIGNED_BY_LAST_NAME'],
         );
     }
 }

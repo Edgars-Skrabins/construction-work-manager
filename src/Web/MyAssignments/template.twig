@@ -18,7 +18,7 @@
         {% for row in site.rows %}
             <div class="assignment-block {{ row.status.stripeClass() }}">
                 <div class="d-flex flex-wrap justify-content-between align-items-center column-gap-3 row-gap-1">
-                    <span class="fw-semibold">{{ row.work.item.workItemName }}</span>
+                    <a class="assignment-link fw-semibold" href="{{ urlGenerator.generate('my-assignments.view', {id: row.work.item.assignment.id}) }}" data-modal-link>{{ row.work.item.workItemName }}</a>
                     {% include 'Web/MyAssignments/period-status.twig' with {work: row.work, status: row.status} %}
                 </div>
                 {% if row.work.workItemDescription is not null %}
@@ -34,10 +34,11 @@
         <div class="mt-2">
             {% for row in myAssignments.history %}
                 <div class="assignment-block {{ row.status.stripeClass() }} d-flex flex-wrap justify-content-between align-items-center column-gap-3 row-gap-1">
-                    <span>{{ row.work.item.constructionSiteName }}: {{ row.work.item.workItemName }}</span>
+                    <a class="assignment-link" href="{{ urlGenerator.generate('my-assignments.view', {id: row.work.item.assignment.id}) }}" data-modal-link>{{ row.work.item.constructionSiteName }}: {{ row.work.item.workItemName }}</a>
                     {% include 'Web/MyAssignments/period-status.twig' with {work: row.work, status: row.status} %}
                 </div>
             {% endfor %}
         </div>
     </details>
 {% endif %}
+{% include 'Web/Shared/Modal/modal.twig' %}
