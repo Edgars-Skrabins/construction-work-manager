@@ -298,6 +298,10 @@ final class LanguageTest extends IntegrationTestCase
         yield 'assignment edit' => ['manager@mail.test', 'GET', '/assignments/1/edit', []];
         yield 'admin assignments' => ['admin@mail.test', 'GET', '/assignments', []];
         yield 'assignment search without results' => ['manager@mail.test', 'GET', '/assignments?q=zzz', []];
+        yield 'assignment filter' => ['manager@mail.test', 'GET', '/assignments?employee=4', []];
+        yield 'assignment filter without results' => ['manager@mail.test', 'GET', '/assignments?employee=7', []];
+        yield 'employee with assignments delete refused' => ['admin@mail.test', 'POST', '/employees/4/delete', []];
+        yield 'employee role change refused' => ['admin@mail.test', 'POST', '/employees/4/edit', ['firstName' => 'Mārtiņš', 'lastName' => 'Liepiņš', 'birthDate' => '1990-05-18', 'accessLevelId' => '1', 'role' => 'manager', 'managerId' => '', 'email' => 'employee@mail.test', 'loginActive' => '1']];
         yield 'employee search' => ['admin@mail.test', 'GET', '/employees?q=a', []];
         yield 'employee search without results' => ['admin@mail.test', 'GET', '/employees?q=zzz', []];
         yield 'site search without results' => ['admin@mail.test', 'GET', '/sites?q=zzz', []];

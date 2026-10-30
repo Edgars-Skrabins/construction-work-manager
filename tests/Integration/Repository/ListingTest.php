@@ -37,7 +37,7 @@ final class ListingTest extends IntegrationTestCase
      */
     public static function sortKeys(): iterable
     {
-        foreach (['name', 'birthDate', 'accessLevel', 'role', 'manager'] as $key) {
+        foreach (['name', 'birthDate', 'accessLevel', 'role', 'manager', 'login'] as $key) {
             yield "employees by $key" => ['employees', $key];
         }
         foreach (['name', 'city', 'country', 'area', 'accessLevel'] as $key) {
@@ -77,6 +77,18 @@ final class ListingTest extends IntegrationTestCase
     public function testSortsByTheColumnWithIdAsTieBreak(string $list, string $sort, array $expected): void
     {
         assertSame($expected, $this->ids($this->paginator($list, $sort)));
+    }
+
+    public function testSortsEmployeesByLoginStatusWithIdAsTieBreak(): void
+    {
+        $this->db()->createCommand()->update('ACCOUNT', ['PASSWORD_HASH' => null], ['EMPLOYEE_ID' => 6])->execute();
+        $this->db()->createCommand()->update('ACCOUNT', ['IS_ACTIVE' => 0], ['EMPLOYEE_ID' => 5])->execute();
+        $withoutLogin = array_values(array_diff(range(1, 80), [1, 2, 3, 4, 5, 6, 15]));
+
+        $ascending = $this->ids($this->paginator('employees', 'login')->withPageSize(100));
+
+        assertSame([...$withoutLogin, 6, 1, 2, 3, 4, 15, 5], $ascending);
+        assertSame(array_reverse($ascending), $this->ids($this->paginator('employees', '-login')->withPageSize(100)));
     }
 
     public function testUnknownSortKeyFallsBackToName(): void

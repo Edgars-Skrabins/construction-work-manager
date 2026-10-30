@@ -20,9 +20,10 @@ interface AssignmentRepositoryInterface
     public function findListItem(int $id, int $viewerId, Scope $scope): ?AssignmentListItem;
 
     /**
+     * @param array<string, int> $filters
      * @return OffsetPaginator<int, AssignmentListItem>
      */
-    public function listPaginator(int $viewerId, Scope $scope, string $sort, string $search): OffsetPaginator;
+    public function listPaginator(int $viewerId, Scope $scope, string $sort, string $search, array $filters = []): OffsetPaginator;
 
     /**
      * @return list<AssignmentListItem>
@@ -54,7 +55,7 @@ interface AssignmentRepositoryInterface
         int $createdById,
     ): int;
 
-    public function updatePeriodAndStatus(int $id, DateTimeImmutable $startDate, DateTimeImmutable $endDate, AssignmentStatus $status): void;
+    public function update(int $id, int $employeeId, DateTimeImmutable $startDate, DateTimeImmutable $endDate, AssignmentStatus $status): void;
 
     public function delete(int $id): void;
 

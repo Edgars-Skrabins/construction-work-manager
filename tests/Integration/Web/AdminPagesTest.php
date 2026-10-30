@@ -266,6 +266,28 @@ final class AdminPagesTest extends IntegrationTestCase
         assertStringNotContainsString('Roofing', $body);
     }
 
+    public function testEmployeesCanBeSortedByLoginKeepingTheSearch(): void
+    {
+        $this->asAdmin();
+
+        $sorted = (string) $this->request('GET', '/employees?sort=login')->getBody();
+        $searched = (string) $this->request('GET', '/employees?sort=-login&q=' . rawurlencode('iņš'))->getBody();
+
+        assertStringContainsString('href="/employees?sort=-login">Login ▲</a>', $sorted);
+        assertStringContainsString('href="/employees?sort=login&amp;q=' . urlencode('iņš') . '">Login ▼</a>', $searched);
+        assertStringContainsString('name="sort" value="-login"', $searched);
+    }
+
+    public function testOnlyTheAdminsOwnRowIsMarked(): void
+    {
+        $this->asAdmin();
+
+        $body = (string) $this->request('GET', '/employees')->getBody();
+
+        assertStringContainsString('<td>Bērziņš, Jānis <span class="text-secondary">(you)</span></td>', $body);
+        assertSame(1, substr_count($body, '(you)'));
+    }
+
     public function testUnmatchedSearchEchoesTheQueryEscaped(): void
     {
         $this->asAdmin();
@@ -361,6 +383,7 @@ final class AdminPagesTest extends IntegrationTestCase
         assertSame(200, $response->getStatusCode());
         assertMatchesRegularExpression('/is-invalid"[^>]*id="role"/', $body);
         assertStringContainsString('Finish or cancel this employee&#039;s active assignments first.', $body);
+        assertStringContainsString('href="/assignments?employee=4">View assignments</a>', $body);
         $this->resetServices();
         assertSame('employee', $this->db()->createCommand('SELECT ROLE FROM EMPLOYEE WHERE ID = 4')->queryScalar());
     }
@@ -421,17 +444,18 @@ final class AdminPagesTest extends IntegrationTestCase
     }
 
     /**
-     * @return iterable<string, array{string, string, string}>
+     * @return iterable<string, array{string, string, string, string|null}>
      */
     public static function blockedDeletes(): iterable
     {
-        yield 'site in use' => ['/sites/2/delete', "This construction site is still in use and can't be deleted.", 'SELECT COUNT(*) FROM CONSTRUCTION_SITE WHERE ID = 2'];
-        yield 'work item in use' => ['/work-items/5/delete', "This work item is still in use and can't be deleted.", 'SELECT COUNT(*) FROM WORK_ITEM WHERE ID = 5'];
-        yield 'manager with employees' => ['/employees/2/delete', "Reassign this manager's employees first.", 'SELECT COUNT(*) FROM EMPLOYEE WHERE ID = 2'];
+        yield 'site in use' => ['/sites/2/delete', "This construction site is still in use and can't be deleted.", 'SELECT COUNT(*) FROM CONSTRUCTION_SITE WHERE ID = 2', '/assignments?site=2'];
+        yield 'work item in use' => ['/work-items/5/delete', "This work item is still in use and can't be deleted.", 'SELECT COUNT(*) FROM WORK_ITEM WHERE ID = 5', '/assignments?workItem=5'];
+        yield 'employee with assignments' => ['/employees/4/delete', "This employee still has assignments and can't be deleted.", 'SELECT COUNT(*) FROM EMPLOYEE WHERE ID = 4', '/assignments?employee=4'];
+        yield 'manager with employees' => ['/employees/2/delete', "Reassign this manager's employees first.", 'SELECT COUNT(*) FROM EMPLOYEE WHERE ID = 2', null];
     }
 
     #[DataProvider('blockedDeletes')]
-    public function testBlockedDeleteShowsTheReasonWithA409(string $path, string $reason, string $stillThere): void
+    public function testBlockedDeleteShowsTheReasonWithA409(string $path, string $reason, string $stillThere, ?string $assignments): void
     {
         $this->referenceTable = 'TEST_ADMIN_PAGES_' . strtoupper(bin2hex(random_bytes(6)));
         $this->db()->createCommand(
@@ -446,6 +470,11 @@ final class AdminPagesTest extends IntegrationTestCase
         assertSame(409, $response->getStatusCode());
         assertStringContainsString(htmlspecialchars($reason, ENT_QUOTES), $body);
         assertStringNotContainsString('btn btn-danger', $body);
+        if ($assignments === null) {
+            assertStringNotContainsString('View assignments', $body);
+        } else {
+            assertStringContainsString(sprintf('href="%s">View assignments</a>', $assignments), $body);
+        }
         $this->resetServices();
         assertSame(1, (int) $this->db()->createCommand($stillThere)->queryScalar());
     }

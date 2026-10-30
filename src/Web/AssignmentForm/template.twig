@@ -6,26 +6,30 @@
         <h1 class="h3 mb-4">{{ title }}</h1>
         <form method="post" action="{{ item ? urlGenerator.generate('assignment.edit', {id: item.assignment.id}) : urlGenerator.generate('assignment.create') }}" novalidate>
             {{ csrf.hiddenInput()|raw }}
+            <div class="mb-3">
+                <label for="employee" class="form-label">{{ t('Employee') }}</label>
+                <select class="form-select{% if errors.employee is defined or (item and errors.constructionSite is defined) %} is-invalid{% endif %}" id="employee" name="employee" required>
+                    <option value="">{{ t('Choose…') }}</option>
+                    {% if item and item.assignment.employeeId not in options.employees|map(employee => employee.id) %}
+                        <option value="{{ item.assignment.employeeId }}" data-access-level="{{ item.employeeAccessLevel }}"{% if form.employee == item.assignment.employeeId ~ '' %} selected{% endif %}>{{ t('{name} (access level {level})', {name: item.employeeName, level: item.employeeAccessLevel}) }}</option>
+                    {% endif %}
+                    {% for employee in options.employees %}
+                        <option value="{{ employee.id }}" data-access-level="{{ employee.accessLevelId }}"{% if form.employee == employee.id ~ '' %} selected{% endif %}>{{ t('{name} (access level {level})', {name: employee.fullName(), level: employee.accessLevelId}) }}</option>
+                    {% endfor %}
+                </select>
+                {% include 'Web/Shared/Form/field-errors.twig' with {errors: errors.employee ?? []} %}
+                {% if item %}
+                    {% include 'Web/Shared/Form/field-errors.twig' with {errors: errors.constructionSite ?? []} %}
+                {% endif %}
+            </div>
             {% if item %}
                 <dl class="row">
-                    <dt class="col-sm-4">{{ t('Employee') }}</dt>
-                    <dd class="col-sm-8">{{ item.employeeName }}</dd>
                     <dt class="col-sm-4">{{ t('Work item') }}</dt>
                     <dd class="col-sm-8">{{ item.workItemName }}</dd>
                     <dt class="col-sm-4">{{ t('Construction site') }}</dt>
                     <dd class="col-sm-8">{{ item.constructionSiteName }}</dd>
                 </dl>
             {% else %}
-                <div class="mb-3">
-                    <label for="employee" class="form-label">{{ t('Employee') }}</label>
-                    <select class="form-select{% if errors.employee is defined %} is-invalid{% endif %}" id="employee" name="employee" required>
-                        <option value="">{{ t('Choose…') }}</option>
-                        {% for employee in options.employees %}
-                            <option value="{{ employee.id }}" data-access-level="{{ employee.accessLevelId }}"{% if form.employee == employee.id ~ '' %} selected{% endif %}>{{ t('{name} (access level {level})', {name: employee.fullName(), level: employee.accessLevelId}) }}</option>
-                        {% endfor %}
-                    </select>
-                    {% include 'Web/Shared/Form/field-errors.twig' with {errors: errors.employee ?? []} %}
-                </div>
                 <div class="mb-3">
                     <label for="workItem" class="form-label">{{ t('Work item') }}</label>
                     <select class="form-select{% if errors.workItem is defined %} is-invalid{% endif %}" id="workItem" name="workItem" required>
