@@ -136,7 +136,6 @@
                 list.append(item);
             });
             empty.textContent = list.children.length === 0 ? (texts.selectNoMatches ?? 'No matches') : '';
-            empty.hidden = list.children.length > 0;
             const selected = query === '' ? list.querySelector('[aria-selected="true"]:not([aria-disabled="true"])') : null;
             highlight(selected ?? enabledItems()[0] ?? null);
         };
@@ -312,7 +311,7 @@
     const enhanceWithin = (root) => {
         if (root instanceof HTMLSelectElement) {
             enhance(root);
-        } else if (root instanceof Element) {
+        } else if (root instanceof Element && root.closest('.select-picker') === null) {
             root.querySelectorAll('select').forEach(enhance);
         }
     };
