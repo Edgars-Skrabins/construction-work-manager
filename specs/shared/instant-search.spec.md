@@ -1,7 +1,7 @@
 # Instant search — Spec
 
 **Type:** feature
-**Status:** ready for implementation
+**Status:** done
 **Last updated:** 2026-10-30
 
 # Part 1 — Business logic and usage
@@ -105,16 +105,16 @@ Read Part 1 and Part 2 before starting. Work through the tasks in order and tick
 Baseline before starting: `make check` green on `main` at `c93fa82`.
 
 ### A. Server side
-- [ ] A1. Add `ListingAsset`, register it in `search-form.twig`, add `data-instant-search`, remove the button, wrap the Clear link in `data-list-clear` and add the `data-list-status` paragraph.
-- [ ] A2. Add the result count message to all six message files.
-- [ ] A3. Wrap the results of the four list templates in `<div data-list-results>`.
-- [ ] A4. Add `InstantSearchTest` as described in 2.2 and fix any existing test that expected the Search button.
+- [x] A1. Add `ListingAsset`, register it in `search-form.twig`, add `data-instant-search`, remove the button, wrap the Clear link in `data-list-clear` and add the `data-list-status` paragraph.
+- [x] A2. Add the result count message to all six message files.
+- [x] A3. Wrap the results of the four list templates in `<div data-list-results>`.
+- [x] A4. Add `InstantSearchTest` as described in 2.2 and fix any existing test that expected the Search button.
 
 ### B. Script
-- [ ] B1. Add `assets/listing/instant-search.js` as described in 2.2.
-- [ ] B2. Change the `data-confirm` handler in `assets/assignment/assignment.js` to a delegated listener.
+- [x] B1. Add `assets/listing/instant-search.js` as described in 2.2.
+- [x] B2. Change the `data-confirm` handler in `assets/assignment/assignment.js` to a delegated listener.
 
 ### Z. Wrap-up
-- [ ] Z1. `make check` green.
-- [ ] Z2. Manual check in the running app at 375 and 1280 px: type a search and see the list update without a reload, with focus and caret kept; type fast and see only the final text's results; Back from an edit page and reload keep the search; Clear empties it at once; delete confirmation still appears on a searched Assignments list; no flicker.
-- [ ] Z3. Update `CLAUDE.md` (the `src/Web/Shared/Listing/` description) and the README if it describes searching.
+- [x] Z1. `make check` green.
+- [x] Z2. Manual check in the running app at 375 and 1280 px: type a search and see the list update without a reload, with focus and caret kept; type fast and see only the final text's results; Back from an edit page and reload keep the search; Clear empties it at once; delete confirmation still appears on a searched Assignments list; no flicker. Result: all confirmed in Chromium at 375 and 1280 px; a response delayed past a newer one was dropped both when aborted and when it still arrived, and a failing fetch fell back to a normal page load; no page-level horizontal scroll at 375 px; no console errors.
+- [x] Z3. Update `CLAUDE.md` (the `src/Web/Shared/Listing/` description) and the README if it describes searching. The README doesn't describe searching, so only `CLAUDE.md` changed.
