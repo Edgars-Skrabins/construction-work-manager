@@ -296,7 +296,7 @@ final class AssignmentPagesTest extends IntegrationTestCase
 
         $body = (string) $this->request('GET', '/assignments')->getBody();
 
-        assertMatchesRegularExpression('#<a class="btn btn-sm btn-outline-secondary" href="/assignments/\d+/edit\#employee">Reassign</a>#', $body);
+        assertMatchesRegularExpression('#<a class="btn btn-sm btn-outline-secondary" href="/assignments/\d+/edit\#employee" data-modal-link>Reassign</a>#', $body);
     }
 
     public function testListIsFilteredByEmployeeWithAChipThatClearsIt(): void

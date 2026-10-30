@@ -54,4 +54,11 @@ trait WebClient
 
         return $this->request('POST', $path, ['_csrf' => $token, ...$fields], $headers);
     }
+
+    private static function cell(string $text): string
+    {
+        $html = preg_quote(htmlspecialchars($text, ENT_QUOTES), '#');
+
+        return '<td[^>]*>(?:<span [^>]*title="' . $html . '">)?' . $html . '(?:</span>)?</td>';
+    }
 }
