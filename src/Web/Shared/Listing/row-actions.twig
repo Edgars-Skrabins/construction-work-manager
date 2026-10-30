@@ -1,4 +1,4 @@
-<div class="d-inline-flex gap-1" role="group" aria-label="{{ t('Actions for {name}', {name: name}) }}">
+<div class="d-inline-flex gap-1 list-row-actions" role="group" aria-label="{{ t('Actions for {name}', {name: name}) }}">
     {% for action in actions %}
         <a class="btn btn-sm btn-outline-{{ action.variant }}" href="{{ action.url }}" data-modal-link>{{ action.label }}</a>
     {% endfor %}
