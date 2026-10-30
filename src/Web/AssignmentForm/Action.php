@@ -59,9 +59,10 @@ final readonly class Action
                             (int) $form->constructionSite,
                             $form->startDate,
                             $form->endDate,
+                            $form->description,
                         );
                     } else {
-                        $this->assignments->update($actorId, $item->assignment->id, (int) $form->employee, $form->startDate, $form->endDate, $form->status, $form->expectedEmployeeId());
+                        $this->assignments->update($actorId, $item->assignment->id, (int) $form->employee, $form->startDate, $form->endDate, $form->status, $form->description, $form->expectedEmployeeId());
                     }
                     $this->flash->addSuccess('Assignment saved.');
 

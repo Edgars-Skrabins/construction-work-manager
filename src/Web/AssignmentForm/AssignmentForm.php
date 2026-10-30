@@ -8,6 +8,7 @@ use App\Entity\Assignment;
 use App\Web\Shared\Form\FormBody;
 use App\Web\Shared\Listing\ListParams;
 use Yiisoft\Validator\Label;
+use Yiisoft\Validator\Rule\Length;
 use Yiisoft\Validator\Rule\Required;
 use Yiisoft\Validator\RulesProviderInterface;
 
@@ -31,6 +32,10 @@ final class AssignmentForm implements RulesProviderInterface
     #[Label('Status')]
     public string $status = '';
 
+    #[Label('Description')]
+    #[Length(max: 1000)]
+    public string $description = '';
+
     public string $currentEmployee = '';
 
     public function __construct(
@@ -40,7 +45,7 @@ final class AssignmentForm implements RulesProviderInterface
     public static function fromBody(mixed $body, bool $editing): self
     {
         $form = new self($editing);
-        foreach (['employee', 'workItem', 'constructionSite', 'startDate', 'endDate', 'status', 'currentEmployee'] as $name) {
+        foreach (['employee', 'workItem', 'constructionSite', 'startDate', 'endDate', 'status', 'description', 'currentEmployee'] as $name) {
             $form->$name = FormBody::string($body, $name);
         }
 
@@ -55,6 +60,7 @@ final class AssignmentForm implements RulesProviderInterface
         $form->startDate = $assignment->startDate->format('Y-m-d');
         $form->endDate = $assignment->endDate->format('Y-m-d');
         $form->status = $assignment->status->value;
+        $form->description = $assignment->description ?? '';
 
         return $form;
     }

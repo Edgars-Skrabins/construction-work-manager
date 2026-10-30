@@ -36,6 +36,8 @@ use function sprintf;
 
 final readonly class AssignmentService
 {
+    private const int DESCRIPTION_MAX_LENGTH = 1000;
+
     public function __construct(
         private AssignmentRepositoryInterface $assignments,
         private EmployeeRepositoryInterface $employees,
@@ -128,11 +130,12 @@ final readonly class AssignmentService
         int $constructionSiteId,
         string $startDate,
         string $endDate,
+        string $description = '',
     ): int {
         $this->accessChecker->ensure($actorId, Permission::AssignmentCreate);
         $scope = $this->scope($actorId);
 
-        return $this->save(function () use ($actorId, $scope, $employeeId, $workItemId, $constructionSiteId, $startDate, $endDate): int {
+        return $this->save(function () use ($actorId, $scope, $employeeId, $workItemId, $constructionSiteId, $startDate, $endDate, $description): int {
             $employee = $this->employees->findForUpdate($employeeId);
             if ($employee === null || !$this->isAssignable($employee, $actorId, $scope)) {
                 throw new ForbiddenException(sprintf('Employee %d may not assign employee %d.', $actorId, $employeeId));
@@ -140,6 +143,7 @@ final readonly class AssignmentService
 
             $errors = [];
             $period = $this->period($startDate, $endDate, $errors);
+            $text = $this->description($description, $errors);
             if ($this->workItems->find($workItemId) === null) {
                 $errors['workItem'] = $this->translator->translate('Choose a work item.');
             }
@@ -157,7 +161,7 @@ final readonly class AssignmentService
                 throw new ValidationException($errors !== [] ? $errors : $this->invalidPeriod());
             }
 
-            return $this->assignments->create($employeeId, $workItemId, $constructionSiteId, $period[0], $period[1], $actorId);
+            return $this->assignments->create($employeeId, $workItemId, $constructionSiteId, $period[0], $period[1], $actorId, $text);
         });
     }
 
@@ -168,6 +172,7 @@ final readonly class AssignmentService
         string $startDate,
         string $endDate,
         string $status,
+        string $description,
         ?int $expectedEmployeeId = null,
     ): void {
         $this->accessChecker->ensure($actorId, Permission::AssignmentUpdate);
@@ -175,9 +180,10 @@ final readonly class AssignmentService
         $assignment = $this->scopedOrFail($actorId, $id, $scope);
         $currentEmployeeId = $expectedEmployeeId ?? $assignment->employeeId;
 
-        $this->save(function () use ($actorId, $scope, $assignment, $currentEmployeeId, $employeeId, $startDate, $endDate, $status): void {
+        $this->save(function () use ($actorId, $scope, $assignment, $currentEmployeeId, $employeeId, $startDate, $endDate, $status, $description): void {
             $errors = [];
             $period = $this->period($startDate, $endDate, $errors);
+            $text = $this->description($description, $errors);
             $newStatus = AssignmentStatus::tryFrom($status);
             if ($newStatus === null) {
                 $errors['status'] = $this->translator->translate('Choose a status.');
@@ -208,7 +214,7 @@ final readonly class AssignmentService
                 throw new ValidationException($errors !== [] ? $errors : $this->invalidPeriod());
             }
 
-            $this->assignments->update($assignment->id, $employeeId, $period[0], $period[1], $newStatus);
+            $this->assignments->update($assignment->id, $employeeId, $period[0], $period[1], $newStatus, $text);
         });
     }
 
@@ -304,6 +310,22 @@ final readonly class AssignmentService
         }
 
         return $start !== null && $end !== null && $end >= $start ? [$start, $end] : null;
+    }
+
+    /**
+     * @param array<string, string> $errors
+     */
+    private function description(string $description, array &$errors): ?string
+    {
+        $text = trim($description);
+        if (mb_strlen($text) > self::DESCRIPTION_MAX_LENGTH) {
+            $errors['description'] = $this->translator->translate(
+                '{Property} must contain at most {max, number} {max, plural, one{character} other{characters}}.',
+                ['Property' => $this->translator->translate('Description'), 'max' => self::DESCRIPTION_MAX_LENGTH],
+            );
+        }
+
+        return $text === '' ? null : $text;
     }
 
     /**
