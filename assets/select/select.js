@@ -306,6 +306,9 @@
             attributeFilter: ['disabled', 'hidden', 'selected', 'label', 'class', 'aria-describedby'],
         });
         refresh();
+        if (document.activeElement === select) {
+            toggle.focus();
+        }
     };
 
     const enhanceWithin = (root) => {

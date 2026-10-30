@@ -1,6 +1,4 @@
 .select-picker {
-    --select-picker-rows: 8;
-    --select-picker-row-height: calc(1.5em + 2 * var(--bs-dropdown-item-padding-y));
     max-width: 100%;
 }
 
@@ -24,11 +22,15 @@
     box-shadow: 0 0 0 0.25rem var(--bs-focus-ring-color);
 }
 
-.select-picker-toggle:disabled {
+.select-picker .select-picker-toggle:disabled {
+    color: var(--bs-secondary-color);
+    background-color: var(--bs-secondary-bg);
     cursor: not-allowed;
 }
 
 .select-picker-menu {
+    --select-picker-rows: 8;
+    --select-picker-row-height: calc(1.5em + 2 * var(--bs-dropdown-item-padding-y));
     top: 100%;
     left: 0;
     width: 100%;
