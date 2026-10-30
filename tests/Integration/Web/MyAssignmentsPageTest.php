@@ -43,7 +43,7 @@ final class MyAssignmentsPageTest extends IntegrationTestCase
         assertStringContainsString('Required access level: General (1)', $body);
         assertStringContainsString('Concrete works', $body);
         assertStringContainsString('Formwork, reinforcement and pouring of foundations, slabs and walls.', $body);
-        assertMatchesRegularExpression('#<div class="assignment-block status-in-progress">\s*<div [^>]*>\s*<a class="assignment-link touch-link fw-semibold" href="/my-assignments/\d+" data-modal-link>Concrete works</a>\s*<span [^>]*>\s*<span class="text-nowrap">\d{4}-\d{2}-\d{2} – \d{4}-\d{2}-\d{2}</span>\s*<span class="badge status-badge status-in-progress">In progress</span>#u', $body);
+        assertMatchesRegularExpression('#<div class="assignment-block status-in-progress">\s*<div [^>]*>\s*<a class="assignment-link fw-semibold" href="/my-assignments/\d+" data-modal-link>Concrete works</a>\s*<span [^>]*>\s*<span class="text-nowrap">\d{4}-\d{2}-\d{2} – \d{4}-\d{2}-\d{2}</span>\s*<span class="badge status-badge status-in-progress">In progress</span>#u', $body);
         assertStringNotContainsString(self::OTHER_EMPLOYEES_SITE, $body);
         assertStringNotContainsString(self::OTHER_EMPLOYEES_WORK, $body);
         assertStringNotContainsString(self::EMPTY_STATE, $body);
@@ -65,11 +65,11 @@ final class MyAssignmentsPageTest extends IntegrationTestCase
 
         $body = (string) $this->request('GET', '/my-assignments')->getBody();
 
-        preg_match_all('#<a class="assignment-link touch-link(?: fw-semibold)?" href="/my-assignments/(\d+)" data-modal-link>#', $body, $links);
+        preg_match_all('#<a class="assignment-link(?: fw-semibold)?" href="/my-assignments/(\d+)" data-modal-link>#', $body, $links);
         $linked = array_map(intval(...), $links[1]);
         sort($linked);
         assertSame($ids, $linked);
-        assertMatchesRegularExpression('#<summary class="history-toggle">.*?<a class="assignment-link touch-link" href="/my-assignments/\d+" data-modal-link>[^<]+: [^<]+</a>#su', $body);
+        assertMatchesRegularExpression('#<summary class="history-toggle">.*?<a class="assignment-link" href="/my-assignments/\d+" data-modal-link>[^<]+: [^<]+</a>#su', $body);
         assertSame(1, substr_count($body, 'id="app-modal"'));
     }
 

@@ -579,5 +579,15 @@ details[open] > .history-toggle .history-toggle-icon {
     .touch-link {
         padding-block: 0.875rem;
     }
+
+    .assignment-link {
+        position: relative;
+    }
+
+    .assignment-link::after {
+        content: "";
+        position: absolute;
+        inset: -0.875rem 0;
+    }
 }
 
