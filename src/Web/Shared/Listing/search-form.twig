@@ -6,7 +6,10 @@
         <input type="hidden" name="{{ name }}" value="{{ value }}">
     {% endfor %}
     <label class="visually-hidden" for="list-search">{{ t('Search') }}</label>
-    <input class="form-control list-search-input" type="search" id="list-search" name="q" value="{{ q }}" maxlength="100" placeholder="{{ placeholder }}">
+    <div class="list-search">
+        <svg class="list-search-icon" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+        <input class="form-control list-search-input" type="search" id="list-search" name="q" value="{{ q }}" maxlength="100" placeholder="{{ placeholder }}">
+    </div>
     <span data-list-clear>
         {%- if q != '' -%}
             <a class="btn btn-link" href="{{ urlGenerator.generate(route, [], {sort: sort}|merge(filters ?? {})) }}">{{ t('Clear') }}</a>
