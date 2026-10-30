@@ -214,4 +214,6 @@ return [
     'The site requires {required}; the employee has {actual}.' => 'Būvobjektam nepieciešams {required}, bet darbiniekam ir {actual}.',
     "The assignment couldn't be saved because of a change made at the same time. Try again." => 'Uzdevumu neizdevās saglabāt, jo tajā pašā laikā tika veiktas citas izmaiņas. Mēģiniet vēlreiz.',
     'The employee already has this work item at this site from {start} to {end}.' => 'Darbiniekam jau ir šis darba veids šajā būvobjektā no {start} līdz {end}.',
+    'Assigned by' => 'Piešķīra',
+    'Back to my assignments' => 'Atpakaļ uz maniem uzdevumiem',
 ];

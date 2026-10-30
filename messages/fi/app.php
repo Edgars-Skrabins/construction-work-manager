@@ -214,4 +214,6 @@ return [
     'The site requires {required}; the employee has {actual}.' => 'Työmaa vaatii tason {required}, mutta työntekijän taso on {actual}.',
     "The assignment couldn't be saved because of a change made at the same time. Try again." => 'Työtehtävää ei voitu tallentaa, koska samaan aikaan tehtiin toinen muutos. Yritä uudelleen.',
     'The employee already has this work item at this site from {start} to {end}.' => 'Työntekijällä on jo tämä työlaji tällä työmaalla ajalla {start}–{end}.',
+    'Assigned by' => 'Määrittäjä',
+    'Back to my assignments' => 'Takaisin omiin työtehtäviin',
 ];
