@@ -33,6 +33,7 @@ return [
     'Search' => 'Поиск',
     'Clear' => 'Сбросить',
     'No results for “{query}”.' => 'По запросу «{query}» ничего не найдено.',
+    '{count, plural, one{# result} other{# results}}' => '{count, plural, one{# результат} few{# результата} many{# результатов} other{# результата}}',
     'Name or email' => 'Имя или эл. почта',
     'Name or description' => 'Название или описание',
     'Employee, work item or site' => 'Сотрудник, вид работ или объект',

@@ -33,6 +33,7 @@ return [
     'Search' => 'Otsi',
     'Clear' => 'Tühjenda',
     'No results for “{query}”.' => 'Päringule „{query}“ ei leitud tulemusi.',
+    '{count, plural, one{# result} other{# results}}' => '{count, plural, one{# tulemus} other{# tulemust}}',
     'Name or email' => 'Nimi või e-post',
     'Name or description' => 'Nimi või kirjeldus',
     'Employee, work item or site' => 'Töötaja, tööliik või ehitusobjekt',
