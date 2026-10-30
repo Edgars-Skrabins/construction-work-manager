@@ -257,6 +257,11 @@ final class AssignmentLockingTest extends IntegrationTestCase
                 return $this->assignments->findListItem($id, $viewerId, $scope);
             }
 
+            public function employeeIdForUpdate(int $id): ?int
+            {
+                return $this->assignments->employeeIdForUpdate($id);
+            }
+
             public function listPaginator(int $viewerId, Scope $scope, string $sort, string $search, array $filters = []): OffsetPaginator
             {
                 return $this->assignments->listPaginator($viewerId, $scope, $sort, $search, $filters);

@@ -11,7 +11,7 @@ final readonly class ListParams
 {
     public const int SEARCH_MAX_LENGTH = 100;
 
-    private const string POSITIVE_INT_PATTERN = '/^[1-9]\d{0,8}$/';
+    public const string POSITIVE_INT_PATTERN = '/^[1-9]\d{0,8}$/D';
 
     /**
      * @param array<string, int> $filters

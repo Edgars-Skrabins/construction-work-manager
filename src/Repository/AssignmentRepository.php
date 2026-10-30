@@ -55,6 +55,17 @@ final readonly class AssignmentRepository implements AssignmentRepositoryInterfa
         return $query->one();
     }
 
+    public function employeeIdForUpdate(int $id): ?int
+    {
+        $employeeId = (new Query($this->db))
+            ->select('a.EMPLOYEE_ID')
+            ->from(new Expression('ASSIGNMENT a WITH (UPDLOCK)'))
+            ->where(['a.ID' => $id])
+            ->scalar();
+
+        return $employeeId === false || $employeeId === null ? null : (int) $employeeId;
+    }
+
     public function findListItem(int $id, int $viewerId, Scope $scope): ?AssignmentListItem
     {
         /** @var AssignmentListItem|null */

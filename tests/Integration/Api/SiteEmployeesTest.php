@@ -186,10 +186,13 @@ final class SiteEmployeesTest extends IntegrationTestCase
 
     public function testExactlyTwelveMonthsIsAllowed(): void
     {
-        $response = $this->get('/api/v1/construction-sites/DGP-SCH-01/employees?from=2030-11-01&to=2031-10-31');
+        $from = $this->service(ClockInterface::class)->now()->modify('+1 day')->format('Y-m-d');
+        $to = $this->service(ClockInterface::class)->now()->modify('+1 year')->format('Y-m-d');
+
+        $response = $this->get('/api/v1/construction-sites/DGP-SCH-01/employees?from=' . $from . '&to=' . $to);
 
         assertSame(200, $response->getStatusCode());
-        assertSame(['from' => '2030-11-01', 'to' => '2031-10-31'], $this->period($response));
+        assertSame(['from' => $from, 'to' => $to], $this->period($response));
     }
 
     public function testMalformedSiteCodeIsCheckedBeforeThePeriod(): void
