@@ -263,7 +263,7 @@ final class AssignmentServiceTest extends IntegrationTestCase
 
     public function testAssignmentOfAnEmployeeWhoBecameAManagerCanStayDoneButNotBeReopened(): void
     {
-        $assignment = $this->existing(6, 1, 3, '2026-11-10', '2026-11-20');
+        $assignment = $this->existing(6, 1, 1, '2026-11-10', '2026-11-20');
         $this->assignments()->update(1, $assignment->id, 6, '2026-11-10', '2026-11-20', 'done', '');
         $this->db()->createCommand("UPDATE EMPLOYEE SET ROLE = N'manager', MANAGER_ID = NULL WHERE ID = 6")->execute();
 
