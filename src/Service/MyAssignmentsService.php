@@ -58,4 +58,14 @@ final readonly class MyAssignmentsService
 
         return $this->assignments->listInPeriod($employeeId, Scope::Own, $from, $to, null);
     }
+
+    /**
+     * @return array{int, int}|null
+     */
+    public function calendarYears(int $employeeId): ?array
+    {
+        $this->accessChecker->ensure($employeeId, Permission::AssignmentReadOwn);
+
+        return $this->assignments->yearRange($employeeId, Scope::Own, null);
+    }
 }

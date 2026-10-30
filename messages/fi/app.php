@@ -29,6 +29,7 @@ return [
     'Save' => 'Tallenna',
     'Cancel' => 'Peruuta',
     'Choose…' => 'Valitse…',
+    'Choose date' => 'Valitse päivämäärä',
     'Name' => 'Nimi',
     'Description' => 'Kuvaus',
     '{Property} cannot be blank.' => 'Kenttä ”{Property}” on pakollinen.',
@@ -46,7 +47,10 @@ return [
     'Reassign' => 'Siirrä toiselle',
     'View assignments' => 'Näytä työtehtävät',
     'Clear filter' => 'Poista suodatin',
+    'sorted ascending' => 'lajiteltu nousevasti',
+    'sorted descending' => 'lajiteltu laskevasti',
     'No assignments match the filter.' => 'Suodatinta vastaavia työtehtäviä ei ole.',
+    'Filter assignments by this' => 'Suodata työtehtävät tämän mukaan',
     '{label}: {name}' => '{label}: {name}',
 
     'Log in' => 'Kirjaudu sisään',
@@ -129,7 +133,6 @@ return [
 
     'Work calendar' => 'Työkalenteri',
     'Employees list' => 'Työntekijäluettelo',
-    'Months' => 'Kuukaudet',
     'Today' => 'Tänään',
     'All employees' => 'Kaikki työntekijät',
     'Show' => 'Näytä',

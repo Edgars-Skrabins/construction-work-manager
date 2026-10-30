@@ -24,6 +24,10 @@
                 {% include 'Web/Shared/Layout/Main/theme-toggle.twig' %}
                 {% include 'Web/Shared/Layout/Main/language-selector.twig' %}
                 {% if not currentUser.isGuest() %}
+                    <form class="d-none d-xl-flex" id="logout-form" method="post" action="{{ urlGenerator.generate('logout') }}">
+                        {{ csrf.hiddenInput()|raw }}
+                        <button type="submit" class="btn btn-outline-secondary navbar-control">{{ t('Log out') }}</button>
+                    </form>
                     <button class="navbar-toggler navbar-control" type="button" data-bs-toggle="collapse" data-bs-target="#main-navbar" aria-controls="main-navbar" aria-expanded="false" aria-label="{{ t('Toggle navigation') }}">
                         <span class="navbar-toggler-icon"></span>
                     </button>
@@ -64,11 +68,11 @@
                             </li>
                         {% endif %}
                     </ul>
-                    <form class="d-flex align-items-center gap-2 gap-xl-3 pb-2 pb-xl-0 navbar-account" method="post" action="{{ urlGenerator.generate('logout') }}">
-                        {{ csrf.hiddenInput()|raw }}
-                        <span class="navbar-text text-truncate">{{ currentUser.getIdentity().fullName() }} ({{ t(currentUser.getIdentity().role.value) }})</span>
-                        <button type="submit" class="btn btn-outline-secondary navbar-control flex-shrink-0">{{ t('Log out') }}</button>
-                    </form>
+                    {% set account = currentUser.getIdentity().fullName() ~ ' (' ~ t(currentUser.getIdentity().role.value) ~ ')' %}
+                    <div class="d-flex align-items-center gap-2 pb-2 pb-xl-0 navbar-account">
+                        <span class="navbar-text text-truncate" title="{{ account }}">{{ account }}</span>
+                        <button type="submit" form="logout-form" class="btn btn-outline-secondary navbar-control flex-shrink-0 d-xl-none">{{ t('Log out') }}</button>
+                    </div>
                 </div>
             {% endif %}
         </div>

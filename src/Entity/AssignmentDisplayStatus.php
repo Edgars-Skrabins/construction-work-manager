@@ -33,13 +33,7 @@ enum AssignmentDisplayStatus
 
     public function badgeClass(): string
     {
-        return match ($this) {
-            self::Planned => 'text-bg-info',
-            self::InProgress => 'text-bg-primary',
-            self::Overdue => 'text-bg-danger',
-            self::Done => 'text-bg-success',
-            self::Cancelled => 'text-bg-secondary',
-        };
+        return 'status-badge ' . $this->stripeClass();
     }
 
     public function stripeClass(): string

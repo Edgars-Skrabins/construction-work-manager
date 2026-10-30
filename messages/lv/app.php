@@ -29,6 +29,7 @@ return [
     'Save' => 'Saglabāt',
     'Cancel' => 'Atcelt',
     'Choose…' => 'Izvēlieties…',
+    'Choose date' => 'Izvēlēties datumu',
     'Name' => 'Nosaukums',
     'Description' => 'Apraksts',
     '{Property} cannot be blank.' => 'Lauks „{Property}” ir obligāts.',
@@ -46,7 +47,10 @@ return [
     'Reassign' => 'Piešķirt citam',
     'View assignments' => 'Skatīt uzdevumus',
     'Clear filter' => 'Noņemt filtru',
+    'sorted ascending' => 'kārtots augošā secībā',
+    'sorted descending' => 'kārtots dilstošā secībā',
     'No assignments match the filter.' => 'Neviens uzdevums neatbilst filtram.',
+    'Filter assignments by this' => 'Filtrēt uzdevumus pēc šī',
     '{label}: {name}' => '{label}: {name}',
 
     'Log in' => 'Pieteikties',
@@ -129,7 +133,6 @@ return [
 
     'Work calendar' => 'Darbu kalendārs',
     'Employees list' => 'Darbinieku saraksts',
-    'Months' => 'Mēneši',
     'Today' => 'Šodien',
     'All employees' => 'Visi darbinieki',
     'Show' => 'Rādīt',

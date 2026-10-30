@@ -1,0 +1,43 @@
+.date-input {
+    position: relative;
+}
+
+.date-input .form-control {
+    padding-right: 3rem;
+}
+
+.date-input .form-control.is-invalid {
+    padding-right: 5rem;
+    background-position: right 3rem center;
+}
+
+.date-input-button {
+    position: absolute;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    width: 2.75rem;
+    padding: 0;
+    color: var(--bs-secondary-color);
+    border: 0;
+}
+
+.date-input-button:hover {
+    color: var(--bs-body-color);
+}
+
+.date-input-picker {
+    position: absolute;
+    right: 0;
+    bottom: 0;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    border: 0;
+    opacity: 0;
+    pointer-events: none;
+}
+
+.date-input:has(.is-invalid) ~ .invalid-feedback {
+    display: block;
+}

@@ -10,10 +10,10 @@
 {% for site in myAssignments.sites %}
     {% set first = site.first() %}
     <section class="mb-4">
-        <h2 class="h6 text-secondary text-uppercase mb-1">{{ first.item.constructionSiteName }}</h2>
+        <h2 class="h5 mb-1">{{ first.item.constructionSiteName }}</h2>
         <p class="small text-secondary mb-2">
             {{ first.address() }} · {{ t('Required access level: {level}', {level: first.item.siteLevel().label()}) }} ·
-            <a href="https://www.google.com/maps/search/?api=1&amp;query={{ first.address()|url_encode }}" target="_blank" rel="noopener noreferrer">{{ t('Open in Google Maps') }}</a>
+            <a class="touch-link" href="https://www.google.com/maps/search/?api=1&amp;query={{ first.address()|url_encode }}" target="_blank" rel="noopener noreferrer">{{ t('Open in Google Maps') }}</a>
         </p>
         {% for row in site.rows %}
             <div class="assignment-block {{ row.status.stripeClass() }}">
@@ -30,7 +30,7 @@
 {% endfor %}
 {% if myAssignments.history is not empty %}
     <details class="mt-4">
-        <summary>{{ t('History ({count})', {count: myAssignments.history|length}) }}</summary>
+        <summary class="history-toggle"><svg class="history-toggle-icon" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="m9 6 6 6-6 6"/></svg>{{ t('History ({count})', {count: myAssignments.history|length}) }}</summary>
         <div class="mt-2">
             {% for row in myAssignments.history %}
                 <div class="assignment-block {{ row.status.stripeClass() }} d-flex flex-wrap justify-content-between align-items-center column-gap-3 row-gap-1">

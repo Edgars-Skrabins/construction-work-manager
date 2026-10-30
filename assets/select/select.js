@@ -47,7 +47,7 @@
         const list = element('ul', 'select-picker-list', {role: 'listbox', id: `${id}-picker-list`, tabindex: '-1'});
         const empty = element('p', 'select-picker-empty', {role: 'status'});
         let search = null;
-        if (select.options.length > visibleRows) {
+        if (select.options.length > visibleRows && !select.hasAttribute('data-select-plain')) {
             search = element('input', 'form-control form-control-sm select-picker-search', {
                 type: 'search',
                 role: 'combobox',

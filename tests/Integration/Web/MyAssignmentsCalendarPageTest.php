@@ -39,7 +39,7 @@ final class MyAssignmentsCalendarPageTest extends IntegrationTestCase
 
         assertSame(200, $response->getStatusCode());
         assertStringContainsString('<title>My work calendar</title>', $body);
-        assertStringContainsString('<h2 class="h5 mb-0 text-nowrap">March 2030</h2>', $body);
+        assertStringContainsString('<h2 class="visually-hidden">March 2030</h2>', $body);
         assertSame(3 * 2, substr_count($body, '<span class="calendar-entry-line fw-semibold">Electrical installation</span>'));
         assertMatchesRegularExpression(
             '#<span class="visually-hidden">Planned:</span>\s*<span class="calendar-entry-line fw-semibold">Electrical installation</span>\s*<span class="calendar-entry-line">Daugavpils School Renovation</span>#u',
@@ -58,7 +58,7 @@ final class MyAssignmentsCalendarPageTest extends IntegrationTestCase
 
         $body = (string) $this->request('GET', '/my-assignments/calendar?year=2030&monthOfYear=03')->getBody();
 
-        assertStringContainsString('<h2 class="h5 mb-0 text-nowrap">March 2030</h2>', $body);
+        assertStringContainsString('<h2 class="visually-hidden">March 2030</h2>', $body);
         assertSame(1, substr_count($body, '<template id="calendar-entry-'));
         assertMatchesRegularExpression('#<h3 class="h6 fw-semibold mb-2">Electrical installation</h3>\s*<dl class="row mb-0">\s*<dt class="col-sm-5 fw-normal text-body-secondary">Construction site</dt>\s*<dd class="col-sm-7">Daugavpils School Renovation</dd>#u', $body);
         assertStringNotContainsString('<dt class="col-sm-5 fw-normal text-body-secondary">Employee</dt>', $body);
@@ -73,7 +73,7 @@ final class MyAssignmentsCalendarPageTest extends IntegrationTestCase
 
         $body = (string) $this->request('GET', '/my-assignments/calendar?month=2030-03')->getBody();
 
-        assertStringContainsString('<div class="d-md-none">', $body);
+        assertStringContainsString('<div class="d-lg-none">', $body);
         foreach (['Sun, 2030-03-10', 'Mon, 2030-03-11', 'Tue, 2030-03-12'] as $heading) {
             assertStringContainsString('<h3 class="card-header h6">' . $heading . '</h3>', $body);
         }
@@ -81,15 +81,26 @@ final class MyAssignmentsCalendarPageTest extends IntegrationTestCase
         assertStringNotContainsString('No assigned work this month.', $body);
     }
 
-    public function testMonthLinksCrossTheYear(): void
+    public function testYearPickerOffersTheYearsOfTheEmployeesOwnAssignments(): void
+    {
+        $this->insertMarchWork();
+        $this->logIn('employee@mail.test', '123123123');
+
+        $body = (string) $this->request('GET', '/my-assignments/calendar')->getBody();
+
+        assertStringContainsString('<option value="2030">2030</option>', $body);
+    }
+
+    public function testMonthNavigationHasOnlyThePicker(): void
     {
         $this->logIn('employee@mail.test', '123123123');
 
         $body = (string) $this->request('GET', '/my-assignments/calendar?month=2031-01')->getBody();
 
-        assertStringContainsString('href="/my-assignments/calendar?month=2030-12">‹ Previous</a>', $body);
-        assertStringContainsString('href="/my-assignments/calendar?month=2031-02">Next ›</a>', $body);
-        assertStringContainsString('href="/my-assignments/calendar?month=' . $this->today()->format('Y-m') . '">Today</a>', $body);
+        assertStringNotContainsString('Previous</a>', $body);
+        assertStringNotContainsString('>Today</a>', $body);
+        assertStringContainsString('<option value="2031" selected>2031</option>', $body);
+        assertStringContainsString('<button type="submit" class="btn btn-sm btn-outline-primary calendar-picker-submit">Go</button>', $body);
         assertStringContainsString('No assigned work this month.', $body);
     }
 
@@ -100,7 +111,7 @@ final class MyAssignmentsCalendarPageTest extends IntegrationTestCase
 
         $body = (string) $this->request('GET', '/my-assignments/calendar?month=2030-13')->getBody();
 
-        assertStringContainsString('<h2 class="h5 mb-0 text-nowrap">' . $today->format('F Y') . '</h2>', $body);
+        assertStringContainsString('<h2 class="visually-hidden">' . $today->format('F Y') . '</h2>', $body);
         assertMatchesRegularExpression(
             '#<td class="calendar-today" aria-current="date">\s*<div class="fw-semibold mb-1">' . $today->format('j') . '<span class="visually-hidden"> Today</span></div>#',
             $body,

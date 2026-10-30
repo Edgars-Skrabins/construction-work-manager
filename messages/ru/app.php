@@ -29,6 +29,7 @@ return [
     'Save' => 'Сохранить',
     'Cancel' => 'Отмена',
     'Choose…' => 'Выберите…',
+    'Choose date' => 'Выбрать дату',
     'Name' => 'Название',
     'Description' => 'Описание',
     '{Property} cannot be blank.' => 'Поле «{Property}» обязательно для заполнения.',
@@ -46,7 +47,10 @@ return [
     'Reassign' => 'Переназначить',
     'View assignments' => 'Посмотреть задания',
     'Clear filter' => 'Сбросить фильтр',
+    'sorted ascending' => 'отсортировано по возрастанию',
+    'sorted descending' => 'отсортировано по убыванию',
     'No assignments match the filter.' => 'Нет заданий, соответствующих фильтру.',
+    'Filter assignments by this' => 'Отфильтровать задания по этому значению',
     '{label}: {name}' => '{label}: {name}',
 
     'Log in' => 'Войти',
@@ -129,7 +133,6 @@ return [
 
     'Work calendar' => 'Календарь работ',
     'Employees list' => 'Список сотрудников',
-    'Months' => 'Месяцы',
     'Today' => 'Сегодня',
     'All employees' => 'Все сотрудники',
     'Show' => 'Показать',

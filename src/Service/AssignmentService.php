@@ -78,6 +78,16 @@ final readonly class AssignmentService
     }
 
     /**
+     * @return array{int, int}|null
+     */
+    public function calendarYears(int $actorId, ?int $employeeId): ?array
+    {
+        $this->accessChecker->ensure($actorId, Permission::EmployeeList);
+
+        return $this->assignments->yearRange($actorId, $this->scope($actorId), $employeeId);
+    }
+
+    /**
      * @return list<Employee>
      */
     public function teamEmployees(int $actorId): array

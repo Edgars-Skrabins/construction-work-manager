@@ -33,10 +33,10 @@ final class AssignmentDisplayStatusTest extends TestCase
      */
     public static function classes(): iterable
     {
-        yield 'planned' => [AssignmentDisplayStatus::Planned, 'text-bg-info', 'status-planned'];
-        yield 'in progress' => [AssignmentDisplayStatus::InProgress, 'text-bg-primary', 'status-in-progress'];
-        yield 'overdue' => [AssignmentDisplayStatus::Overdue, 'text-bg-danger', 'status-overdue'];
-        yield 'done' => [AssignmentDisplayStatus::Done, 'text-bg-success', 'status-done'];
-        yield 'cancelled' => [AssignmentDisplayStatus::Cancelled, 'text-bg-secondary', 'status-cancelled'];
+        yield 'planned' => [AssignmentDisplayStatus::Planned, 'status-badge status-planned', 'status-planned'];
+        yield 'in progress' => [AssignmentDisplayStatus::InProgress, 'status-badge status-in-progress', 'status-in-progress'];
+        yield 'overdue' => [AssignmentDisplayStatus::Overdue, 'status-badge status-overdue', 'status-overdue'];
+        yield 'done' => [AssignmentDisplayStatus::Done, 'status-badge status-done', 'status-done'];
+        yield 'cancelled' => [AssignmentDisplayStatus::Cancelled, 'status-badge status-cancelled', 'status-cancelled'];
     }
 }

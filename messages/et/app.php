@@ -29,6 +29,7 @@ return [
     'Save' => 'Salvesta',
     'Cancel' => 'Tühista',
     'Choose…' => 'Vali…',
+    'Choose date' => 'Vali kuupäev',
     'Name' => 'Nimi',
     'Description' => 'Kirjeldus',
     '{Property} cannot be blank.' => 'Väli „{Property}“ on kohustuslik.',
@@ -46,7 +47,10 @@ return [
     'Reassign' => 'Määra ümber',
     'View assignments' => 'Vaata tööülesandeid',
     'Clear filter' => 'Eemalda filter',
+    'sorted ascending' => 'sorditud kasvavalt',
+    'sorted descending' => 'sorditud kahanevalt',
     'No assignments match the filter.' => 'Filtrile vastavaid tööülesandeid ei ole.',
+    'Filter assignments by this' => 'Filtreeri tööülesandeid selle järgi',
     '{label}: {name}' => '{label}: {name}',
 
     'Log in' => 'Logi sisse',
@@ -129,7 +133,6 @@ return [
 
     'Work calendar' => 'Töökalender',
     'Employees list' => 'Töötajate nimekiri',
-    'Months' => 'Kuud',
     'Today' => 'Täna',
     'All employees' => 'Kõik töötajad',
     'Show' => 'Näita',

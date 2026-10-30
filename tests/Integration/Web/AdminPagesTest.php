@@ -89,7 +89,7 @@ final class AdminPagesTest extends IntegrationTestCase
         $this->asAdmin();
 
         $employees = (string) $this->request('GET', '/employees?q=' . rawurlencode('Kalniņa'))->getBody();
-        assertMatchesRegularExpression('#' . self::cell('Kalniņa, Ilze') . '(?:(?!</tr>).)*' . self::cell('Classified (4)') . '#su', $employees);
+        assertMatchesRegularExpression('#' . self::cell('Ilze Kalniņa') . '(?:(?!</tr>).)*' . self::cell('Classified (4)') . '#su', $employees);
 
         $sites = (string) $this->request('GET', '/sites?q=' . rawurlencode('Ādaži'))->getBody();
         assertMatchesRegularExpression('#' . self::cell('Ādaži Defence Facility') . '(?:(?!</tr>).)*' . self::cell('Classified (4)') . '#su', $sites);
@@ -200,7 +200,7 @@ final class AdminPagesTest extends IntegrationTestCase
         $this->assertRedirectsTo('/employees', $this->submit('/employees/create', $fields));
         $list = (string) $this->request('GET', '/employees?sort=-role')->getBody();
         assertStringContainsString('Employee saved.', $list);
-        assertMatchesRegularExpression('#' . self::cell('Pārbaude, Lapa') . '#', $list);
+        assertMatchesRegularExpression('#' . self::cell('Lapa Pārbaude') . '#', $list);
         $this->resetServices();
         $id = (int) $this->db()->createCommand("SELECT ID FROM EMPLOYEE WHERE FIRST_NAME = N'Lapa' AND LAST_NAME = N'Pārbaude'")->queryScalar();
 
@@ -212,7 +212,7 @@ final class AdminPagesTest extends IntegrationTestCase
         $this->assertRedirectsTo('/employees', $this->submit("/employees/$id/delete", []));
         $list = (string) $this->request('GET', '/employees?sort=-role')->getBody();
         assertStringContainsString('Employee deleted.', $list);
-        assertStringNotContainsString('Pārbaude, Lapa', $list);
+        assertStringNotContainsString('Lapa Pārbaude', $list);
     }
 
     public function testPaginationShowsAWindowAndNoLinksForDisabledItems(): void
@@ -242,8 +242,8 @@ final class AdminPagesTest extends IntegrationTestCase
      */
     public static function searches(): iterable
     {
-        yield 'employees' => ['/employees', 'kalniņa', 'Kalniņa, Ilze', 'Ābele, Dace'];
-        yield 'employees by email' => ['/employees', 'employee3@', 'Vītols, Kristaps', 'Bērziņš, Jānis'];
+        yield 'employees' => ['/employees', 'kalniņa', 'Ilze Kalniņa', 'Dace Ābele'];
+        yield 'employees by email' => ['/employees', 'employee3@', 'Kristaps Vītols', 'Dace Ābele'];
         yield 'sites' => ['/sites', 'Daugavpils', 'Daugavpils School Renovation', 'Ādaži Defence Facility'];
         yield 'sites by code' => ['/sites', 'rix-tec', 'Rīga Thermal Power Plant Upgrade', 'Āgenskalns Residential Block'];
         yield 'work items' => ['/work-items', 'pipework', 'Welding', 'Roofing'];
@@ -275,7 +275,7 @@ final class AdminPagesTest extends IntegrationTestCase
 
         $body = (string) $this->request('GET', '/work-items?sort=-name&page=2&q=' . rawurlencode(self::WORK_ITEM))->getBody();
 
-        preg_match_all('/<a class="(?:page-link|link-body-emphasis[^"]*)" href="([^"]*)"/', $body, $links);
+        preg_match_all('/<a class="(?:page-link|sort-link[^"]*)" href="([^"]*)"/', $body, $links);
         assertSame(5, count($links[1]));
         foreach ($links[1] as $href) {
             assertStringContainsString('q=' . urlencode(self::WORK_ITEM), html_entity_decode($href));
@@ -293,8 +293,8 @@ final class AdminPagesTest extends IntegrationTestCase
         $sorted = (string) $this->request('GET', '/employees?sort=login')->getBody();
         $searched = (string) $this->request('GET', '/employees?sort=-login&q=' . rawurlencode('iņš'))->getBody();
 
-        assertStringContainsString('href="/employees?sort=-login">Login ▲</a>', $sorted);
-        assertStringContainsString('href="/employees?sort=login&amp;q=' . urlencode('iņš') . '">Login ▼</a>', $searched);
+        assertMatchesRegularExpression('#href="/employees\?sort=-login">Login<svg class="sort-icon" [^>]*aria-hidden="true"[^>]*>.*?</svg><span class="visually-hidden"> sorted ascending</span>\s*</a>#', $sorted);
+        assertMatchesRegularExpression('#href="/employees\?sort=login&amp;q=' . preg_quote(urlencode('iņš'), '#') . '">Login<svg class="sort-icon" [^>]*aria-hidden="true"[^>]*>.*?</svg><span class="visually-hidden"> sorted descending</span>\s*</a>#', $searched);
         assertStringContainsString('name="sort" value="-login"', $searched);
     }
 
@@ -304,7 +304,7 @@ final class AdminPagesTest extends IntegrationTestCase
 
         $body = (string) $this->request('GET', '/employees')->getBody();
 
-        assertStringContainsString('<td class="text-nowrap"><span class="d-inline-block text-truncate align-bottom list-truncate" title="Bērziņš, Jānis">Bērziņš, Jānis</span> <span class="text-secondary">(you)</span></td>', $body);
+        assertStringContainsString('<td class="text-nowrap"><span class="d-inline-block text-truncate align-bottom list-truncate" title="Jānis Bērziņš">Jānis Bērziņš</span> <span class="text-secondary">(you)</span></td>', $body);
         assertSame(1, substr_count($body, '(you)'));
     }
 
@@ -436,7 +436,7 @@ final class AdminPagesTest extends IntegrationTestCase
         assertStringContainsString('New setup code', $again);
 
         $list = (string) $this->request('GET', '/employees?sort=-role')->getBody();
-        assertMatchesRegularExpression('#' . self::cell('Pārbaude, Lapa') . '#', $list);
+        assertMatchesRegularExpression('#' . self::cell('Lapa Pārbaude') . '#', $list);
         assertMatchesRegularExpression('#' . self::cell('Pending setup') . '#', $list);
     }
 

@@ -25,10 +25,12 @@ final readonly class Action
     public function __invoke(ServerRequestInterface $request): ResponseInterface
     {
         $calendar = MonthCalendar::create(MonthCalendar::requestedMonth($request->getQueryParams()), $this->clock->now());
-        $items = $this->myAssignments->calendar((int) $this->currentUser->getId(), $calendar->from(), $calendar->to());
+        $employeeId = (int) $this->currentUser->getId();
+        $items = $this->myAssignments->calendar($employeeId, $calendar->from(), $calendar->to());
 
         return $this->viewRenderer->render(__DIR__ . '/template', [
             'calendar' => $calendar,
+            'years' => $calendar->years($this->myAssignments->calendarYears($employeeId)),
             'weeks' => $calendar->weeks($items),
             'entries' => $calendar->entries($items),
             'statuses' => AssignmentDisplayStatus::calendarStatuses(),

@@ -41,6 +41,7 @@ final readonly class Action
 
         return $this->viewRenderer->render(__DIR__ . '/template', [
             'calendar' => $calendar,
+            'years' => $calendar->years($this->assignments->calendarYears($actorId, $employeeId)),
             'weeks' => $calendar->weeks($items),
             'entries' => $calendar->entries($items),
             'team' => $team,

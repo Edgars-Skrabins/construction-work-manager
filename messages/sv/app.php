@@ -29,6 +29,7 @@ return [
     'Save' => 'Spara',
     'Cancel' => 'Avbryt',
     'Choose…' => 'Välj…',
+    'Choose date' => 'Välj datum',
     'Name' => 'Namn',
     'Description' => 'Beskrivning',
     '{Property} cannot be blank.' => 'Fältet ”{Property}” måste fyllas i.',
@@ -46,7 +47,10 @@ return [
     'Reassign' => 'Omfördela',
     'View assignments' => 'Visa uppdrag',
     'Clear filter' => 'Ta bort filter',
+    'sorted ascending' => 'sorterad stigande',
+    'sorted descending' => 'sorterad fallande',
     'No assignments match the filter.' => 'Inga uppdrag matchar filtret.',
+    'Filter assignments by this' => 'Filtrera uppdrag efter detta',
     '{label}: {name}' => '{label}: {name}',
 
     'Log in' => 'Logga in',
@@ -129,7 +133,6 @@ return [
 
     'Work calendar' => 'Arbetskalender',
     'Employees list' => 'Medarbetarlista',
-    'Months' => 'Månader',
     'Today' => 'Idag',
     'All employees' => 'Alla medarbetare',
     'Show' => 'Visa',

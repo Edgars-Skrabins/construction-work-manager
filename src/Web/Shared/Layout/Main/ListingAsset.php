@@ -20,6 +20,7 @@ final class ListingAsset extends AssetBundle
     /** @var list<string> */
     public array $js = [
         'instant-search.js',
+        'row-actions.js',
     ];
 
     /** @var list<class-string<AssetBundle>> */

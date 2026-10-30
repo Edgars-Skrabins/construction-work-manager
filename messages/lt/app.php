@@ -29,6 +29,7 @@ return [
     'Save' => 'Išsaugoti',
     'Cancel' => 'Atšaukti',
     'Choose…' => 'Pasirinkite…',
+    'Choose date' => 'Pasirinkti datą',
     'Name' => 'Pavadinimas',
     'Description' => 'Aprašymas',
     '{Property} cannot be blank.' => 'Laukas „{Property}“ yra privalomas.',
@@ -46,7 +47,10 @@ return [
     'Reassign' => 'Perskirti',
     'View assignments' => 'Peržiūrėti užduotis',
     'Clear filter' => 'Pašalinti filtrą',
+    'sorted ascending' => 'surikiuota didėjančia tvarka',
+    'sorted descending' => 'surikiuota mažėjančia tvarka',
     'No assignments match the filter.' => 'Nėra filtrą atitinkančių užduočių.',
+    'Filter assignments by this' => 'Filtruoti užduotis pagal tai',
     '{label}: {name}' => '{label}: {name}',
 
     'Log in' => 'Prisijungti',
@@ -129,7 +133,6 @@ return [
 
     'Work calendar' => 'Darbų kalendorius',
     'Employees list' => 'Darbuotojų sąrašas',
-    'Months' => 'Mėnesiai',
     'Today' => 'Šiandien',
     'All employees' => 'Visi darbuotojai',
     'Show' => 'Rodyti',

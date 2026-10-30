@@ -5,7 +5,7 @@
     <div class="col-lg-8" data-modal-content>
         <h1 class="h3 mb-4" data-modal-title>{{ title }}</h1>
         {% if employee and employee.account and employee.account.passwordHash is null %}
-            <div class="alert alert-info d-flex justify-content-between align-items-center" role="status">
+            <div class="alert alert-info d-flex flex-wrap justify-content-between align-items-center gap-2" role="status">
                 <span>{{ t("Login pending: the employee hasn't set a password yet.") }}</span>
                 <form method="post" action="{{ urlGenerator.generate('employee.setupCode', {id: employee.id}) }}">
                     {{ csrf.hiddenInput()|raw }}
@@ -29,7 +29,7 @@
             </div>
             <div class="mb-3">
                 <label for="birthDate" class="form-label">{{ t('Birth date') }}</label>
-                <input type="date" class="form-control{% if errors.birthDate is defined %} is-invalid{% endif %}" id="birthDate" name="birthDate" value="{{ form.birthDate }}" required>
+                {% include 'Web/Shared/Form/date-input.twig' with {id: 'birthDate', value: form.birthDate, invalid: errors.birthDate is defined, required: true} %}
                 {% include 'Web/Shared/Form/field-errors.twig' with {errors: errors.birthDate ?? []} %}
             </div>
             <div class="mb-3">

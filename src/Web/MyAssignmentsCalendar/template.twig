@@ -4,6 +4,6 @@
     <a class="btn btn-outline-secondary" href="{{ urlGenerator.generate('my-assignments') }}">{{ t('List') }}</a>
 </div>
 <div class="mb-3">
-    {% include 'Web/Shared/Calendar/month-nav.twig' with {calendar: calendar, route: 'my-assignments.calendar', query: {}} %}
+    {% include 'Web/Shared/Calendar/month-nav.twig' with {calendar: calendar, years: years, route: 'my-assignments.calendar', query: {}} %}
 </div>
 {% include 'Web/Shared/Calendar/month.twig' with {weeks: weeks, entries: entries, statuses: statuses, showEmployee: false} %}

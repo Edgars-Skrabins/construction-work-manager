@@ -1,25 +1,22 @@
-<div class="d-flex flex-wrap align-items-center gap-2">
-    <nav class="d-flex flex-wrap align-items-center gap-2" aria-label="{{ t('Months') }}">
-        <a class="btn btn-sm btn-outline-primary text-nowrap" href="{{ urlGenerator.generate(route, [], {month: calendar.previousMonth()}|merge(query)) }}">‹ {{ t('Previous') }}</a>
-        <h2 class="h5 mb-0 text-nowrap">{{ month_year(calendar.month()) }}</h2>
-        <a class="btn btn-sm btn-outline-primary text-nowrap" href="{{ urlGenerator.generate(route, [], {month: calendar.nextMonth()}|merge(query)) }}">{{ t('Next') }} ›</a>
-        <a class="btn btn-sm btn-link" href="{{ urlGenerator.generate(route, [], {month: calendar.currentMonth()}|merge(query)) }}">{{ t('Today') }}</a>
-    </nav>
-    <form class="d-flex align-items-center gap-2" method="get" action="{{ urlGenerator.generate(route) }}" aria-label="{{ t('Go to month') }}" data-calendar-picker>
-        {% for name, value in query %}
-            {% if value is not null %}
-                <input type="hidden" name="{{ name }}" value="{{ value }}">
-            {% endif %}
+<h2 class="visually-hidden">{{ month_year(calendar.month()) }}</h2>
+<form class="d-flex align-items-center gap-2" method="get" action="{{ urlGenerator.generate(route) }}" aria-label="{{ t('Go to month') }}" data-calendar-picker>
+    {% for name, value in query %}
+        {% if value is not null %}
+            <input type="hidden" name="{{ name }}" value="{{ value }}">
+        {% endif %}
+    {% endfor %}
+    <label class="visually-hidden" for="calendar-month">{{ t('Month') }}</label>
+    <select class="form-select form-select-sm w-auto" id="calendar-month" name="monthOfYear" data-select-plain>
+        {% for name in month_names() %}
+            {% set value = '%02d'|format(loop.index) %}
+            <option value="{{ value }}"{% if value == calendar.month()|date('m') %} selected{% endif %}>{{ name }}</option>
         {% endfor %}
-        <label class="visually-hidden" for="calendar-month">{{ t('Month') }}</label>
-        <select class="form-select form-select-sm w-auto" id="calendar-month" name="monthOfYear">
-            {% for name in month_names() %}
-                {% set value = '%02d'|format(loop.index) %}
-                <option value="{{ value }}"{% if value == calendar.month()|date('m') %} selected{% endif %}>{{ name }}</option>
-            {% endfor %}
-        </select>
-        <label class="visually-hidden" for="calendar-year">{{ t('Year') }}</label>
-        <input class="form-control form-control-sm calendar-year" type="number" id="calendar-year" name="year" min="2000" max="2100" step="1" required value="{{ calendar.month()|date('Y') }}">
-        <button type="submit" class="btn btn-sm btn-outline-primary">{{ t('Go') }}</button>
-    </form>
-</div>
+    </select>
+    <label class="visually-hidden" for="calendar-year">{{ t('Year') }}</label>
+    <select class="form-select form-select-sm w-auto" id="calendar-year" name="year" data-select-plain>
+        {% for year in years %}
+            <option value="{{ year }}"{% if year == calendar.month()|date('Y') %} selected{% endif %}>{{ year }}</option>
+        {% endfor %}
+    </select>
+    <button type="submit" class="btn btn-sm btn-outline-primary calendar-picker-submit">{{ t('Go') }}</button>
+</form>

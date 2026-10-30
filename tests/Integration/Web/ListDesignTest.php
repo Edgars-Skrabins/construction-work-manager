@@ -42,8 +42,19 @@ final class ListDesignTest extends IntegrationTestCase
         $body = (string) $this->request('GET', $path)->getBody();
 
         assertStringContainsString('<th scope="col" class="text-end list-actions">Actions</th>', $body);
-        assertMatchesRegularExpression('#<td class="text-end text-nowrap list-actions"><div class="d-inline-flex gap-1" role="group" aria-label="Actions for [^"]+">#', $body);
+        assertMatchesRegularExpression('#<td class="text-end text-nowrap list-actions"><div class="d-inline-flex gap-1 list-row-actions" role="group" aria-label="Actions for [^"]+">#', $body);
         assertMatchesRegularExpression('#<span class="d-inline-block text-truncate align-bottom list-truncate" title="([^"]+)">\1</span>#', $body);
+    }
+
+    #[DataProvider('lists')]
+    public function testListsRenderTheRowActionsSheetAndItsScript(string $path): void
+    {
+        $this->logIn('admin@mail.test', '123123123');
+
+        $body = (string) $this->request('GET', $path)->getBody();
+
+        assertStringContainsString('<div class="modal fade" id="row-actions-sheet" tabindex="-1" aria-labelledby="row-actions-sheet-title" aria-hidden="true" data-row-actions-sheet>', $body);
+        assertMatchesRegularExpression('#<script src="[^"]*/listing/[^"]*row-actions\.js[^"]*"#', $body);
     }
 
     #[DataProvider('lists')]

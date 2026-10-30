@@ -33,6 +33,11 @@ interface AssignmentRepositoryInterface
     public function listInPeriod(int $viewerId, Scope $scope, DateTimeImmutable $from, DateTimeImmutable $to, ?int $employeeId): array;
 
     /**
+     * @return array{int, int}|null
+     */
+    public function yearRange(int $viewerId, Scope $scope, ?int $employeeId): ?array;
+
+    /**
      * @return list<AssignedWork>
      */
     public function findAssignedWork(int $employeeId): array;
