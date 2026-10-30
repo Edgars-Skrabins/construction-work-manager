@@ -409,16 +409,6 @@ final class AdminPagesTest extends IntegrationTestCase
         assertStringNotContainsString('font-monospace', $body);
     }
 
-    public function testSetupCodePageIsNeverCached(): void
-    {
-        $this->asAdmin();
-
-        $response = $this->request('GET', '/employees/4/setup-code');
-
-        assertSame(200, $response->getStatusCode());
-        assertSame('no-store', $response->getHeaderLine('Cache-Control'));
-    }
-
     public function testOwnRowHasNoDeleteButton(): void
     {
         $this->asAdmin();

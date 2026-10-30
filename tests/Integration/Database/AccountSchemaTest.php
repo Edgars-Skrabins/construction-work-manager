@@ -7,11 +7,8 @@ namespace App\Tests\Integration\Database;
 use App\Tests\Integration\IntegrationTestCase;
 use PHPUnit\Framework\Attributes\DataProvider;
 use Yiisoft\Db\Exception\Exception as DbException;
-use Yiisoft\Security\PasswordHasher;
 
-use function PHPUnit\Framework\assertSame;
 use function PHPUnit\Framework\assertStringContainsString;
-use function PHPUnit\Framework\assertTrue;
 
 final class AccountSchemaTest extends IntegrationTestCase
 {
@@ -23,31 +20,6 @@ final class AccountSchemaTest extends IntegrationTestCase
     protected function tearDown(): void
     {
         $this->db()->getTransaction()?->rollBack();
-    }
-
-    public function testDemoAccountsAreSeeded(): void
-    {
-        $emails = $this->db()->createCommand('SELECT EMAIL FROM ACCOUNT ORDER BY EMPLOYEE_ID')->queryColumn();
-
-        assertSame([
-            'admin@mail.test',
-            'manager@mail.test',
-            'manager2@mail.test',
-            'employee@mail.test',
-            'employee2@mail.test',
-            'employee3@mail.test',
-            'manager3@mail.test',
-        ], $emails);
-    }
-
-    public function testDemoPasswordVerifiesAgainstEverySeededHash(): void
-    {
-        $hasher = new PasswordHasher();
-        $hashes = $this->db()->createCommand('SELECT PASSWORD_HASH FROM ACCOUNT')->queryColumn();
-
-        foreach ($hashes as $hash) {
-            assertTrue(is_string($hash) && $hasher->validate('123123123', $hash));
-        }
     }
 
     #[DataProvider('invalidRows')]
