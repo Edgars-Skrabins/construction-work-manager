@@ -15,6 +15,6 @@ final class IsoDate
     {
         $date = DateTimeImmutable::createFromFormat('!' . self::FORMAT, $value, $timezone);
 
-        return $date !== false && $date->format(self::FORMAT) === $value ? $date : null;
+        return $date !== false && $date->format(self::FORMAT) === $value && (int) $date->format('Y') >= 1 ? $date : null;
     }
 }
