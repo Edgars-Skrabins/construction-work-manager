@@ -33,6 +33,7 @@ return [
     'Search' => 'Sök',
     'Clear' => 'Rensa',
     'No results for “{query}”.' => 'Inga träffar för ”{query}”.',
+    'No matches' => 'Inga träffar',
     '{count, plural, one{# result} other{# results}}' => '{count, plural, one{# träff} other{# träffar}}',
     'Name or email' => 'Namn eller e-post',
     'Name or description' => 'Namn eller beskrivning',

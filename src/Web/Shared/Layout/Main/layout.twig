@@ -14,7 +14,7 @@
     <title>{{ this.getTitle() }}</title>
     {% do this.head() %}
 </head>
-<body class="d-flex flex-column">
+<body class="d-flex flex-column" data-select-search="{{ t('Search') }}" data-select-no-matches="{{ t('No matches') }}">
 {% do this.beginBody() %}
 <header>
     <nav class="navbar navbar-expand-lg site-navbar">

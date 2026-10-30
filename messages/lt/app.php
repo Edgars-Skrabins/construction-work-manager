@@ -33,6 +33,7 @@ return [
     'Search' => 'Ieškoti',
     'Clear' => 'Išvalyti',
     'No results for “{query}”.' => 'Pagal „{query}“ nieko nerasta.',
+    'No matches' => 'Atitikmenų nėra',
     '{count, plural, one{# result} other{# results}}' => '{count, plural, one{# rezultatas} few{# rezultatai} many{# rezultato} other{# rezultatų}}',
     'Name or email' => 'Vardas arba el. paštas',
     'Name or description' => 'Pavadinimas arba aprašymas',
