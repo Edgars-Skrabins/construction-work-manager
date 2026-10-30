@@ -45,6 +45,8 @@ return [
     'Reassign' => 'Määra ümber',
     'View assignments' => 'Vaata tööülesandeid',
     'Clear filter' => 'Eemalda filter',
+    'sorted ascending' => 'sorditud kasvavalt',
+    'sorted descending' => 'sorditud kahanevalt',
     'No assignments match the filter.' => 'Filtrile vastavaid tööülesandeid ei ole.',
     '{label}: {name}' => '{label}: {name}',
 

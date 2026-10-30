@@ -164,8 +164,8 @@ final class LanguageTest extends IntegrationTestCase
         assertStringContainsString('<title>Uzdevumi</title>', $latvian);
         assertStringContainsString('<h1 class="h3 mb-0">Uzdevumi</h1>', $latvian);
         assertStringContainsString('<div class="alert alert-success" role="status">Uzdevums saglabāts.</div>', $latvian);
-        assertStringContainsString('>Darbinieks</a>', $latvian);
-        assertStringContainsString('<span class="badge text-bg-info">Plānots</span>', $latvian);
+        assertStringContainsString('>Darbinieks<svg class="sort-icon', $latvian);
+        assertStringContainsString('<span class="badge status-badge status-planned">Plānots</span>', $latvian);
         assertStringContainsString('data-modal-link>Dzēst</a>', $latvian);
         assertStringContainsString('Mārtiņš Liepiņš', $latvian);
 
@@ -174,8 +174,8 @@ final class LanguageTest extends IntegrationTestCase
 
         assertStringContainsString('<html lang="ru" ', $russian);
         assertStringContainsString('<h1 class="h3 mb-0">Задания</h1>', $russian);
-        assertStringContainsString('>Сотрудник</a>', $russian);
-        assertStringContainsString('<span class="badge text-bg-info">Запланировано</span>', $russian);
+        assertStringContainsString('>Сотрудник<svg class="sort-icon', $russian);
+        assertStringContainsString('<span class="badge status-badge status-planned">Запланировано</span>', $russian);
         assertStringContainsString('(руководитель)', $russian);
         assertStringContainsString('Mārtiņš Liepiņš', $russian);
         assertStringNotContainsString('Uzdevumi', $russian);

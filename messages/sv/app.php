@@ -45,6 +45,8 @@ return [
     'Reassign' => 'Omfördela',
     'View assignments' => 'Visa uppdrag',
     'Clear filter' => 'Ta bort filter',
+    'sorted ascending' => 'sorterad stigande',
+    'sorted descending' => 'sorterad fallande',
     'No assignments match the filter.' => 'Inga uppdrag matchar filtret.',
     '{label}: {name}' => '{label}: {name}',
 

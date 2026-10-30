@@ -45,6 +45,8 @@ return [
     'Reassign' => 'Perskirti',
     'View assignments' => 'Peržiūrėti užduotis',
     'Clear filter' => 'Pašalinti filtrą',
+    'sorted ascending' => 'surikiuota didėjančia tvarka',
+    'sorted descending' => 'surikiuota mažėjančia tvarka',
     'No assignments match the filter.' => 'Nėra filtrą atitinkančių užduočių.',
     '{label}: {name}' => '{label}: {name}',
 

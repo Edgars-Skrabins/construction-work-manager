@@ -45,6 +45,8 @@ return [
     'Reassign' => 'Переназначить',
     'View assignments' => 'Посмотреть задания',
     'Clear filter' => 'Сбросить фильтр',
+    'sorted ascending' => 'отсортировано по возрастанию',
+    'sorted descending' => 'отсортировано по убыванию',
     'No assignments match the filter.' => 'Нет заданий, соответствующих фильтру.',
     '{label}: {name}' => '{label}: {name}',
 

@@ -45,6 +45,8 @@ return [
     'Reassign' => 'Siirrä toiselle',
     'View assignments' => 'Näytä työtehtävät',
     'Clear filter' => 'Poista suodatin',
+    'sorted ascending' => 'lajiteltu nousevasti',
+    'sorted descending' => 'lajiteltu laskevasti',
     'No assignments match the filter.' => 'Suodatinta vastaavia työtehtäviä ei ole.',
     '{label}: {name}' => '{label}: {name}',
 

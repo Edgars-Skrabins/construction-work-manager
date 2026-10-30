@@ -275,7 +275,7 @@ final class AdminPagesTest extends IntegrationTestCase
 
         $body = (string) $this->request('GET', '/work-items?sort=-name&page=2&q=' . rawurlencode(self::WORK_ITEM))->getBody();
 
-        preg_match_all('/<a class="(?:page-link|link-body-emphasis[^"]*)" href="([^"]*)"/', $body, $links);
+        preg_match_all('/<a class="(?:page-link|sort-link[^"]*)" href="([^"]*)"/', $body, $links);
         assertSame(5, count($links[1]));
         foreach ($links[1] as $href) {
             assertStringContainsString('q=' . urlencode(self::WORK_ITEM), html_entity_decode($href));
@@ -293,8 +293,8 @@ final class AdminPagesTest extends IntegrationTestCase
         $sorted = (string) $this->request('GET', '/employees?sort=login')->getBody();
         $searched = (string) $this->request('GET', '/employees?sort=-login&q=' . rawurlencode('iņš'))->getBody();
 
-        assertStringContainsString('href="/employees?sort=-login">Login ▲</a>', $sorted);
-        assertStringContainsString('href="/employees?sort=login&amp;q=' . urlencode('iņš') . '">Login ▼</a>', $searched);
+        assertMatchesRegularExpression('#href="/employees\?sort=-login">Login<svg class="sort-icon" [^>]*aria-hidden="true"[^>]*>.*?</svg><span class="visually-hidden"> sorted ascending</span>\s*</a>#', $sorted);
+        assertMatchesRegularExpression('#href="/employees\?sort=login&amp;q=' . preg_quote(urlencode('iņš'), '#') . '">Login<svg class="sort-icon" [^>]*aria-hidden="true"[^>]*>.*?</svg><span class="visually-hidden"> sorted descending</span>\s*</a>#', $searched);
         assertStringContainsString('name="sort" value="-login"', $searched);
     }
 

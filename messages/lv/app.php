@@ -45,6 +45,8 @@ return [
     'Reassign' => 'Piešķirt citam',
     'View assignments' => 'Skatīt uzdevumus',
     'Clear filter' => 'Noņemt filtru',
+    'sorted ascending' => 'kārtots augošā secībā',
+    'sorted descending' => 'kārtots dilstošā secībā',
     'No assignments match the filter.' => 'Neviens uzdevums neatbilst filtram.',
     '{label}: {name}' => '{label}: {name}',
 
