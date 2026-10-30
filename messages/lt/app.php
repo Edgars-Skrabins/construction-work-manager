@@ -5,6 +5,7 @@ declare(strict_types=1);
 return [
     'Language' => 'Kalba',
     'Toggle navigation' => 'Perjungti naršymą',
+    'Dark mode' => 'Tamsus režimas',
     'My assignments' => 'Mano užduotys',
     'Employees' => 'Darbuotojai',
     'Construction sites' => 'Statybos objektai',
