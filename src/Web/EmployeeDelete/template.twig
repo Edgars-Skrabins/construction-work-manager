@@ -10,6 +10,9 @@
                 <button type="submit" class="btn btn-danger">{{ t('Delete') }}</button>
             </form>
         {% endif %}
+        {% if error and employee.role.value == 'employee' and access.can('assignment.update') %}
+            <a class="btn btn-outline-primary" href="{{ urlGenerator.generate('assignment.list', [], {employee: employee.id}) }}">{{ t('View assignments') }}</a>
+        {% endif %}
         <a class="btn btn-link" href="{{ urlGenerator.generate('employee.list') }}">{{ t('Cancel') }}</a>
     </div>
 </div>

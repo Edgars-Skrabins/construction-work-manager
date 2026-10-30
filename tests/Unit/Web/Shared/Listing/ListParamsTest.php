@@ -85,6 +85,27 @@ final class ListParamsTest extends TestCase
         yield 'array' => [['2']];
     }
 
+    public function testNamedFiltersAreReadAsPositiveIntegers(): void
+    {
+        $params = ListParams::fromRequest(
+            (new ServerRequest())->withQueryParams(['site' => '7', 'employee' => '12', 'other' => '3']),
+            ['employee', 'workItem', 'site'],
+        );
+
+        assertSame(['employee' => 12, 'site' => 7], $params->filters);
+    }
+
+    #[DataProvider('invalidPages')]
+    public function testInvalidFiltersAreLeftOut(mixed $value): void
+    {
+        assertSame([], ListParams::fromRequest((new ServerRequest())->withQueryParams(['employee' => $value]), ['employee'])->filters);
+    }
+
+    public function testFiltersAreOnlyReadWhenNamed(): void
+    {
+        assertSame([], ListParams::fromRequest((new ServerRequest())->withQueryParams(['employee' => '4']))->filters);
+    }
+
     public function testPagePastTheEndShowsTheLastPage(): void
     {
         $paginator = (new ListParams('', 9))->applyTo($this->paginator(45));
