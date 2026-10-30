@@ -15,6 +15,7 @@ use Yiisoft\Translator\TranslatorInterface;
 final class TranslatorExtension extends AbstractExtension
 {
     private const string MONDAY = '2024-01-01';
+    private const string YEAR = '2024';
 
     public function __construct(
         private readonly TranslatorInterface $translator,
@@ -25,6 +26,7 @@ final class TranslatorExtension extends AbstractExtension
         return [
             new TwigFunction('t', $this->translate(...)),
             new TwigFunction('month_year', $this->monthYear(...)),
+            new TwigFunction('month_names', $this->monthNames(...)),
             new TwigFunction('weekday_names', $this->weekdayNames(...)),
             new TwigFunction('weekday_name', $this->weekdayName(...)),
         ];
@@ -41,6 +43,17 @@ final class TranslatorExtension extends AbstractExtension
     public function monthYear(DateTimeInterface $date): string
     {
         return $this->format($date, 'LLLL y');
+    }
+
+    /**
+     * @return list<string>
+     */
+    public function monthNames(): array
+    {
+        return array_map(
+            fn(int $month): string => $this->format(new DateTimeImmutable(sprintf('%s-%02d-01', self::YEAR, $month), new DateTimeZone('UTC')), 'LLLL'),
+            range(1, 12),
+        );
     }
 
     /**
