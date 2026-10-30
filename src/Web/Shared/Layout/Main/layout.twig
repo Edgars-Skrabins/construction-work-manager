@@ -17,13 +17,14 @@
 <body class="d-flex flex-column">
 {% do this.beginBody() %}
 <header>
-    <nav class="navbar navbar-expand-lg site-navbar">
+    <nav class="navbar navbar-expand-xl site-navbar">
         <div class="container">
-            <a class="navbar-brand" href="{{ aliases.get('@baseUrl') }}">{{ applicationParams.name }}</a>
-            <div class="d-flex align-items-center gap-2 ms-auto order-lg-last ms-lg-3">
+            <span class="navbar-brand">{{ applicationParams.name }}</span>
+            <div class="d-flex align-items-center gap-2 ms-auto order-xl-last ms-xl-3">
+                {% include 'Web/Shared/Layout/Main/theme-toggle.twig' %}
                 {% include 'Web/Shared/Layout/Main/language-selector.twig' %}
                 {% if not currentUser.isGuest() %}
-                    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#main-navbar" aria-controls="main-navbar" aria-expanded="false" aria-label="{{ t('Toggle navigation') }}">
+                    <button class="navbar-toggler navbar-control" type="button" data-bs-toggle="collapse" data-bs-target="#main-navbar" aria-controls="main-navbar" aria-expanded="false" aria-label="{{ t('Toggle navigation') }}">
                         <span class="navbar-toggler-icon"></span>
                     </button>
                 {% endif %}
@@ -31,37 +32,42 @@
             {% if not currentUser.isGuest() %}
                 {% set routeName = currentRoute.getName() ?? '' %}
                 <div class="collapse navbar-collapse" id="main-navbar">
-                    <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+                    <ul class="navbar-nav me-auto mb-2 mb-xl-0">
                         {% if access.can('assignment.readOwn') %}
                             <li class="nav-item">
-                                <a class="nav-link{% if routeName starts with 'my-assignments' %} active{% endif %}" href="{{ urlGenerator.generate('my-assignments') }}">{{ t('My assignments') }}</a>
+                                {% set active = routeName starts with 'my-assignments' %}
+                                <a class="nav-link{% if active %} active{% endif %}"{% if active %} aria-current="page"{% endif %} href="{{ urlGenerator.generate('my-assignments') }}">{{ t('My assignments') }}</a>
                             </li>
                         {% endif %}
                         {% if access.can('employee.list') %}
                             <li class="nav-item">
-                                <a class="nav-link{% if routeName starts with 'employee.' %} active{% endif %}" href="{{ urlGenerator.generate('employee.list') }}">{{ t('Employees') }}</a>
+                                {% set active = routeName starts with 'employee.' %}
+                                <a class="nav-link{% if active %} active{% endif %}"{% if active %} aria-current="page"{% endif %} href="{{ urlGenerator.generate('employee.list') }}">{{ t('Employees') }}</a>
                             </li>
                         {% endif %}
                         {% if access.can('site.update') %}
                             <li class="nav-item">
-                                <a class="nav-link{% if routeName starts with 'site.' %} active{% endif %}" href="{{ urlGenerator.generate('site.list') }}">{{ t('Construction sites') }}</a>
+                                {% set active = routeName starts with 'site.' %}
+                                <a class="nav-link{% if active %} active{% endif %}"{% if active %} aria-current="page"{% endif %} href="{{ urlGenerator.generate('site.list') }}">{{ t('Construction sites') }}</a>
                             </li>
                         {% endif %}
                         {% if access.can('workItem.update') %}
                             <li class="nav-item">
-                                <a class="nav-link{% if routeName starts with 'workItem.' %} active{% endif %}" href="{{ urlGenerator.generate('workItem.list') }}">{{ t('Work items') }}</a>
+                                {% set active = routeName starts with 'workItem.' %}
+                                <a class="nav-link{% if active %} active{% endif %}"{% if active %} aria-current="page"{% endif %} href="{{ urlGenerator.generate('workItem.list') }}">{{ t('Work items') }}</a>
                             </li>
                         {% endif %}
                         {% if access.can('assignment.update') %}
                             <li class="nav-item">
-                                <a class="nav-link{% if routeName starts with 'assignment.' %} active{% endif %}" href="{{ urlGenerator.generate('assignment.list') }}">{{ t('Assignments') }}</a>
+                                {% set active = routeName starts with 'assignment.' %}
+                                <a class="nav-link{% if active %} active{% endif %}"{% if active %} aria-current="page"{% endif %} href="{{ urlGenerator.generate('assignment.list') }}">{{ t('Assignments') }}</a>
                             </li>
                         {% endif %}
                     </ul>
-                    <form class="d-flex flex-wrap align-items-center gap-2 gap-lg-3 pb-2 pb-lg-0" method="post" action="{{ urlGenerator.generate('logout') }}">
+                    <form class="d-flex align-items-center gap-2 gap-xl-3 pb-2 pb-xl-0 navbar-account" method="post" action="{{ urlGenerator.generate('logout') }}">
                         {{ csrf.hiddenInput()|raw }}
-                        <span class="navbar-text">{{ currentUser.getIdentity().fullName() }} ({{ t(currentUser.getIdentity().role.value) }})</span>
-                        <button type="submit" class="btn btn-outline-secondary btn-sm">{{ t('Log out') }}</button>
+                        <span class="navbar-text text-truncate">{{ currentUser.getIdentity().fullName() }} ({{ t(currentUser.getIdentity().role.value) }})</span>
+                        <button type="submit" class="btn btn-outline-secondary navbar-control flex-shrink-0">{{ t('Log out') }}</button>
                     </form>
                 </div>
             {% endif %}
@@ -69,7 +75,7 @@
     </nav>
 </header>
 
-<main class="container flex-grow-1 py-5">
+<main class="container flex-grow-1 py-4 py-md-5">
     {% for message in flash.success() %}
         <div class="alert alert-success" role="status">{{ message }}</div>
     {% endfor %}

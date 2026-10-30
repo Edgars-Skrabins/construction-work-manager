@@ -5,6 +5,7 @@ declare(strict_types=1);
 return [
     'Language' => 'Språk',
     'Toggle navigation' => 'Visa eller dölj menyn',
+    'Dark mode' => 'Mörkt läge',
     'My assignments' => 'Mina uppdrag',
     'Employees' => 'Medarbetare',
     'Construction sites' => 'Byggarbetsplatser',

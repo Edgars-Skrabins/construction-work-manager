@@ -3,7 +3,7 @@
 <form class="dropdown" method="post" action="{{ urlGenerator.generate('language') }}">
     {{ csrf.hiddenInput()|raw }}
     <input type="hidden" name="returnUrl" value="{{ uri ? uri.getPath() ~ (uri.getQuery() ? '?' ~ uri.getQuery() : '') : '/' }}">
-    <button class="btn btn-outline-secondary btn-sm dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false" aria-label="{{ t('Language') }}">{{ current.nativeName() }}</button>
+    <button class="btn btn-outline-secondary navbar-control dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false" aria-label="{{ t('Language') }}">{{ current.nativeName() }}</button>
     <ul class="dropdown-menu dropdown-menu-end">
         {% for item in language.all() %}
             <li><button type="submit" name="locale" value="{{ item.value }}" class="dropdown-item{% if item == current %} active{% endif %}" lang="{{ item.value }}"{% if item == current %} aria-current="true"{% endif %}>{{ item.nativeName() }}</button></li>
