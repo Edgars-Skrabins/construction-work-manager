@@ -171,6 +171,7 @@ return [
     'Delete this assignment?' => 'Poistetaanko tämä työtehtävä?',
     '{name} – access level {level}' => '{name} – kulkuoikeustaso {level}',
     '{name} – requires {level}' => '{name} – vaatii tason {level}',
+    '{site} requires {required}. {employee} has {actual}.' => 'Työmaa {site} vaatii tason {required}. Työntekijän {employee} taso on {actual}.',
     'Assignment saved.' => 'Työtehtävä tallennettu.',
     'Assignment deleted.' => 'Työtehtävä poistettu.',
     'Choose an employee.' => 'Valitse työntekijä.',

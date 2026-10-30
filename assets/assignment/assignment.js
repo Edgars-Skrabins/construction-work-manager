@@ -1,4 +1,6 @@
 document.addEventListener('DOMContentLoaded', () => {
+    new bootstrap.Tooltip(document.body, {selector: '[data-bs-toggle="tooltip"]'});
+
     document.querySelectorAll('form[data-confirm]').forEach((form) => {
         form.addEventListener('submit', (event) => {
             if (!window.confirm(form.dataset.confirm)) {

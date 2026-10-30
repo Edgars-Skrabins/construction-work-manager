@@ -224,7 +224,14 @@ final class AssignmentPagesTest extends IntegrationTestCase
         $body = (string) $this->request('GET', '/assignments?sort=-startDate')->getBody();
 
         assertStringContainsString('<table class="table align-middle assignment-table">', $body);
-        assertMatchesRegularExpression(sprintf('#<tr class="status-planned">(?:(?!</tr>).)*<span class="badge border border-danger text-danger">Access level too low</span>(?:(?!</tr>).)*/assignments/%d/edit#s', $id), $body);
+        $explanation = 'Rīga Thermal Power Plant Upgrade requires Critical infrastructure (3). Laura Krūmiņa has Restricted (2).';
+        assertMatchesRegularExpression(sprintf(
+            '#<tr class="status-planned">(?:(?!</tr>).)*<span class="badge border border-danger text-danger" tabindex="0" data-bs-toggle="tooltip" data-bs-title="%1$s">Access level too low<span class="visually-hidden">: %1$s</span></span>(?:(?!</tr>).)*/assignments/%2$d/edit#su',
+            preg_quote($explanation, '#'),
+            $id,
+        ), $body);
+        assertDoesNotMatchRegularExpression('#<script(?![^>]*\ssrc=)[^>]*>#', $body);
+        assertMatchesRegularExpression('#<script src="/assets/assignment/[^"]*assignment\.js[^"]*"#', $body);
     }
 
     private function deleteAssignment(int $id): ResponseInterface

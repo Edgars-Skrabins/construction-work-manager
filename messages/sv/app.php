@@ -171,6 +171,7 @@ return [
     'Delete this assignment?' => 'Ta bort det här uppdraget?',
     '{name} – access level {level}' => '{name} – behörighetsnivå {level}',
     '{name} – requires {level}' => '{name} – kräver {level}',
+    '{site} requires {required}. {employee} has {actual}.' => '{site} kräver {required}. {employee} har {actual}.',
     'Assignment saved.' => 'Uppdraget har sparats.',
     'Assignment deleted.' => 'Uppdraget har tagits bort.',
     'Choose an employee.' => 'Välj medarbetare.',

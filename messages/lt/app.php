@@ -171,6 +171,7 @@ return [
     'Delete this assignment?' => 'Ištrinti šią užduotį?',
     '{name} – access level {level}' => '{name} – prieigos lygis {level}',
     '{name} – requires {level}' => '{name} – reikalingas {level}',
+    '{site} requires {required}. {employee} has {actual}.' => 'Objektui {site} reikalingas {required}. Darbuotojo {employee} lygis – {actual}.',
     'Assignment saved.' => 'Užduotis išsaugota.',
     'Assignment deleted.' => 'Užduotis ištrinta.',
     'Choose an employee.' => 'Pasirinkite darbuotoją.',

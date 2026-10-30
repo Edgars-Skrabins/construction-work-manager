@@ -171,6 +171,7 @@ return [
     'Delete this assignment?' => 'Kas kustutada see tööülesanne?',
     '{name} – access level {level}' => '{name} – ligipääsutase {level}',
     '{name} – requires {level}' => '{name} – nõutav {level}',
+    '{site} requires {required}. {employee} has {actual}.' => 'Objekt {site} nõuab taset {required}. Töötaja {employee} tase on {actual}.',
     'Assignment saved.' => 'Tööülesanne salvestatud.',
     'Assignment deleted.' => 'Tööülesanne kustutatud.',
     'Choose an employee.' => 'Vali töötaja.',

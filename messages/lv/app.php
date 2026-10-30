@@ -171,6 +171,7 @@ return [
     'Delete this assignment?' => 'Dzēst šo uzdevumu?',
     '{name} – access level {level}' => '{name} – piekļuves līmenis {level}',
     '{name} – requires {level}' => '{name} – nepieciešams {level}',
+    '{site} requires {required}. {employee} has {actual}.' => 'Būvobjektam {site} nepieciešams {required}. Darbiniekam {employee} ir {actual}.',
     'Assignment saved.' => 'Uzdevums saglabāts.',
     'Assignment deleted.' => 'Uzdevums dzēsts.',
     'Choose an employee.' => 'Izvēlieties darbinieku.',

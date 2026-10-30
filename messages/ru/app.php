@@ -171,6 +171,7 @@ return [
     'Delete this assignment?' => 'Удалить это задание?',
     '{name} – access level {level}' => '{name} – уровень допуска {level}',
     '{name} – requires {level}' => '{name} – требуется {level}',
+    '{site} requires {required}. {employee} has {actual}.' => 'Для объекта {site} требуется {required}. У сотрудника {employee} — {actual}.',
     'Assignment saved.' => 'Задание сохранено.',
     'Assignment deleted.' => 'Задание удалено.',
     'Choose an employee.' => 'Выберите сотрудника.',
