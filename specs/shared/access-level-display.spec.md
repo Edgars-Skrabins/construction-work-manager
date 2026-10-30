@@ -1,7 +1,7 @@
 # Access level display — Spec
 
 **Type:** feature
-**Status:** ready for implementation
+**Status:** done
 **Last updated:** 2026-10-30
 
 # Part 1 — Business logic and usage
@@ -89,18 +89,18 @@ Read Part 1 and Part 2 before starting. Work through the tasks in order and tick
 
 ### A. Label
 
-- [ ] A1. `AccessLevel::label()`, `ConstructionSite::requiredAccessLevel()`, `EmployeeListItem::$accessLevelId` and `accessLevel()` (set in `EmployeeRepository`), `AssignmentListItem` names and `employeeLevel()`/`siteLevel()` (set in `AssignmentRepository::listQuery()`), `AssignedWork::requiredAccessLevelName` removed. Unit tests: `AccessLevel::label()` and the `AssignmentListItem` level methods; fix the tests that build these entities.
-- [ ] A2. `AssignmentFormOptions::$accessLevels` and `AssignmentService::formOptions()`.
-- [ ] A3. Templates of the employee form, site form, assignment form, Employees list, Sites list and My assignments use the label; the two new assignment form messages replace the old ones in all six message files. Page tests: each place renders "Name (n)".
+- [x] A1. `AccessLevel::label()`, `ConstructionSite::requiredAccessLevel()`, `EmployeeListItem::$accessLevelId` and `accessLevel()` (set in `EmployeeRepository`), `AssignmentListItem` names and `employeeLevel()`/`siteLevel()` (set in `AssignmentRepository::listQuery()`), `AssignedWork::requiredAccessLevelName` removed. Unit tests: `AccessLevel::label()` and the `AssignmentListItem` level methods; fix the tests that build these entities.
+- [x] A2. `AssignmentFormOptions::$accessLevels` and `AssignmentService::formOptions()`.
+- [x] A3. Templates of the employee form, site form, assignment form, Employees list, Sites list and My assignments use the label; the two new assignment form messages replace the old ones in all six message files. Page tests: each place renders "Name (n)".
 
 ### B. Badge tooltip
 
-- [ ] B1. `src/Web/Shared/Access/access-level-too-low-badge.twig`, used by the Assignments list; the tooltip message in all six message files.
-- [ ] B2. The delegated tooltip in `assets/assignment/assignment.js`.
-- [ ] B3. Page test: a flagged assignment's badge has `tabindex="0"`, `data-bs-toggle="tooltip"`, the `data-bs-title` and the hidden text with the site's and the employee's levels; the Assignments list has no inline script.
+- [x] B1. `src/Web/Shared/Access/access-level-too-low-badge.twig`, used by the Assignments list; the tooltip message in all six message files.
+- [x] B2. The delegated tooltip in `assets/assignment/assignment.js`.
+- [x] B3. Page test: a flagged assignment's badge has `tabindex="0"`, `data-bs-toggle="tooltip"`, the `data-bs-title` and the hidden text with the site's and the employee's levels; the Assignments list has no inline script.
 
 ### Z. Wrap-up
 
-- [ ] Z1. `make check` green.
-- [ ] Z2. Update `README.md` if it describes the labels or the badge.
-- [ ] Z3. Manual check on the dark theme at 375 and 1280 px: the badge tooltip by hover, keyboard focus and tap; the labels on the forms, lists and My assignments.
+- [x] Z1. `make check` green.
+- [x] Z2. Update `README.md` if it describes the labels or the badge (the badge sentence in Running the app now mentions the tooltip).
+- [x] Z3. Manual check on the dark theme at 375 and 1280 px: the badge tooltip by hover, keyboard focus and tap; the labels on the forms, lists and My assignments.
