@@ -69,6 +69,8 @@ return [
     'You have no assigned work yet. Your manager will assign work to you.' => 'Jums vēl nav piešķirtu uzdevumu. Tos piešķirs jūsu vadītājs.',
     'Required access level: {level}' => 'Nepieciešamais piekļuves līmenis: {level}',
     'Open in Google Maps' => 'Atvērt Google Maps',
+    'Your manager: {name}' => 'Jūsu vadītājs: {name}',
+    "You don't have a manager yet." => 'Jums vēl nav vadītāja.',
     'History ({count})' => 'Vēsture ({count})',
     'Planned' => 'Plānots',
     'In progress' => 'Procesā',

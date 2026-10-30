@@ -69,6 +69,8 @@ return [
     'You have no assigned work yet. Your manager will assign work to you.' => 'Вам пока не назначено ни одного задания. Задания назначит ваш руководитель.',
     'Required access level: {level}' => 'Требуемый уровень допуска: {level}',
     'Open in Google Maps' => 'Открыть в Google Картах',
+    'Your manager: {name}' => 'Ваш руководитель: {name}',
+    "You don't have a manager yet." => 'У вас пока нет руководителя.',
     'History ({count})' => 'История ({count})',
     'Planned' => 'Запланировано',
     'In progress' => 'В работе',
