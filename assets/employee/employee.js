@@ -1,6 +1,6 @@
-document.addEventListener('DOMContentLoaded', () => {
-    const role = document.getElementById('role');
-    const manager = document.getElementById('managerId');
+const initEmployeeForm = (root) => {
+    const role = root.querySelector('#role');
+    const manager = root.querySelector('#managerId');
     if (role === null || manager === null) {
         return;
     }
@@ -15,4 +15,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
     role.addEventListener('change', lockManager);
     lockManager();
-});
+};
+
+document.addEventListener('app:content-loaded', (event) => initEmployeeForm(event.target));
+
+document.addEventListener('DOMContentLoaded', () => initEmployeeForm(document));

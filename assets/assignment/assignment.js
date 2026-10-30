@@ -1,19 +1,6 @@
-document.addEventListener('submit', (event) => {
-    const form = event.target;
-    if (form.matches('form[data-confirm]') && !window.confirm(form.dataset.confirm)) {
-        event.preventDefault();
-    }
-});
-
-document.addEventListener('DOMContentLoaded', () => {
-    new bootstrap.Tooltip(document.body, {selector: '[data-bs-toggle="tooltip"]'});
-
-    const employee = document.getElementById('employee');
-    if (employee !== null && window.location.hash === '#employee') {
-        employee.focus();
-    }
-
-    const site = document.getElementById('constructionSite');
+const initAssignmentForm = (root) => {
+    const employee = root.querySelector('#employee');
+    const site = root.querySelector('#constructionSite');
     if (employee === null || site === null) {
         return;
     }
@@ -36,4 +23,17 @@ document.addEventListener('DOMContentLoaded', () => {
 
     employee.addEventListener('change', filterSites);
     filterSites();
+};
+
+document.addEventListener('app:content-loaded', (event) => initAssignmentForm(event.target));
+
+document.addEventListener('DOMContentLoaded', () => {
+    new bootstrap.Tooltip(document.body, {selector: '[data-bs-toggle="tooltip"]'});
+
+    const employee = document.getElementById('employee');
+    if (employee !== null && window.location.hash === '#employee') {
+        employee.focus();
+    }
+
+    initAssignmentForm(document);
 });

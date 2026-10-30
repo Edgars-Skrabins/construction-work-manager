@@ -1,0 +1,12 @@
+{% do assetManager.register('App\\Web\\Shared\\Layout\\Main\\ModalAsset') %}
+<div class="modal fade" id="app-modal" tabindex="-1" aria-labelledby="app-modal-title" aria-hidden="true" data-modal data-loading-text="{{ t('Loading…') }}">
+    <div class="modal-dialog modal-lg modal-dialog-scrollable modal-fullscreen-sm-down">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 class="modal-title fs-5" id="app-modal-title"></h2>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="{{ t('Close') }}"></button>
+            </div>
+            <div class="modal-body"></div>
+        </div>
+    </div>
+</div>
