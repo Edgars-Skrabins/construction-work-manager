@@ -7,68 +7,70 @@
     {% endif %}
 </div>
 {% include 'Web/Shared/Listing/search-form.twig' with {route: 'assignment.list', placeholder: t('Employee, work item or site')} %}
-{% if chips is not empty %}
-    {% set filterLabels = {employee: t('Employee'), workItem: t('Work item'), site: t('Construction site')} %}
-    <div class="d-flex flex-wrap gap-2 mb-3">
-        {% for chip in chips %}
-            <span class="badge rounded-pill text-bg-secondary d-inline-flex align-items-center gap-2 fs-6 fw-normal">
-                {{ t('{label}: {name}', {label: filterLabels[chip.filter], name: chip.name}) }}
-                <a class="link-light text-decoration-none" href="{{ urlGenerator.generate('assignment.list', [], {sort: paginator.getSort().getOrderAsString(), q: q ?: null}|merge(chip.without)) }}" aria-label="{{ t('Clear filter') }}" title="{{ t('Clear filter') }}">×</a>
-            </span>
-        {% endfor %}
-    </div>
-{% endif %}
-{% if paginator.getTotalItems() == 0 and q != '' %}
-    <p class="text-secondary">{{ t('No results for “{query}”.', {query: q}) }}</p>
-{% elseif paginator.getTotalItems() == 0 and filters is not empty %}
-    <p class="text-secondary">{{ t('No assignments match the filter.') }}</p>
-{% elseif paginator.getTotalItems() == 0 %}
-    <p class="text-secondary">{{ t('No assignments yet.') }}</p>
-{% else %}
-    <div class="table-responsive">
-        <table class="table align-middle assignment-table">
-            <thead>
-                <tr>
-                    <th scope="col">{% include 'Web/Shared/Listing/sort-link.twig' with {label: t('Employee'), key: 'employee', route: 'assignment.list'} %}</th>
-                    <th scope="col">{% include 'Web/Shared/Listing/sort-link.twig' with {label: t('Work item'), key: 'workItem', route: 'assignment.list'} %}</th>
-                    <th scope="col">{% include 'Web/Shared/Listing/sort-link.twig' with {label: t('Construction site'), key: 'site', route: 'assignment.list'} %}</th>
-                    <th scope="col">{% include 'Web/Shared/Listing/sort-link.twig' with {label: t('Start date'), key: 'startDate', route: 'assignment.list'} %}</th>
-                    <th scope="col">{% include 'Web/Shared/Listing/sort-link.twig' with {label: t('End date'), key: 'endDate', route: 'assignment.list'} %}</th>
-                    <th scope="col">{{ t('Status') }}</th>
-                    <th scope="col" class="text-end">{{ t('Actions') }}</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for row in rows %}
-                    {% set item = row.item %}
-                    <tr class="{{ row.status.stripeClass() }}">
-                        <td>{{ item.employeeName }}</td>
-                        <td>{{ item.workItemName }}</td>
-                        <td>{{ item.constructionSiteName }}</td>
-                        <td class="text-nowrap">{{ item.assignment.startDate|date('Y-m-d') }}</td>
-                        <td class="text-nowrap">{{ item.assignment.endDate|date('Y-m-d') }}</td>
-                        <td>
-                            <span class="badge {{ row.status.badgeClass() }}">{{ t(row.status.label()) }}</span>
-                            {% if item.accessLevelTooLow() %}
-                                {% include 'Web/Shared/Access/access-level-too-low-badge.twig' with {item: item} %}
-                            {% endif %}
-                        </td>
-                        <td class="text-end text-nowrap">
-                            {% if access.can('assignment.update') %}
-                                <a class="btn btn-sm btn-outline-primary" href="{{ urlGenerator.generate('assignment.edit', {id: item.assignment.id}) }}">{{ t('Edit') }}</a>
-                                <a class="btn btn-sm btn-outline-secondary" href="{{ urlGenerator.generate('assignment.edit', {id: item.assignment.id}) }}#employee">{{ t('Reassign') }}</a>
-                            {% endif %}
-                            {% if access.can('assignment.delete') %}
-                                <form class="d-inline" method="post" action="{{ urlGenerator.generate('assignment.delete', {id: item.assignment.id}) }}" data-confirm="{{ t('Delete this assignment?') }}">
-                                    {{ csrf.hiddenInput()|raw }}
-                                    <button type="submit" class="btn btn-sm btn-outline-danger">{{ t('Delete') }}</button>
-                                </form>
-                            {% endif %}
-                        </td>
+<div data-list-results>
+    {% if chips is not empty %}
+        {% set filterLabels = {employee: t('Employee'), workItem: t('Work item'), site: t('Construction site')} %}
+        <div class="d-flex flex-wrap gap-2 mb-3">
+            {% for chip in chips %}
+                <span class="badge rounded-pill text-bg-secondary d-inline-flex align-items-center gap-2 fs-6 fw-normal">
+                    {{ t('{label}: {name}', {label: filterLabels[chip.filter], name: chip.name}) }}
+                    <a class="link-light text-decoration-none" href="{{ urlGenerator.generate('assignment.list', [], {sort: paginator.getSort().getOrderAsString(), q: q ?: null}|merge(chip.without)) }}" aria-label="{{ t('Clear filter') }}" title="{{ t('Clear filter') }}">×</a>
+                </span>
+            {% endfor %}
+        </div>
+    {% endif %}
+    {% if paginator.getTotalItems() == 0 and q != '' %}
+        <p class="text-secondary">{{ t('No results for “{query}”.', {query: q}) }}</p>
+    {% elseif paginator.getTotalItems() == 0 and filters is not empty %}
+        <p class="text-secondary">{{ t('No assignments match the filter.') }}</p>
+    {% elseif paginator.getTotalItems() == 0 %}
+        <p class="text-secondary">{{ t('No assignments yet.') }}</p>
+    {% else %}
+        <div class="table-responsive">
+            <table class="table align-middle assignment-table">
+                <thead>
+                    <tr>
+                        <th scope="col">{% include 'Web/Shared/Listing/sort-link.twig' with {label: t('Employee'), key: 'employee', route: 'assignment.list'} %}</th>
+                        <th scope="col">{% include 'Web/Shared/Listing/sort-link.twig' with {label: t('Work item'), key: 'workItem', route: 'assignment.list'} %}</th>
+                        <th scope="col">{% include 'Web/Shared/Listing/sort-link.twig' with {label: t('Construction site'), key: 'site', route: 'assignment.list'} %}</th>
+                        <th scope="col">{% include 'Web/Shared/Listing/sort-link.twig' with {label: t('Start date'), key: 'startDate', route: 'assignment.list'} %}</th>
+                        <th scope="col">{% include 'Web/Shared/Listing/sort-link.twig' with {label: t('End date'), key: 'endDate', route: 'assignment.list'} %}</th>
+                        <th scope="col">{{ t('Status') }}</th>
+                        <th scope="col" class="text-end">{{ t('Actions') }}</th>
                     </tr>
-                {% endfor %}
-            </tbody>
-        </table>
-    </div>
-    {% include 'Web/Shared/Listing/pagination.twig' with {route: 'assignment.list'} %}
-{% endif %}
+                </thead>
+                <tbody>
+                    {% for row in rows %}
+                        {% set item = row.item %}
+                        <tr class="{{ row.status.stripeClass() }}">
+                            <td>{{ item.employeeName }}</td>
+                            <td>{{ item.workItemName }}</td>
+                            <td>{{ item.constructionSiteName }}</td>
+                            <td class="text-nowrap">{{ item.assignment.startDate|date('Y-m-d') }}</td>
+                            <td class="text-nowrap">{{ item.assignment.endDate|date('Y-m-d') }}</td>
+                            <td>
+                                <span class="badge {{ row.status.badgeClass() }}">{{ t(row.status.label()) }}</span>
+                                {% if item.accessLevelTooLow() %}
+                                    {% include 'Web/Shared/Access/access-level-too-low-badge.twig' with {item: item} %}
+                                {% endif %}
+                            </td>
+                            <td class="text-end text-nowrap">
+                                {% if access.can('assignment.update') %}
+                                    <a class="btn btn-sm btn-outline-primary" href="{{ urlGenerator.generate('assignment.edit', {id: item.assignment.id}) }}">{{ t('Edit') }}</a>
+                                    <a class="btn btn-sm btn-outline-secondary" href="{{ urlGenerator.generate('assignment.edit', {id: item.assignment.id}) }}#employee">{{ t('Reassign') }}</a>
+                                {% endif %}
+                                {% if access.can('assignment.delete') %}
+                                    <form class="d-inline" method="post" action="{{ urlGenerator.generate('assignment.delete', {id: item.assignment.id}) }}" data-confirm="{{ t('Delete this assignment?') }}">
+                                        {{ csrf.hiddenInput()|raw }}
+                                        <button type="submit" class="btn btn-sm btn-outline-danger">{{ t('Delete') }}</button>
+                                    </form>
+                                {% endif %}
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% include 'Web/Shared/Listing/pagination.twig' with {route: 'assignment.list'} %}
+    {% endif %}
+</div>

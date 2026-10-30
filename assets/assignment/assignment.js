@@ -1,13 +1,12 @@
+document.addEventListener('submit', (event) => {
+    const form = event.target;
+    if (form.matches('form[data-confirm]') && !window.confirm(form.dataset.confirm)) {
+        event.preventDefault();
+    }
+});
+
 document.addEventListener('DOMContentLoaded', () => {
     new bootstrap.Tooltip(document.body, {selector: '[data-bs-toggle="tooltip"]'});
-
-    document.querySelectorAll('form[data-confirm]').forEach((form) => {
-        form.addEventListener('submit', (event) => {
-            if (!window.confirm(form.dataset.confirm)) {
-                event.preventDefault();
-            }
-        });
-    });
 
     const employee = document.getElementById('employee');
     if (employee !== null && window.location.hash === '#employee') {
