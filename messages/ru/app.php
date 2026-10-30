@@ -120,6 +120,9 @@ return [
     'Show' => 'Показать',
     'Status legend' => 'Обозначения статусов',
     'No assigned work this month.' => 'В этом месяце заданий нет.',
+    'My work calendar' => 'Мой календарь работ',
+    'Calendar' => 'Календарь',
+    'List' => 'Список',
 
     'Setup code for {name}' => 'Код активации — {name}',
     'Give this code to the employee. It is shown only once and is valid for 72 hours. They enter it on the Set password page.' => 'Передайте этот код сотруднику. Он показывается только один раз и действует 72 часа. Сотрудник вводит его на странице «Задать пароль».',

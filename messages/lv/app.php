@@ -120,6 +120,9 @@ return [
     'Show' => 'Rādīt',
     'Status legend' => 'Statusu skaidrojums',
     'No assigned work this month.' => 'Šomēnes nav piešķirtu darbu.',
+    'My work calendar' => 'Mans darbu kalendārs',
+    'Calendar' => 'Kalendārs',
+    'List' => 'Saraksts',
 
     'Setup code for {name}' => 'Aktivizācijas kods — {name}',
     'Give this code to the employee. It is shown only once and is valid for 72 hours. They enter it on the Set password page.' => 'Nododiet šo kodu darbiniekam. Tas tiek parādīts tikai vienreiz un ir derīgs 72 stundas. Darbinieks to ievada lapā „Iestatīt paroli”.',

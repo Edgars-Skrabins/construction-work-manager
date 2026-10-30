@@ -120,6 +120,9 @@ return [
     'Show' => 'Näytä',
     'Status legend' => 'Tilojen selitykset',
     'No assigned work this month.' => 'Tälle kuulle ei ole annettu töitä.',
+    'My work calendar' => 'Oma työkalenteri',
+    'Calendar' => 'Kalenteri',
+    'List' => 'Luettelo',
 
     'Setup code for {name}' => 'Aktivointikoodi – {name}',
     'Give this code to the employee. It is shown only once and is valid for 72 hours. They enter it on the Set password page.' => 'Anna tämä koodi työntekijälle. Se näytetään vain kerran ja on voimassa 72 tuntia. Työntekijä syöttää sen sivulla ”Aseta salasana”.',

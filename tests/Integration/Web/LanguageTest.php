@@ -276,6 +276,8 @@ final class LanguageTest extends IntegrationTestCase
         yield 'forbidden' => ['employee@mail.test', 'GET', '/employees', []];
         yield 'my assignments' => ['employee@mail.test', 'GET', '/my-assignments', []];
         yield 'empty my assignments' => ['admin@mail.test', 'GET', '/my-assignments', []];
+        yield 'my calendar' => ['employee@mail.test', 'GET', '/my-assignments/calendar', []];
+        yield 'empty my calendar month' => ['employee@mail.test', 'GET', '/my-assignments/calendar?month=2030-03', []];
         yield 'employees' => ['admin@mail.test', 'GET', '/employees', []];
         yield 'employee create errors' => ['admin@mail.test', 'POST', '/employees/create', ['firstName' => '', 'lastName' => '', 'birthDate' => 'x', 'accessLevelId' => '', 'role' => '', 'managerId' => 'x', 'email' => 'x']];
         yield 'employee edit' => ['admin@mail.test', 'GET', '/employees/4/edit', []];

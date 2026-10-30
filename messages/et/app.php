@@ -120,6 +120,9 @@ return [
     'Show' => 'Näita',
     'Status legend' => 'Olekute selgitus',
     'No assigned work this month.' => 'Sel kuul pole tööd määratud.',
+    'My work calendar' => 'Minu töökalender',
+    'Calendar' => 'Kalender',
+    'List' => 'Nimekiri',
 
     'Setup code for {name}' => 'Aktiveerimiskood – {name}',
     'Give this code to the employee. It is shown only once and is valid for 72 hours. They enter it on the Set password page.' => 'Anna see kood töötajale. Seda näidatakse ainult üks kord ja see kehtib 72 tundi. Töötaja sisestab selle lehel „Määra parool“.',
