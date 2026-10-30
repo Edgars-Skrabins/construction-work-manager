@@ -1,0 +1,17 @@
+.list-truncate {
+    max-width: 10rem;
+}
+
+.list-truncate-wide {
+    max-width: 14rem;
+}
+
+@media (min-width: 992px) {
+    .list-truncate {
+        max-width: 16rem;
+    }
+
+    .list-truncate-wide {
+        max-width: 28rem;
+    }
+}

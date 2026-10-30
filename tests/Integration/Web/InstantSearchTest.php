@@ -61,7 +61,7 @@ final class InstantSearchTest extends IntegrationTestCase
 
         $body = (string) $this->request('GET', $path . '?q=zzzz')->getBody();
 
-        assertMatchesRegularExpression('#<div data-list-results>\s*<p class="text-secondary">No results for “zzzz”.</p>\s*</div>#', $body);
+        assertMatchesRegularExpression('#<div data-list-results>\s*<p class="text-secondary text-center border rounded py-4 px-3 mb-0">No results for “zzzz”.</p>\s*</div>#', $body);
         assertStringContainsString('data-list-status>No results for “zzzz”.</p>', $body);
         assertMatchesRegularExpression('#<span data-list-clear><a class="btn btn-link" href="' . preg_quote($path, '#') . '\?sort=[^"]*">Clear</a></span>#', $body);
     }
