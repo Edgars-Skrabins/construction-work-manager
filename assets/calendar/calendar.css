@@ -1,0 +1,108 @@
+.calendar .status-planned {
+    --calendar-accent: var(--bs-secondary-color);
+}
+
+.calendar .status-in-progress {
+    --calendar-accent: var(--bs-primary);
+}
+
+.calendar .status-overdue {
+    --calendar-accent: var(--bs-danger);
+}
+
+.calendar .status-done {
+    --calendar-accent: var(--bs-success);
+}
+
+.calendar-swatch {
+    display: inline-block;
+    width: 0.75rem;
+    height: 0.75rem;
+    vertical-align: -0.0625rem;
+    background-color: var(--bs-tertiary-bg);
+    background-color: color-mix(in srgb, var(--calendar-accent) 12%, var(--bs-body-bg));
+    border: 1px solid var(--bs-border-color);
+    border-left: 3px solid var(--calendar-accent);
+    border-radius: 0.125rem;
+}
+
+.calendar-entry {
+    display: block;
+    width: 100%;
+    margin-bottom: 0.25rem;
+    padding: 0.125rem 0.375rem;
+    font-size: 0.8125rem;
+    line-height: 1.3;
+    text-align: start;
+    color: var(--bs-body-color);
+    background-color: var(--bs-tertiary-bg);
+    background-color: color-mix(in srgb, var(--calendar-accent) 10%, var(--bs-body-bg));
+    border: 0;
+    border-left: 3px solid var(--calendar-accent);
+    border-radius: 0.25rem;
+}
+
+.calendar-entry:hover {
+    background-color: var(--bs-secondary-bg);
+    background-color: color-mix(in srgb, var(--calendar-accent) 18%, var(--bs-body-bg));
+}
+
+.calendar-entry:focus-visible,
+.calendar-more:focus-visible {
+    outline: 0;
+    box-shadow: 0 0 0 0.25rem var(--bs-focus-ring-color);
+}
+
+.calendar-entry-line {
+    display: block;
+    overflow-wrap: anywhere;
+}
+
+.calendar-entry-line + .calendar-entry-line {
+    color: var(--bs-secondary-color);
+}
+
+.calendar-enhanced .calendar-entry:not(.calendar-entry-full) .calendar-entry-line {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.calendar-enhanced .calendar-entry-extra,
+.calendar-more {
+    display: none;
+}
+
+.calendar-enhanced .calendar-more {
+    display: inline-block;
+}
+
+.calendar-entry-full {
+    padding: 0.375rem 0.5rem;
+    font-size: 0.875rem;
+}
+
+.work-calendar {
+    table-layout: fixed;
+}
+
+.work-calendar td {
+    height: 6rem;
+    padding: 0.375rem;
+    vertical-align: top;
+}
+
+.work-calendar td.calendar-today {
+    --bs-table-bg: var(--bs-primary-bg-subtle);
+    box-shadow: inset 0 0 0 2px var(--bs-primary);
+}
+
+.calendar-detail + .calendar-detail {
+    margin-top: 1rem;
+    padding-top: 1rem;
+    border-top: 1px solid var(--bs-border-color);
+}
+
+.calendar-year {
+    width: 6rem;
+}

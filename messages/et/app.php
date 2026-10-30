@@ -133,6 +133,13 @@ return [
     'My work calendar' => 'Minu töökalender',
     'Calendar' => 'Kalender',
     'List' => 'Nimekiri',
+    'Go to month' => 'Mine kuule',
+    'Month' => 'Kuu',
+    'Year' => 'Aasta',
+    'Go' => 'Mine',
+    'Assignment details' => 'Ülesande üksikasjad',
+    'Close' => 'Sulge',
+    '{count, plural, other{+# more}}' => '{count, plural, one{+# veel} other{+# veel}}',
 
     'Setup code for {name}' => 'Aktiveerimiskood – {name}',
     'Give this code to the employee. It is shown only once and is valid for 72 hours. They enter it on the Set password page.' => 'Anna see kood töötajale. Seda näidatakse ainult üks kord ja see kehtib 72 tundi. Töötaja sisestab selle lehel „Määra parool“.',
