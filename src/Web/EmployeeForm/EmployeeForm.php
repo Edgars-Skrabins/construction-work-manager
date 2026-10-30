@@ -6,6 +6,7 @@ namespace App\Web\EmployeeForm;
 
 use App\Access\Role;
 use App\Entity\Employee;
+use App\Entity\IsoDate;
 use App\Service\EmployeeInput;
 use App\Web\Shared\Form\FormBody;
 use DateTimeImmutable;
@@ -106,9 +107,7 @@ final class EmployeeForm
     public function checkBirthDate(mixed $value): Result
     {
         $result = new Result();
-        $date = is_string($value) ? DateTimeImmutable::createFromFormat('!Y-m-d', $value) : false;
-
-        if ($date === false || $date->format('Y-m-d') !== $value) {
+        if (!is_string($value) || IsoDate::parse($value) === null) {
             return $result->addError('Enter the birth date as YYYY-MM-DD.');
         }
 

@@ -93,7 +93,7 @@ return [
     '—' => '—',
     'Pending setup' => 'Ootab aktiveerimist',
     'Inactive' => 'Mitteaktiivne',
-    '(you)' => '(sina)',
+    '(you)' => '(teie)',
     'No manager' => 'Juht puudub',
     "Login pending: the employee hasn't set a password yet." => 'Konto ootab aktiveerimist: töötaja ei ole veel parooli määranud.',
     'New setup code' => 'Uus aktiveerimiskood',
