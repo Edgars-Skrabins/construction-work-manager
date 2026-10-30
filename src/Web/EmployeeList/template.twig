@@ -25,7 +25,7 @@
                     <th scope="col">{% include 'Web/Shared/Listing/sort-link.twig' with {label: t('Access level'), key: 'accessLevel', route: 'employee.list'} %}</th>
                     <th scope="col">{% include 'Web/Shared/Listing/sort-link.twig' with {label: t('Role'), key: 'role', route: 'employee.list'} %}</th>
                     <th scope="col">{% include 'Web/Shared/Listing/sort-link.twig' with {label: t('Manager'), key: 'manager', route: 'employee.list'} %}</th>
-                    <th scope="col">{{ t('Login') }}</th>
+                    <th scope="col">{% include 'Web/Shared/Listing/sort-link.twig' with {label: t('Login'), key: 'login', route: 'employee.list'} %}</th>
                     <th scope="col" class="text-end">{{ t('Actions') }}</th>
                 </tr>
             </thead>
