@@ -17,5 +17,6 @@ final readonly class MyAssignments
     public function __construct(
         public array $sites,
         public array $history,
+        public ?string $managerName,
     ) {}
 }

@@ -69,6 +69,8 @@ return [
     'You have no assigned work yet. Your manager will assign work to you.' => 'Sinulle ei ole vielä annettu työtehtäviä. Esihenkilösi antaa ne sinulle.',
     'Required access level: {level}' => 'Vaadittu kulkuoikeustaso: {level}',
     'Open in Google Maps' => 'Avaa Google Mapsissa',
+    'Your manager: {name}' => 'Esihenkilösi: {name}',
+    "You don't have a manager yet." => 'Sinulla ei ole vielä esihenkilöä.',
     'History ({count})' => 'Historia ({count})',
     'Planned' => 'Suunniteltu',
     'In progress' => 'Käynnissä',

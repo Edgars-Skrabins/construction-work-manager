@@ -25,6 +25,7 @@ final class MyAssignmentsPageTest extends IntegrationTestCase
     {
         $this->resetServices();
         $this->db()->createCommand()->update('CONSTRUCTION_SITE', ['NAME' => self::SITE], ['ID' => 1])->execute();
+        $this->db()->createCommand()->update('EMPLOYEE', ['MANAGER_ID' => 2], ['ID' => 4])->execute();
     }
 
     public function testEmployeeSeesOnlyTheirOwnAssignmentsGroupedBySite(): void
@@ -36,6 +37,7 @@ final class MyAssignmentsPageTest extends IntegrationTestCase
 
         assertSame(200, $response->getStatusCode());
         assertStringContainsString('<title>My assignments</title>', $body);
+        assertStringContainsString('<p class="text-secondary">Your manager: Ilze Kalniņa</p>', $body);
         assertStringContainsString('<h2 class="h6 text-secondary text-uppercase mb-1">' . self::SITE . '</h2>', $body);
         assertStringContainsString('Mazā Nometņu iela 12, Rīga, Latvia', $body);
         assertStringContainsString('Required access level: General', $body);
@@ -83,6 +85,7 @@ final class MyAssignmentsPageTest extends IntegrationTestCase
 
         $body = (string) $this->request('GET', '/my-assignments')->getBody();
 
+        assertStringContainsString('Your manager: Ilze Kalniņa', $body);
         assertStringContainsString(self::EMPTY_STATE, $body);
         assertStringNotContainsString('<section', $body);
         assertStringContainsString('<summary>History (2)</summary>', $body);
@@ -90,6 +93,17 @@ final class MyAssignmentsPageTest extends IntegrationTestCase
         assertStringContainsString('<div class="assignment-block status-done ', $body);
         assertStringContainsString('<div class="assignment-block status-cancelled ', $body);
         assertStringContainsString('<span class="badge text-bg-secondary">Cancelled</span>', $body);
+    }
+
+    public function testEmployeeWithoutManagerIsToldSo(): void
+    {
+        $this->db()->createCommand()->update('EMPLOYEE', ['MANAGER_ID' => null], ['ID' => 4])->execute();
+        $this->logIn('employee@mail.test', '123123123');
+
+        $body = (string) $this->request('GET', '/my-assignments')->getBody();
+
+        assertStringContainsString('<p class="text-secondary">You don&#039;t have a manager yet.</p>', $body);
+        assertStringNotContainsString('Your manager:', $body);
     }
 
     public function testEmployeeIsRedirectedFromHomeToTheirAssignments(): void
