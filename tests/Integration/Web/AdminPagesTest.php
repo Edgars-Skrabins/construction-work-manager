@@ -88,8 +88,8 @@ final class AdminPagesTest extends IntegrationTestCase
     {
         $this->asAdmin();
 
-        $employees = (string) $this->request('GET', '/employees?q=' . rawurlencode('Bērziņš'))->getBody();
-        assertMatchesRegularExpression('#<td>Bērziņš, Jānis</td>(?:(?!</tr>).)*<td>Classified \(4\)</td>#su', $employees);
+        $employees = (string) $this->request('GET', '/employees?q=' . rawurlencode('Kalniņa'))->getBody();
+        assertMatchesRegularExpression('#<td>Kalniņa, Ilze</td>(?:(?!</tr>).)*<td>Classified \(4\)</td>#su', $employees);
 
         $sites = (string) $this->request('GET', '/sites?q=' . rawurlencode('Ādaži'))->getBody();
         assertMatchesRegularExpression('#<td>Ādaži Defence Facility</td>(?:(?!</tr>).)*<td>Classified \(4\)</td>#su', $sites);
