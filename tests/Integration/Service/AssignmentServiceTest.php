@@ -97,7 +97,7 @@ final class AssignmentServiceTest extends IntegrationTestCase
             $s->create(4, 4, 1, 1, '2026-11-10', '2026-11-20');
         }];
         yield 'update' => [static function (AssignmentService $s, Assignment $a): void {
-            $s->update(4, $a->id, '2026-11-10', '2026-11-20', 'done');
+            $s->update(4, $a->id, $a->employeeId, '2026-11-10', '2026-11-20', 'done');
         }];
         yield 'delete' => [static function (AssignmentService $s, Assignment $a): void {
             $s->delete(4, $a->id);
@@ -158,7 +158,7 @@ final class AssignmentServiceTest extends IntegrationTestCase
 
         $this->assertErrors(fn() => $this->assignments()->create(2, 5, 1, 2, '2026-11-10', '2026-11-20'), $overlap);
 
-        $this->assignments()->update(2, $other->id, '2026-11-01', '2026-11-12', 'cancelled');
+        $this->assignments()->update(2, $other->id, $other->employeeId, '2026-11-01', '2026-11-12', 'cancelled');
 
         $this->assertCreated(5, 1, 2);
     }
@@ -167,7 +167,7 @@ final class AssignmentServiceTest extends IntegrationTestCase
     {
         $assignment = $this->existing(5, 1, 2, '2026-11-10', '2026-11-20');
 
-        $this->assignments()->update(2, $assignment->id, '2026-11-12', '2026-11-25', 'active');
+        $this->assignments()->update(2, $assignment->id, $assignment->employeeId, '2026-11-12', '2026-11-25', 'active');
 
         $updated = $this->assignments()->find(2, $assignment->id)?->assignment;
         assertSame(['2026-11-12', '2026-11-25'], [$updated?->startDate->format('Y-m-d'), $updated?->endDate->format('Y-m-d')]);
@@ -179,11 +179,11 @@ final class AssignmentServiceTest extends IntegrationTestCase
         $assignment = $this->existing(5, 1, 2, '2026-11-10', '2026-11-20');
 
         $this->assertErrors(
-            fn() => $this->assignments()->update(2, $assignment->id, '2026-11-10', '2026-11-20', 'planned'),
+            fn() => $this->assignments()->update(2, $assignment->id, $assignment->employeeId, '2026-11-10', '2026-11-20', 'planned'),
             ['status' => 'Choose a status.'],
         );
         $this->assertErrors(
-            fn() => $this->assignments()->update(2, $assignment->id, '2026-11-05', '2026-11-20', 'active'),
+            fn() => $this->assignments()->update(2, $assignment->id, $assignment->employeeId, '2026-11-05', '2026-11-20', 'active'),
             ['startDate' => 'The employee already has this work item at this site from 2026-11-01 to 2026-11-09.'],
         );
     }
@@ -194,12 +194,72 @@ final class AssignmentServiceTest extends IntegrationTestCase
         $this->db()->createCommand('UPDATE EMPLOYEE SET ACCESS_LEVEL_ID = 2 WHERE ID = 6')->execute();
         $levelError = ['constructionSite' => 'The site requires access level 3; the employee has level 2.'];
 
-        $this->assertErrors(fn() => $this->assignments()->update(2, $assignment->id, '2026-11-10', '2026-11-25', 'active'), $levelError);
+        $this->assertErrors(fn() => $this->assignments()->update(2, $assignment->id, $assignment->employeeId, '2026-11-10', '2026-11-25', 'active'), $levelError);
 
-        $this->assignments()->update(2, $assignment->id, '2026-11-10', '2026-11-20', 'done');
+        $this->assignments()->update(2, $assignment->id, $assignment->employeeId, '2026-11-10', '2026-11-20', 'done');
         assertSame(AssignmentStatus::Done, $this->assignments()->find(2, $assignment->id)?->assignment->status);
 
-        $this->assertErrors(fn() => $this->assignments()->update(2, $assignment->id, '2026-11-10', '2026-11-20', 'active'), $levelError);
+        $this->assertErrors(fn() => $this->assignments()->update(2, $assignment->id, $assignment->employeeId, '2026-11-10', '2026-11-20', 'active'), $levelError);
+    }
+
+    public function testManagerReassignsToAnotherOfTheirEmployees(): void
+    {
+        $assignment = $this->existing(4, 1, 1, '2026-11-10', '2026-11-20');
+
+        $this->assignments()->update(2, $assignment->id, 5, '2026-11-10', '2026-11-20', 'active');
+
+        assertSame(5, $this->assignments()->find(2, $assignment->id)?->assignment->employeeId);
+    }
+
+    public function testAdminReassignsToAnotherManagersEmployee(): void
+    {
+        $assignment = $this->existing(4, 1, 1, '2026-11-10', '2026-11-20');
+
+        $this->assignments()->update(1, $assignment->id, 7, '2026-11-10', '2026-11-20', 'active');
+
+        assertSame(7, $this->assignments()->find(1, $assignment->id)?->assignment->employeeId);
+        assertNull($this->assignments()->find(2, $assignment->id));
+    }
+
+    #[DataProvider('forbiddenAssignees')]
+    public function testOnlyAssignableEmployeesCanBeReassigned(int $actorId, int $employeeId): void
+    {
+        $assignment = $this->existing(4, 1, 1, '2026-11-10', '2026-11-20');
+
+        try {
+            $this->assignments()->update($actorId, $assignment->id, $employeeId, '2026-11-10', '2026-11-20', 'done');
+            self::fail('Expected the reassignment to be forbidden.');
+        } catch (ForbiddenException) {
+            assertSame(4, $this->assignments()->find(1, $assignment->id)?->assignment->employeeId);
+        }
+    }
+
+    public function testReassignmentToAnEmployeeBelowTheSitesLevelIsRejectedUnlessDone(): void
+    {
+        $assignment = $this->existing(5, 1, 2, '2026-11-10', '2026-11-20');
+
+        $this->assertErrors(
+            fn() => $this->assignments()->update(2, $assignment->id, 4, '2026-11-10', '2026-11-20', 'active'),
+            ['constructionSite' => 'The site requires access level 2; the employee has level 1.'],
+        );
+
+        $this->assignments()->update(2, $assignment->id, 4, '2026-11-10', '2026-11-20', 'done');
+        assertSame(4, $this->assignments()->find(2, $assignment->id)?->assignment->employeeId);
+    }
+
+    public function testReassignmentChecksTheNewEmployeesOverlapAndIgnoresItself(): void
+    {
+        $this->existing(6, 1, 2, '2026-11-01', '2026-11-12');
+        $assignment = $this->existing(5, 1, 2, '2026-11-10', '2026-11-20');
+
+        $this->assertErrors(
+            fn() => $this->assignments()->update(2, $assignment->id, 6, '2026-11-10', '2026-11-20', 'active'),
+            ['startDate' => 'The employee already has this work item at this site from 2026-11-01 to 2026-11-12.'],
+        );
+
+        $this->assignments()->update(2, $assignment->id, 6, '2026-11-13', '2026-11-20', 'active');
+        $this->assignments()->update(2, $assignment->id, 6, '2026-11-14', '2026-11-20', 'active');
+        assertSame(6, $this->assignments()->find(2, $assignment->id)?->assignment->employeeId);
     }
 
     public function testADeadlockedSaveAsksToTryAgain(): void
@@ -215,7 +275,7 @@ final class AssignmentServiceTest extends IntegrationTestCase
         $tryAgain = ['startDate' => "The assignment couldn't be saved because of a change made at the same time. Try again."];
 
         $this->assertErrors(fn() => $assignments->create(2, 5, 3, 2, '2026-11-10', '2026-11-20'), $tryAgain);
-        $this->assertErrors(fn() => $assignments->update(2, $assignment->id, '2026-11-10', '2026-11-25', 'active'), $tryAgain);
+        $this->assertErrors(fn() => $assignments->update(2, $assignment->id, $assignment->employeeId, '2026-11-10', '2026-11-25', 'active'), $tryAgain);
     }
 
     public function testAnotherManagersAssignmentIsNotFound(): void
@@ -232,7 +292,7 @@ final class AssignmentServiceTest extends IntegrationTestCase
     public static function writesOnAnotherManagersAssignment(): iterable
     {
         yield 'update' => [static function (AssignmentService $s, int $id): void {
-            $s->update(2, $id, '2026-11-10', '2026-11-20', 'done');
+            $s->update(2, $id, 7, '2026-11-10', '2026-11-20', 'done');
         }];
         yield 'delete' => [static function (AssignmentService $s, int $id): void {
             $s->delete(2, $id);
@@ -272,6 +332,22 @@ final class AssignmentServiceTest extends IntegrationTestCase
 
         assertSame(1, $this->assignments()->list(2, '', '')->getTotalItems());
         assertSame(2, $this->assignments()->list(1, '', '')->getTotalItems());
+    }
+
+    public function testListFiltersByEmployeeWorkItemAndSiteWithinTheScope(): void
+    {
+        $this->existing(4, 1, 1, '2026-11-10', '2026-11-20');
+        $this->existing(5, 2, 2, '2026-11-10', '2026-11-20');
+        $this->existing(7, 1, 1, '2026-11-10', '2026-11-20');
+
+        assertSame(1, $this->assignments()->list(2, '', '', ['employee' => 4])->getTotalItems());
+        assertSame(1, $this->assignments()->list(2, '', '', ['workItem' => 1])->getTotalItems());
+        assertSame(2, $this->assignments()->list(1, '', '', ['workItem' => 1])->getTotalItems());
+        assertSame(1, $this->assignments()->list(2, '', '', ['site' => 2])->getTotalItems());
+        assertSame(0, $this->assignments()->list(2, '', '', ['workItem' => 1, 'site' => 2])->getTotalItems());
+        assertSame(0, $this->assignments()->list(2, '', '', ['employee' => 7])->getTotalItems());
+        assertSame(1, $this->assignments()->list(1, '', '', ['employee' => 7])->getTotalItems());
+        assertSame(0, $this->assignments()->list(2, '', 'Krūmiņa', ['employee' => 4])->getTotalItems());
     }
 
     public function testEmployeesReadOnlyTheirOwnAssignments(): void

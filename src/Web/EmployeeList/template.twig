@@ -26,14 +26,14 @@
                         <th scope="col">{% include 'Web/Shared/Listing/sort-link.twig' with {label: t('Access level'), key: 'accessLevel', route: 'employee.list'} %}</th>
                         <th scope="col">{% include 'Web/Shared/Listing/sort-link.twig' with {label: t('Role'), key: 'role', route: 'employee.list'} %}</th>
                         <th scope="col">{% include 'Web/Shared/Listing/sort-link.twig' with {label: t('Manager'), key: 'manager', route: 'employee.list'} %}</th>
-                        <th scope="col">{{ t('Login') }}</th>
+                        <th scope="col">{% include 'Web/Shared/Listing/sort-link.twig' with {label: t('Login'), key: 'login', route: 'employee.list'} %}</th>
                         <th scope="col" class="text-end">{{ t('Actions') }}</th>
                     </tr>
                 </thead>
                 <tbody>
                     {% for employee in paginator.read() %}
                         <tr>
-                            <td>{{ employee.lastName }}, {{ employee.firstName }}</td>
+                            <td>{{ employee.lastName }}, {{ employee.firstName }}{% if employee.id ~ '' == currentUser.getId() %} <span class="text-secondary">{{ t('(you)') }}</span>{% endif %}</td>
                             <td class="text-nowrap">{{ employee.birthDate|date('Y-m-d') }}</td>
                             <td>{{ employee.accessLevelName }}</td>
                             <td>{{ t(employee.role.value) }}</td>

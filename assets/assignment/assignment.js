@@ -7,6 +7,10 @@ document.addEventListener('submit', (event) => {
 
 document.addEventListener('DOMContentLoaded', () => {
     const employee = document.getElementById('employee');
+    if (employee !== null && window.location.hash === '#employee') {
+        employee.focus();
+    }
+
     const site = document.getElementById('constructionSite');
     if (employee === null || site === null) {
         return;

@@ -48,13 +48,14 @@ final readonly class AssignmentService
     ) {}
 
     /**
+     * @param array<string, int> $filters
      * @return OffsetPaginator<int, AssignmentListItem>
      */
-    public function list(int $actorId, string $sort, string $search): OffsetPaginator
+    public function list(int $actorId, string $sort, string $search, array $filters = []): OffsetPaginator
     {
         $this->accessChecker->ensure($actorId, Permission::AssignmentRead);
 
-        return $this->assignments->listPaginator($actorId, $this->scope($actorId), $sort, $search);
+        return $this->assignments->listPaginator($actorId, $this->scope($actorId), $sort, $search, $filters);
     }
 
     public function find(int $actorId, int $id): ?AssignmentListItem
@@ -135,12 +136,13 @@ final readonly class AssignmentService
         });
     }
 
-    public function update(int $actorId, int $id, string $startDate, string $endDate, string $status): void
+    public function update(int $actorId, int $id, int $employeeId, string $startDate, string $endDate, string $status): void
     {
         $this->accessChecker->ensure($actorId, Permission::AssignmentUpdate);
+        $scope = $this->scope($actorId);
         $assignment = $this->scopedOrFail($actorId, $id);
 
-        $this->save(function () use ($assignment, $startDate, $endDate, $status): void {
+        $this->save(function () use ($actorId, $scope, $assignment, $employeeId, $startDate, $endDate, $status): void {
             $errors = [];
             $period = $this->period($startDate, $endDate, $errors);
             $newStatus = AssignmentStatus::tryFrom($status);
@@ -148,14 +150,21 @@ final readonly class AssignmentService
                 $errors['status'] = $this->translator->translate('Choose a status.');
             }
 
+            $reassigned = $employeeId !== $assignment->employeeId;
+            $employee = $reassigned || $newStatus === AssignmentStatus::Active
+                ? $this->lockEmployees($assignment->employeeId, $employeeId)
+                : null;
+            if ($reassigned && ($employee === null || !$this->isAssignable($employee, $actorId, $scope))) {
+                throw new ForbiddenException(sprintf('Employee %d may not assign employee %d.', $actorId, $employeeId));
+            }
+
             if ($newStatus === AssignmentStatus::Active) {
-                $employee = $this->employees->findForUpdate($assignment->employeeId);
                 $site = $this->sites->findForUpdate($assignment->constructionSiteId);
                 if ($employee !== null && $site !== null) {
                     $this->checkAccessLevel($employee, $site, $errors);
                 }
                 if ($period !== null && $errors === []) {
-                    $this->checkOverlap($assignment->employeeId, $assignment->workItemId, $assignment->constructionSiteId, $period, $assignment->id, $errors);
+                    $this->checkOverlap($employeeId, $assignment->workItemId, $assignment->constructionSiteId, $period, $assignment->id, $errors);
                 }
             }
 
@@ -163,7 +172,7 @@ final readonly class AssignmentService
                 throw new ValidationException($errors !== [] ? $errors : $this->invalidPeriod());
             }
 
-            $this->assignments->updatePeriodAndStatus($assignment->id, $period[0], $period[1], $newStatus);
+            $this->assignments->update($assignment->id, $employeeId, $period[0], $period[1], $newStatus);
         });
     }
 
@@ -213,6 +222,18 @@ final readonly class AssignmentService
     {
         return $this->assignments->find($id, $actorId, $this->scope($actorId))
             ?? throw new NotFoundException(sprintf('Assignment %d is not reachable for employee %d.', $id, $actorId));
+    }
+
+    private function lockEmployees(int $currentId, int $newId): ?Employee
+    {
+        $ids = array_unique([$currentId, $newId]);
+        sort($ids);
+        $locked = [];
+        foreach ($ids as $id) {
+            $locked[$id] = $this->employees->findForUpdate($id);
+        }
+
+        return $locked[$newId];
     }
 
     private function isAssignable(Employee $employee, int $actorId, Scope $scope): bool
