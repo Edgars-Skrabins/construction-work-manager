@@ -19,7 +19,7 @@ An assignment says who does which work item at which construction site and when,
 - **Rules:**
   - Only actors who may create (`assignment.create`) or update (`assignment.update`) an assignment write its description, within their `AccessScope` (managers: their subordinates' assignments; admins: all). No new permission.
   - The description is plain text: it is always HTML-escaped on output, never rendered with `|raw`; line breaks become `<br>` only after escaping (Twig `nl2br`).
-  - Maximum 1000 characters after trimming, checked by the form validator and again by `AssignmentService` (so every caller is covered).
+  - Line breaks are stored as `\n`, so each counts as one character. Maximum 1000 characters after trimming, checked by the form validator and again by `AssignmentService` (so every caller is covered).
   - Changing only the description of an assignment runs the same save path as any other edit (status, period, employee checks unchanged).
   - Deleting an assignment deletes its description with it.
 - **Out of scope:**
@@ -72,6 +72,7 @@ No new dependencies. `yiisoft/validator` `Length` rule, Twig's built-in `nl2br` 
 7. The shared calendar details template shows the description only when `showEmployee` is true (the Work calendar), because showing it to employees is the scope of `employee-assignment-popup`. (Session, 2026-10-30.)
 8. The description is not searched by the Assignments list search: it isn't shown there, so a match would be unexplained. (Session, 2026-10-30.)
 9. Migration number 019, the next free number after `018_create_auth_throttle`. (Session, 2026-10-30.)
+10. Line breaks are normalised to `\n` (`\r\n` and `\r` alike) before the length check and before storing, because the textarea's `maxlength` counts a line break as one character but the browser submits it as CRLF. `App\Entity\AssignmentDescription` holds `MAX_LENGTH` and `normalize()` (line breaks, then trim); `AssignmentForm::fromBody()` and `AssignmentService` both use it, and the form template reads the limit with Twig `constant()`. (Coordinator review, 2026-10-30.)
 
 # Part 3 — Implementation TODO
 
