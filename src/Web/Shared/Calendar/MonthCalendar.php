@@ -11,6 +11,9 @@ final readonly class MonthCalendar
 {
     private const string DATE_FORMAT = 'Y-m-d';
     private const string MONTH_FORMAT = 'Y-m';
+    private const int FIRST_YEAR = 2000;
+    private const int LAST_YEAR = 2100;
+    private const int YEARS_AROUND = 5;
 
     private function __construct(
         private DateTimeImmutable $month,
@@ -57,19 +60,18 @@ final readonly class MonthCalendar
         return $last->modify(sprintf('+%d days', 7 - (int) $last->format('N')));
     }
 
-    public function previousMonth(): string
+    /**
+     * @return list<int>
+     */
+    public function years(): array
     {
-        return $this->month->modify('-1 month')->format(self::MONTH_FORMAT);
-    }
+        $current = (int) $this->today->format('Y');
+        $years = range(max(self::FIRST_YEAR, $current - self::YEARS_AROUND), min(self::LAST_YEAR, $current + self::YEARS_AROUND));
+        $years[] = (int) $this->month->format('Y');
+        $years = array_values(array_unique($years));
+        sort($years);
 
-    public function nextMonth(): string
-    {
-        return $this->month->modify('+1 month')->format(self::MONTH_FORMAT);
-    }
-
-    public function currentMonth(): string
-    {
-        return $this->today->format(self::MONTH_FORMAT);
+        return $years;
     }
 
     /**
@@ -117,6 +119,6 @@ final readonly class MonthCalendar
         }
         $year = (int) $matches[1];
 
-        return $year >= 2000 && $year <= 2100 ? new DateTimeImmutable($month . '-01') : null;
+        return $year >= self::FIRST_YEAR && $year <= self::LAST_YEAR ? new DateTimeImmutable($month . '-01') : null;
     }
 }
