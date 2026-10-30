@@ -11,12 +11,14 @@ use App\Access\ForbiddenException;
 use App\Access\Permission;
 use App\Access\Role;
 use App\Access\Scope;
+use App\Entity\AccessLevel;
 use App\Entity\Assignment;
 use App\Entity\AssignmentDisplayStatus;
 use App\Entity\AssignmentListItem;
 use App\Entity\AssignmentStatus;
 use App\Entity\ConstructionSite;
 use App\Entity\Employee;
+use App\Repository\AccessLevelRepositoryInterface;
 use App\Repository\AssignmentRepositoryInterface;
 use App\Repository\ConstructionSiteRepositoryInterface;
 use App\Repository\EmployeeRepositoryInterface;
@@ -40,6 +42,7 @@ final readonly class AssignmentService
         private EmployeeRepositoryInterface $employees,
         private ConstructionSiteRepositoryInterface $sites,
         private WorkItemRepositoryInterface $workItems,
+        private AccessLevelRepositoryInterface $accessLevels,
         private AccessChecker $accessChecker,
         private AccessScope $accessScope,
         private ClockInterface $clock,
@@ -93,6 +96,7 @@ final readonly class AssignmentService
             employees: $this->assignableEmployees($actorId, $this->scope($actorId)),
             sites: $this->sites->all(),
             workItems: $this->workItems->all(),
+            accessLevels: $this->accessLevelsById(),
         );
     }
 
@@ -277,8 +281,8 @@ final readonly class AssignmentService
     {
         if ($employee->accessLevelId < $site->requiredAccessLevelId) {
             $errors['constructionSite'] = $this->translator->translate(
-                'The site requires access level {required}; the employee has level {actual}.',
-                ['required' => $site->requiredAccessLevelId, 'actual' => $employee->accessLevelId],
+                'The site requires {required}; the employee has {actual}.',
+                ['required' => $site->requiredAccessLevel()->label(), 'actual' => $this->accessLevelsById()[$employee->accessLevelId]->label()],
             );
         }
     }
@@ -317,5 +321,18 @@ final readonly class AssignmentService
     private function invalidPeriod(): array
     {
         return ['startDate' => $this->translator->translate('Enter a valid start date.')];
+    }
+
+    /**
+     * @return array<int, AccessLevel>
+     */
+    private function accessLevelsById(): array
+    {
+        $levels = [];
+        foreach ($this->accessLevels->all() as $level) {
+            $levels[$level->id] = $level;
+        }
+
+        return $levels;
     }
 }

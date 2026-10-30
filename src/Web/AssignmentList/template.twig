@@ -51,7 +51,7 @@
                             <td>
                                 <span class="badge {{ row.status.badgeClass() }}">{{ t(row.status.label()) }}</span>
                                 {% if item.accessLevelTooLow() %}
-                                    <span class="badge border border-danger text-danger">{{ t('Access level too low') }}</span>
+                                    {% include 'Web/Shared/Access/access-level-too-low-badge.twig' with {item: item} %}
                                 {% endif %}
                             </td>
                             <td class="text-end text-nowrap">

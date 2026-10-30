@@ -6,6 +6,8 @@ document.addEventListener('submit', (event) => {
 });
 
 document.addEventListener('DOMContentLoaded', () => {
+    new bootstrap.Tooltip(document.body, {selector: '[data-bs-toggle="tooltip"]'});
+
     const employee = document.getElementById('employee');
     if (employee !== null && window.location.hash === '#employee') {
         employee.focus();

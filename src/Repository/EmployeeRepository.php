@@ -35,7 +35,7 @@ final readonly class EmployeeRepository implements EmployeeRepositoryInterface
 
         $query = (new Query($this->db))
             ->select([
-                'e.ID', 'e.FIRST_NAME', 'e.LAST_NAME', 'e.BIRTH_DATE', 'e.ROLE',
+                'e.ID', 'e.FIRST_NAME', 'e.LAST_NAME', 'e.BIRTH_DATE', 'e.ACCESS_LEVEL_ID', 'e.ROLE',
                 'LEVEL_NAME' => 'l.NAME',
                 'MANAGER_FIRST_NAME' => 'm.FIRST_NAME',
                 'MANAGER_LAST_NAME' => 'm.LAST_NAME',
@@ -195,7 +195,7 @@ final readonly class EmployeeRepository implements EmployeeRepositoryInterface
      */
     private static function listItemFromRow(array $row): EmployeeListItem
     {
-        /** @var array{ID: int|string, FIRST_NAME: string, LAST_NAME: string, BIRTH_DATE: string, ROLE: string, LEVEL_NAME: string, MANAGER_FIRST_NAME: string|null, MANAGER_LAST_NAME: string|null, ACCOUNT_ID: int|string|null, ACCOUNT_ACTIVE: int|string|bool|null, HAS_PASSWORD: int|string} $row */
+        /** @var array{ID: int|string, FIRST_NAME: string, LAST_NAME: string, BIRTH_DATE: string, ACCESS_LEVEL_ID: int|string, ROLE: string, LEVEL_NAME: string, MANAGER_FIRST_NAME: string|null, MANAGER_LAST_NAME: string|null, ACCOUNT_ID: int|string|null, ACCOUNT_ACTIVE: int|string|bool|null, HAS_PASSWORD: int|string} $row */
         $loginStatus = match (true) {
             $row['ACCOUNT_ID'] === null => LoginStatus::None,
             !(bool) (int) $row['ACCOUNT_ACTIVE'] => LoginStatus::Inactive,
@@ -208,6 +208,7 @@ final readonly class EmployeeRepository implements EmployeeRepositoryInterface
             firstName: $row['FIRST_NAME'],
             lastName: $row['LAST_NAME'],
             birthDate: new DateTimeImmutable($row['BIRTH_DATE']),
+            accessLevelId: (int) $row['ACCESS_LEVEL_ID'],
             accessLevelName: $row['LEVEL_NAME'],
             role: Role::from($row['ROLE']),
             managerName: $row['MANAGER_FIRST_NAME'] === null || $row['MANAGER_LAST_NAME'] === null

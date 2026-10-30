@@ -10,4 +10,9 @@ final readonly class AccessLevel
         public int $id,
         public string $name,
     ) {}
+
+    public function label(): string
+    {
+        return $this->name . ' (' . $this->id . ')';
+    }
 }
