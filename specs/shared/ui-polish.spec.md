@@ -16,7 +16,8 @@ After the UI shell, calendar and modal work, a review of every web page (screens
 6. **Sort indicators are Unicode triangles** (`▲`/`▼`) glued to the label, they say nothing to screen readers, and an unsorted column gives no hint that it can be sorted.
 7. **Hierarchy on My assignments is upside down.** The construction site, the "where" an employee most needs, is a small grey uppercase label above bold work item names, so it reads like a caption rather than the section heading it is. The History disclosure is an unstyled native `<summary>`.
 8. **Two palette values fail WCAG.** Form field borders (`--bs-border-color`, `#34322e` dark, `#d9d4cb` light) are about 1.5:1 against the page and card, below the 3:1 that WCAG 1.4.11 asks of a component's boundary, so an empty input on a card is barely visible. In the dark theme Bootstrap's red `#dc3545`, used as text by the Delete row buttons and the "Access level too low" badge, is 3.76:1 on the card surface, below AA's 4.5:1.
-9. **Small inconsistencies:** the login and set-password titles are weight 500 while every other page title is 600; the "Login pending" alert on the employee form doesn't wrap, so on phones its text is squeezed beside the button; table numbers (dates, areas) use proportional digits, so columns of dates don't line up; text selection and native checkboxes/radios use the browser's blue.
+9. **The calendar month navigation is cluttered** (raised by the user after the first review): "‹ Previous", the month and year as a heading, "Next ›", "Today", then a month select, a year number field and a "Go" button. The month and year appear twice, there are three ways to move, and the year is a free number field with spinner arrows. On the Work calendar the employee filter needs its own "Show" button too.
+10. **Small inconsistencies:** the login and set-password titles are weight 500 while every other page title is 600; the "Login pending" alert on the employee form doesn't wrap, so on phones its text is squeezed beside the button; table numbers (dates, areas) use proportional digits, so columns of dates don't line up; text selection and native checkboxes/radios use the browser's blue.
 
 What should happen instead:
 
@@ -32,14 +33,15 @@ What should happen instead:
   8. On My assignments each construction site is a real section heading in the body text colour and normal case; its address line stays secondary. The History disclosure is a styled toggle with a chevron that turns when open and a 44 px tall target.
   9. Inputs, selects and checkboxes have a border of at least 3:1 against both the page and the card in both themes; cards, tables and dividers keep their quiet borders. Red text (outline Delete buttons, `text-danger`, the access badge, the Overdue status) is at least 4.5:1 in both themes; filled red buttons keep `#dc3545` with white text (4.53:1).
   10. The auth card titles use the same 600 weight as the other page titles. The "Login pending" alert wraps so its button drops below the text on phones. Numbers in tables use tabular digits. Text selection is amber-tinted, and native checkboxes, radios and range controls use the amber accent.
-  11. No page scrolls sideways at 375, 768, 1024 or 1280 px.
+  11. The Work calendar and My work calendar show one month picker: a month select with all twelve months and a year select listing five years back to five years ahead of the current year (plus the shown year if it lies outside that range). Choosing a month or a year opens that month at once, keeping the employee filter. Without a month in the address the current month is shown and selected. There is no Previous, Next, Today or Go control and no separate month heading. On the Work calendar choosing an employee also applies at once, without the "Show" button. Without JavaScript the Go and Show buttons are shown so the forms still submit.
+  12. No page scrolls sideways at 375, 768, 1024 or 1280 px.
 - **Rules:**
   - Refinement only: Bootstrap 5.3, the amber/stone identity, the layout of every page and all behaviour stay as they are.
   - Colours are CSS custom properties defined per theme in `assets/main/site.css`; no hard-coded colours in templates.
   - No inline JavaScript (CSP `script-src 'self'`); icons are inline SVG with `aria-hidden="true"`.
 - **Out of scope:**
-  - The searchable select (spec `ui-select`, in progress in another session).
-  - The calendar grid and its cards (spec `ui-calendar`, just finished); they get the focus, touch-target and token fixes through shared CSS only.
+  - The searchable select's own behaviour (spec `ui-select`); it is merged and gets the shared token and focus fixes.
+  - The calendar grid and its cards (spec `ui-calendar`, just finished); they get the focus, touch-target and token fixes through shared CSS only. The month navigation above the grid is in scope (usage 11).
   - The API, which renders no HTML.
 
 # Part 2 — Technical details
@@ -86,6 +88,14 @@ No new dependencies. Bootstrap 5.3.8 utilities, colour modes and CSS variables, 
 
 - The "Login pending" alert gets `flex-wrap gap-2`.
 
+### Calendar month picker
+
+- `src/Web/Shared/Calendar/MonthCalendar.php`: `years(): list<int>` returns the current year −5 to +5, plus the shown year when outside, sorted and limited to 2000–2100 (the range `parse()` accepts). `previousMonth()`, `nextMonth()` and `currentMonth()` are removed, since nothing links to them any more.
+- `src/Web/Shared/Calendar/month-nav.twig`: one `<form data-calendar-picker>` with the hidden query inputs, a visually hidden `<h2>` with `month_year()` (so the page keeps its heading outline and screen readers hear the month), the month select (`calendar-month`, `monthOfYear`), a year select (`calendar-year`, `year`) over `calendar.years()`, and the Go button with class `calendar-picker-submit`.
+- `src/Web/EmployeeCalendar/template.twig`: the employee filter form also gets `data-calendar-picker`, and its Show button `calendar-picker-submit`.
+- `assets/calendar/calendar.js` adds `calendar-picker-enhanced` to each `form[data-calendar-picker]` (its existing change handler already submits on a select change); `calendar.css` hides `.calendar-picker-enhanced .calendar-picker-submit` and drops `.calendar-year`.
+- The `Months` message (the old nav's label) is unused and removed from all six message files.
+
 ### Translations
 
 - New messages `sorted ascending` and `sorted descending` in all six `messages/*/app.php` files: lv `kārtots augošā secībā` / `kārtots dilstošā secībā`, lt `surikiuota didėjančia tvarka` / `surikiuota mažėjančia tvarka`, et `sorditud kasvavalt` / `sorditud kahanevalt`, ru `отсортировано по возрастанию` / `отсортировано по убыванию`, fi `lajiteltu nousevasti` / `lajiteltu laskevasti`, sv `sorterad stigande` / `sorterad fallande`.
@@ -95,6 +105,8 @@ No new dependencies. Bootstrap 5.3.8 utilities, colour modes and CSS variables, 
 - `tests/Unit/Entity/AssignmentDisplayStatusTest.php`: the new badge classes.
 - `tests/Integration/Web/MyAssignmentsPageTest.php`, `LanguageTest.php`: badge markup, site heading and summary markup.
 - `tests/Integration/Web/AdminPagesTest.php`: sort link markup (icon and the visually hidden sort state instead of `▲`/`▼`).
+- `tests/Unit/Web/Shared/Calendar/MonthCalendarTest.php`: `years()` around today, with a shown year outside the range, and at the 2000/2100 limits; the removed methods' tests go.
+- `tests/Integration/Web/ManagerTeamPagesTest.php`, `MyAssignmentsCalendarPageTest.php`: the picker markup (both selects, the hidden heading, the Go and Show buttons with `calendar-picker-submit`) and no Previous/Next/Today links.
 - `tests/Integration/Web/LayoutTest.php`: the navbar order: the logout form follows the language selector in the control group, the collapse holds the links and an account row with the user's name and a `form="logout-form"` button; there is exactly one logout form.
 
 ## 2.3 Decisions
@@ -111,7 +123,8 @@ All decided by this session on the coordinator's instruction not to interview th
 8. **Sort state for screen readers** is visually hidden text in the link rather than `aria-sort` on the `<th>`, because the sort partial is included inside each list template's `<th>` and the header cells are owned by those templates.
 9. **The 403 and 404 pages, the footer, the calendar grid and the modal frame stay as they are**: the review found them consistent with the rest; they pick up the shared focus, touch-target and token changes.
 10. **The colour scheme stays; only measured failures change** (asked by the user mid-review: suggest a different scheme only with an objective reason). Every text pair in both palettes was measured: body, secondary, accent and link text all pass AA (secondary text 5.2–6.8:1, accent text 6.6–7.9:1). The two failures were field borders (1.5:1, WCAG 1.4.11) and dark-theme red text (3.76:1), fixed through tokens. Rejected: warming the dark page background from neutral `#121212` to match the warm surfaces, which changes no measured value and is taste; and raising the card/page separation in dark (1.10:1), because cards also carry borders or stripes.
-11. **No PRODUCT.md or DESIGN.md** is added; `CLAUDE.md` and the specs already describe the design system.
+11. **Calendar navigation is two selects only** (user request, 2026-10-30): month and year, applied on change, current month by default. Previous, Next and Today are removed as the user suggested, accepting that crossing a year boundary takes two picks. The year is a select (scrollable through the searchable select) of current −5 to +5, wide enough for history and planning while staying short; a shown year outside it, from an old link, is added so the select never lies. The employee filter on the Work calendar applies on change too, for the same reason. Rejected: icon-only arrows beside the selects, which bring back the duplicated navigation the user called out.
+12. **No PRODUCT.md or DESIGN.md** is added; `CLAUDE.md` and the specs already describe the design system.
 
 # Part 3 — Implementation TODO
 
@@ -133,6 +146,10 @@ Baseline before starting: record the test counts from `make check` in A0.
 - [ ] C1. Sort link icons and the visually hidden sort state in `sort-link.twig`, its styles, the two new messages in all six files, and the `AdminPagesTest` update.
 - [ ] C2. My assignments site heading and History toggle, with their styles and the `MyAssignmentsPageTest` update.
 - [ ] C3. Auth title weight, and the wrapping "Login pending" alert in `EmployeeForm/template.twig`.
+
+### D. Calendar month picker
+- [ ] D1. `MonthCalendar::years()` and removal of `previousMonth()`, `nextMonth()`, `currentMonth()`, with `MonthCalendarTest` updated.
+- [ ] D2. Rewrite `month-nav.twig`, auto-apply the employee filter on the Work calendar, the enhanced class in `calendar.js` and its CSS, remove the `Months` message, and update `ManagerTeamPagesTest` and `MyAssignmentsCalendarPageTest`.
 
 ### Z. Wrap-up
 - [ ] Z1. `make check` passes; record the counts.
