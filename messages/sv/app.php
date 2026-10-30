@@ -36,6 +36,11 @@ return [
     'Name or email' => 'Namn eller e-post',
     'Name or description' => 'Namn eller beskrivning',
     'Employee, work item or site' => 'Medarbetare, arbetsmoment eller byggarbetsplats',
+    'Reassign' => 'Omfördela',
+    'View assignments' => 'Visa uppdrag',
+    'Clear filter' => 'Ta bort filter',
+    'No assignments match the filter.' => 'Inga uppdrag matchar filtret.',
+    '{label}: {name}' => '{label}: {name}',
 
     'Log in' => 'Logga in',
     'Email' => 'E-post',

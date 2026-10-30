@@ -36,6 +36,11 @@ return [
     'Name or email' => 'Nimi või e-post',
     'Name or description' => 'Nimi või kirjeldus',
     'Employee, work item or site' => 'Töötaja, tööliik või ehitusobjekt',
+    'Reassign' => 'Määra ümber',
+    'View assignments' => 'Vaata tööülesandeid',
+    'Clear filter' => 'Eemalda filter',
+    'No assignments match the filter.' => 'Filtrile vastavaid tööülesandeid ei ole.',
+    '{label}: {name}' => '{label}: {name}',
 
     'Log in' => 'Logi sisse',
     'Email' => 'E-post',

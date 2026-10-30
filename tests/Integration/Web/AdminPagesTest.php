@@ -361,6 +361,7 @@ final class AdminPagesTest extends IntegrationTestCase
         assertSame(200, $response->getStatusCode());
         assertMatchesRegularExpression('/is-invalid"[^>]*id="role"/', $body);
         assertStringContainsString('Finish or cancel this employee&#039;s active assignments first.', $body);
+        assertStringContainsString('href="/assignments?employee=4">View assignments</a>', $body);
         $this->resetServices();
         assertSame('employee', $this->db()->createCommand('SELECT ROLE FROM EMPLOYEE WHERE ID = 4')->queryScalar());
     }
@@ -421,17 +422,18 @@ final class AdminPagesTest extends IntegrationTestCase
     }
 
     /**
-     * @return iterable<string, array{string, string, string}>
+     * @return iterable<string, array{string, string, string, string|null}>
      */
     public static function blockedDeletes(): iterable
     {
-        yield 'site in use' => ['/sites/2/delete', "This construction site is still in use and can't be deleted.", 'SELECT COUNT(*) FROM CONSTRUCTION_SITE WHERE ID = 2'];
-        yield 'work item in use' => ['/work-items/5/delete', "This work item is still in use and can't be deleted.", 'SELECT COUNT(*) FROM WORK_ITEM WHERE ID = 5'];
-        yield 'manager with employees' => ['/employees/2/delete', "Reassign this manager's employees first.", 'SELECT COUNT(*) FROM EMPLOYEE WHERE ID = 2'];
+        yield 'site in use' => ['/sites/2/delete', "This construction site is still in use and can't be deleted.", 'SELECT COUNT(*) FROM CONSTRUCTION_SITE WHERE ID = 2', '/assignments?site=2'];
+        yield 'work item in use' => ['/work-items/5/delete', "This work item is still in use and can't be deleted.", 'SELECT COUNT(*) FROM WORK_ITEM WHERE ID = 5', '/assignments?workItem=5'];
+        yield 'employee with assignments' => ['/employees/4/delete', "This employee still has assignments and can't be deleted.", 'SELECT COUNT(*) FROM EMPLOYEE WHERE ID = 4', '/assignments?employee=4'];
+        yield 'manager with employees' => ['/employees/2/delete', "Reassign this manager's employees first.", 'SELECT COUNT(*) FROM EMPLOYEE WHERE ID = 2', null];
     }
 
     #[DataProvider('blockedDeletes')]
-    public function testBlockedDeleteShowsTheReasonWithA409(string $path, string $reason, string $stillThere): void
+    public function testBlockedDeleteShowsTheReasonWithA409(string $path, string $reason, string $stillThere, ?string $assignments): void
     {
         $this->referenceTable = 'TEST_ADMIN_PAGES_' . strtoupper(bin2hex(random_bytes(6)));
         $this->db()->createCommand(
@@ -446,6 +448,11 @@ final class AdminPagesTest extends IntegrationTestCase
         assertSame(409, $response->getStatusCode());
         assertStringContainsString(htmlspecialchars($reason, ENT_QUOTES), $body);
         assertStringNotContainsString('btn btn-danger', $body);
+        if ($assignments === null) {
+            assertStringNotContainsString('View assignments', $body);
+        } else {
+            assertStringContainsString(sprintf('href="%s">View assignments</a>', $assignments), $body);
+        }
         $this->resetServices();
         assertSame(1, (int) $this->db()->createCommand($stillThere)->queryScalar());
     }
