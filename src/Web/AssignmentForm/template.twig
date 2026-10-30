@@ -2,8 +2,8 @@
 {% do this.setTitle(title) %}
 {% do assetManager.register('App\\Web\\Shared\\Layout\\Main\\AssignmentAsset') %}
 <div class="row justify-content-center">
-    <div class="col-lg-8">
-        <h1 class="h3 mb-4">{{ title }}</h1>
+    <div class="col-lg-8" data-modal-content>
+        <h1 class="h3 mb-4" data-modal-title>{{ title }}</h1>
         <form method="post" action="{{ item ? urlGenerator.generate('assignment.edit', {id: item.assignment.id}) : urlGenerator.generate('assignment.create') }}" novalidate>
             {{ csrf.hiddenInput()|raw }}
             {% if item %}
@@ -78,7 +78,7 @@
                 </div>
             {% endif %}
             <button type="submit" class="btn btn-primary">{{ t('Save') }}</button>
-            <a class="btn btn-link" href="{{ urlGenerator.generate('assignment.list') }}">{{ t('Cancel') }}</a>
+            <a class="btn btn-link" href="{{ urlGenerator.generate('assignment.list') }}" data-modal-cancel>{{ t('Cancel') }}</a>
         </form>
     </div>
 </div>

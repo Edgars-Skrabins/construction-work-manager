@@ -166,7 +166,7 @@ final class LanguageTest extends IntegrationTestCase
         assertStringContainsString('<div class="alert alert-success" role="status">Uzdevums saglabāts.</div>', $latvian);
         assertStringContainsString('>Darbinieks</a>', $latvian);
         assertStringContainsString('<span class="badge text-bg-info">Plānots</span>', $latvian);
-        assertStringContainsString('data-confirm="Dzēst šo uzdevumu?"', $latvian);
+        assertStringContainsString('data-modal-link>Dzēst</a>', $latvian);
         assertStringContainsString('Mārtiņš Liepiņš', $latvian);
 
         $this->switchLanguage('ru', '/assignments');
@@ -344,7 +344,7 @@ final class LanguageTest extends IntegrationTestCase
         @$document->loadHTML('<?xml encoding="UTF-8">' . $html);
         $xpath = new DOMXPath($document);
         $texts = [];
-        foreach ($xpath->query('//text()[not(ancestor::script) and not(ancestor::style)] | //@aria-label | //@data-confirm | //@title | //@placeholder') ?: [] as $node) {
+        foreach ($xpath->query('//text()[not(ancestor::script) and not(ancestor::style)] | //@aria-label | //@title | //@placeholder') ?: [] as $node) {
             $text = trim(preg_replace('/\s+/u', ' ', (string) $node->nodeValue) ?? '');
             if ($text !== '') {
                 $texts[] = $text;

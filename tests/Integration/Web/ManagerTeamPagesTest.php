@@ -41,12 +41,12 @@ final class ManagerTeamPagesTest extends IntegrationTestCase
         assertSame(200, $response->getStatusCode());
         assertStringContainsString('href="/employees">Employees</a>', $body);
         foreach (self::FIRST_TEAM as $name) {
-            assertStringContainsString("<td>$name</td>", $body);
+            assertMatchesRegularExpression('#' . self::cell($name) . '#', $body);
         }
         foreach ([...self::SECOND_TEAM, 'Bērziņš, Jānis', 'Kalniņa, Ilze', 'Ozoliņš, Andris'] as $name) {
-            assertStringNotContainsString("<td>$name</td>", $body);
+            assertDoesNotMatchRegularExpression('#' . self::cell($name) . '#', $body);
         }
-        assertMatchesRegularExpression('#<td>Liepiņš, Mārtiņš</td>(?:(?!</tr>).)*<td>General \(1\)</td>#su', $body);
+        assertMatchesRegularExpression('#' . self::cell('Liepiņš, Mārtiņš') . '(?:(?!</tr>).)*' . self::cell('General (1)') . '#su', $body);
         assertStringNotContainsString('href="/employees/create"', $body);
         assertStringNotContainsString('(you)', $body);
         assertStringNotContainsString('/edit"', $body);
@@ -60,10 +60,10 @@ final class ManagerTeamPagesTest extends IntegrationTestCase
         $body = (string) $this->request('GET', '/employees?sort=-name')->getBody();
 
         foreach (self::SECOND_TEAM as $name) {
-            assertStringContainsString("<td>$name</td>", $body);
+            assertMatchesRegularExpression('#' . self::cell($name) . '#', $body);
         }
         foreach (self::FIRST_TEAM as $name) {
-            assertStringNotContainsString("<td>$name</td>", $body);
+            assertDoesNotMatchRegularExpression('#' . self::cell($name) . '#', $body);
         }
     }
 

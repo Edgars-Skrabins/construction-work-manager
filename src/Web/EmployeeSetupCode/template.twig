@@ -1,7 +1,7 @@
 {% do this.setTitle(t('Setup code')) %}
 <div class="row justify-content-center">
-    <div class="col-lg-8">
-        <h1 class="h3 mb-4">{{ t('Setup code for {name}', {name: employee.fullName()}) }}</h1>
+    <div class="col-lg-8" data-modal-content>
+        <h1 class="h3 mb-4" data-modal-title>{{ t('Setup code for {name}', {name: employee.fullName()}) }}</h1>
         {% if error %}
             <div class="alert alert-danger" role="alert">{{ error }}</div>
         {% endif %}
@@ -20,6 +20,6 @@
                 <button type="submit" class="btn btn-outline-primary">{{ t('New setup code') }}</button>
             </form>
         {% endif %}
-        <a class="btn btn-link" href="{{ urlGenerator.generate('employee.list') }}">{{ t('Back to employees') }}</a>
+        <a class="btn btn-link" href="{{ urlGenerator.generate('employee.list') }}" data-modal-cancel>{{ t('Back to employees') }}</a>
     </div>
 </div>

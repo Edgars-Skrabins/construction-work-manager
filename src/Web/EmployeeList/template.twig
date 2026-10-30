@@ -1,4 +1,8 @@
 {% do this.setTitle(t('Employees')) %}
+{% if access.can('employee.create') or access.can('employee.update') %}
+    {% do assetManager.register('App\\Web\\Shared\\Layout\\Main\\EmployeeAsset') %}
+{% endif %}
+{% set showActions = access.can('employee.update') or access.can('employee.delete') %}
 <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-4">
     <h1 class="h3 mb-0">{{ t('Employees') }}</h1>
     <div class="d-flex flex-wrap gap-2">
@@ -6,16 +10,16 @@
             <a class="btn btn-outline-primary" href="{{ urlGenerator.generate('employee.calendar') }}">{{ t('Work calendar') }}</a>
         {% endif %}
         {% if access.can('employee.create') %}
-            <a class="btn btn-primary" href="{{ urlGenerator.generate('employee.create') }}">{{ t('Add employee') }}</a>
+            <a class="btn btn-primary" href="{{ urlGenerator.generate('employee.create') }}" data-modal-link>{{ t('Add employee') }}</a>
         {% endif %}
     </div>
 </div>
 {% include 'Web/Shared/Listing/search-form.twig' with {route: 'employee.list', placeholder: t('Name or email')} %}
 <div data-list-results>
     {% if paginator.getTotalItems() == 0 and q != '' %}
-        <p class="text-secondary">{{ t('No results for “{query}”.', {query: q}) }}</p>
+        {% include 'Web/Shared/Listing/empty-state.twig' with {message: t('No results for “{query}”.', {query: q})} %}
     {% elseif paginator.getTotalItems() == 0 %}
-        <p class="text-secondary">{{ t('No employees yet.') }}</p>
+        {% include 'Web/Shared/Listing/empty-state.twig' with {message: t('No employees yet.')} %}
     {% else %}
         <div class="table-responsive">
             <table class="table table-striped align-middle">
@@ -27,26 +31,31 @@
                         <th scope="col">{% include 'Web/Shared/Listing/sort-link.twig' with {label: t('Role'), key: 'role', route: 'employee.list'} %}</th>
                         <th scope="col">{% include 'Web/Shared/Listing/sort-link.twig' with {label: t('Manager'), key: 'manager', route: 'employee.list'} %}</th>
                         <th scope="col">{% include 'Web/Shared/Listing/sort-link.twig' with {label: t('Login'), key: 'login', route: 'employee.list'} %}</th>
-                        <th scope="col" class="text-end">{{ t('Actions') }}</th>
+                        {% if showActions %}
+                            <th scope="col" class="text-end list-actions">{{ t('Actions') }}</th>
+                        {% endif %}
                     </tr>
                 </thead>
                 <tbody>
                     {% for employee in paginator.read() %}
+                        {% set name = employee.lastName ~ ', ' ~ employee.firstName %}
                         <tr>
-                            <td>{{ employee.lastName }}, {{ employee.firstName }}{% if employee.id ~ '' == currentUser.getId() %} <span class="text-secondary">{{ t('(you)') }}</span>{% endif %}</td>
+                            <td class="text-nowrap">{% include 'Web/Shared/Listing/truncated-text.twig' with {text: name} %}{% if employee.id ~ '' == currentUser.getId() %} <span class="text-secondary">{{ t('(you)') }}</span>{% endif %}</td>
                             <td class="text-nowrap">{{ employee.birthDate|date('Y-m-d') }}</td>
-                            <td>{{ employee.accessLevel().label() }}</td>
-                            <td>{{ t(employee.role.value) }}</td>
-                            <td>{{ employee.managerName ?? '—' }}</td>
-                            <td>{{ t(employee.loginStatus.value) }}</td>
-                            <td class="text-end text-nowrap">
+                            <td class="text-nowrap">{{ employee.accessLevel().label() }}</td>
+                            <td class="text-nowrap">{{ t(employee.role.value) }}</td>
+                            <td>{% include 'Web/Shared/Listing/truncated-text.twig' with {text: employee.managerName ?? '—'} %}</td>
+                            <td class="text-nowrap">{{ t(employee.loginStatus.value) }}</td>
+                            {% if showActions %}
+                                {% set actions = [] %}
                                 {% if access.can('employee.update') %}
-                                    <a class="btn btn-sm btn-outline-primary" href="{{ urlGenerator.generate('employee.edit', {id: employee.id}) }}">{{ t('Edit') }}</a>
+                                    {% set actions = actions|merge([{label: t('Edit'), url: urlGenerator.generate('employee.edit', {id: employee.id}), variant: 'primary'}]) %}
                                 {% endif %}
                                 {% if access.can('employee.delete') and employee.id ~ '' != currentUser.getId() %}
-                                    <a class="btn btn-sm btn-outline-danger" href="{{ urlGenerator.generate('employee.delete', {id: employee.id}) }}">{{ t('Delete') }}</a>
+                                    {% set actions = actions|merge([{label: t('Delete'), url: urlGenerator.generate('employee.delete', {id: employee.id}), variant: 'danger'}]) %}
                                 {% endif %}
-                            </td>
+                                <td class="text-end text-nowrap list-actions">{% include 'Web/Shared/Listing/row-actions.twig' with {name: name, actions: actions} %}</td>
+                            {% endif %}
                         </tr>
                     {% endfor %}
                 </tbody>
@@ -55,3 +64,4 @@
         {% include 'Web/Shared/Listing/pagination.twig' with {route: 'employee.list'} %}
     {% endif %}
 </div>
+{% include 'Web/Shared/Modal/modal.twig' %}

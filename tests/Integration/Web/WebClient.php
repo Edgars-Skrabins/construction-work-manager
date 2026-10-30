@@ -27,12 +27,13 @@ trait WebClient
 
     /**
      * @param array<string, string> $body
+     * @param array<string, string> $headers
      */
-    private function request(string $method, string $path, array $body = []): ResponseInterface
+    private function request(string $method, string $path, array $body = [], array $headers = []): ResponseInterface
     {
         $this->resetServices();
 
-        $response = $this->handleRequest($method, $path, [], $this->cookies, $body);
+        $response = $this->handleRequest($method, $path, $headers, $this->cookies, $body);
 
         foreach ($response->getHeader('Set-Cookie') as $cookie) {
             [$pair] = explode(';', $cookie, 2);
@@ -45,11 +46,19 @@ trait WebClient
 
     /**
      * @param array<string, string> $fields
+     * @param array<string, string> $headers
      */
-    private function submit(string $path, array $fields): ResponseInterface
+    private function submit(string $path, array $fields, array $headers = []): ResponseInterface
     {
         $token = $this->csrfToken((string) $this->request('GET', $path)->getBody());
 
-        return $this->request('POST', $path, ['_csrf' => $token, ...$fields]);
+        return $this->request('POST', $path, ['_csrf' => $token, ...$fields], $headers);
+    }
+
+    private static function cell(string $text): string
+    {
+        $html = preg_quote(htmlspecialchars($text, ENT_QUOTES), '#');
+
+        return '<td[^>]*>(?:<span [^>]*title="' . $html . '">)?' . $html . '(?:</span>)?</td>';
     }
 }

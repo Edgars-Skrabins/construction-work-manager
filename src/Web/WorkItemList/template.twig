@@ -1,16 +1,19 @@
 {% do this.setTitle(t('Work items')) %}
+{% set showActions = access.can('workItem.update') or access.can('workItem.delete') %}
 <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-4">
     <h1 class="h3 mb-0">{{ t('Work items') }}</h1>
-    {% if access.can('workItem.create') %}
-        <a class="btn btn-primary" href="{{ urlGenerator.generate('workItem.create') }}">{{ t('Add work item') }}</a>
-    {% endif %}
+    <div class="d-flex flex-wrap gap-2">
+        {% if access.can('workItem.create') %}
+            <a class="btn btn-primary" href="{{ urlGenerator.generate('workItem.create') }}" data-modal-link>{{ t('Add work item') }}</a>
+        {% endif %}
+    </div>
 </div>
 {% include 'Web/Shared/Listing/search-form.twig' with {route: 'workItem.list', placeholder: t('Name or description')} %}
 <div data-list-results>
     {% if paginator.getTotalItems() == 0 and q != '' %}
-        <p class="text-secondary">{{ t('No results for “{query}”.', {query: q}) }}</p>
+        {% include 'Web/Shared/Listing/empty-state.twig' with {message: t('No results for “{query}”.', {query: q})} %}
     {% elseif paginator.getTotalItems() == 0 %}
-        <p class="text-secondary">{{ t('No work items yet.') }}</p>
+        {% include 'Web/Shared/Listing/empty-state.twig' with {message: t('No work items yet.')} %}
     {% else %}
         <div class="table-responsive">
             <table class="table table-striped align-middle">
@@ -18,22 +21,26 @@
                     <tr>
                         <th scope="col">{% include 'Web/Shared/Listing/sort-link.twig' with {label: t('Name'), key: 'name', route: 'workItem.list'} %}</th>
                         <th scope="col">{{ t('Description') }}</th>
-                        <th scope="col" class="text-end">{{ t('Actions') }}</th>
+                        {% if showActions %}
+                            <th scope="col" class="text-end list-actions">{{ t('Actions') }}</th>
+                        {% endif %}
                     </tr>
                 </thead>
                 <tbody>
                     {% for workItem in paginator.read() %}
                         <tr>
-                            <td>{{ workItem.name }}</td>
-                            <td>{{ workItem.description|length > 100 ? workItem.description|slice(0, 100) ~ '…' : workItem.description }}</td>
-                            <td class="text-end text-nowrap">
+                            <td>{% include 'Web/Shared/Listing/truncated-text.twig' with {text: workItem.name} %}</td>
+                            <td>{% include 'Web/Shared/Listing/truncated-text.twig' with {text: workItem.description, wide: true} %}</td>
+                            {% if showActions %}
+                                {% set actions = [] %}
                                 {% if access.can('workItem.update') %}
-                                    <a class="btn btn-sm btn-outline-primary" href="{{ urlGenerator.generate('workItem.edit', {id: workItem.id}) }}">{{ t('Edit') }}</a>
+                                    {% set actions = actions|merge([{label: t('Edit'), url: urlGenerator.generate('workItem.edit', {id: workItem.id}), variant: 'primary'}]) %}
                                 {% endif %}
                                 {% if access.can('workItem.delete') %}
-                                    <a class="btn btn-sm btn-outline-danger" href="{{ urlGenerator.generate('workItem.delete', {id: workItem.id}) }}">{{ t('Delete') }}</a>
+                                    {% set actions = actions|merge([{label: t('Delete'), url: urlGenerator.generate('workItem.delete', {id: workItem.id}), variant: 'danger'}]) %}
                                 {% endif %}
-                            </td>
+                                <td class="text-end text-nowrap list-actions">{% include 'Web/Shared/Listing/row-actions.twig' with {name: workItem.name, actions: actions} %}</td>
+                            {% endif %}
                         </tr>
                     {% endfor %}
                 </tbody>
@@ -42,3 +49,4 @@
         {% include 'Web/Shared/Listing/pagination.twig' with {route: 'workItem.list'} %}
     {% endif %}
 </div>
+{% include 'Web/Shared/Modal/modal.twig' %}

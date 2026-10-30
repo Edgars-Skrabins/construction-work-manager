@@ -13,6 +13,11 @@ final class ListingAsset extends AssetBundle
     public ?string $sourcePath = '@assetsSource/listing';
 
     /** @var list<string> */
+    public array $css = [
+        'listing.css',
+    ];
+
+    /** @var list<string> */
     public array $js = [
         'instant-search.js',
     ];
