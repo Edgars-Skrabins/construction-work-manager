@@ -1,7 +1,7 @@
 # Calendar readability and month picker — Spec
 
 **Type:** feature
-**Status:** ready for implementation
+**Status:** done
 **Last updated:** 2026-10-30
 
 # Part 1 — Business logic and usage
@@ -40,24 +40,24 @@ No new dependencies. It uses Bootstrap 5.3's modal and its `data-bs-toggle="moda
 
 ### Month parsing and the "+N more" logic
 
-- `MonthCalendar::requestedMonth(array $query): ?string` (static): if `year` and `monthOfYear` are both strings, returns `year . '-' . monthOfYear`; otherwise returns `month` when it is a string, else `null`. Both actions pass its result to `MonthCalendar::create()`, whose parsing stays unchanged.
+- `MonthCalendar::requestedMonth(array $query): ?string` (static): if `year` or `monthOfYear` is present, returns `year . '-' . monthOfYear` when both are strings and `null` otherwise (so a year without a month, or the reverse, falls back to the current month); without either it returns `month` when it is a string, else `null`. Both actions pass its result to `MonthCalendar::create()`, whose parsing stays unchanged.
 - `MonthCalendar::entries(array $items): list<CalendarEntry>`: one entry per item with its displayed status for today. `weeks()` uses it, so the status is computed once per item.
 - `CalendarDay::VISIBLE_ENTRIES = 3`, `CalendarDay::visibleCount(): int` (all entries when there are at most three, otherwise two) and `CalendarDay::hiddenCount(): int` (the rest).
 
 ### Twig functions
 
-- `TranslatorExtension` gets `month_names()`: the twelve standalone month names (`LLLL`) in the UI language, keyed `01` to `12`, first letter uppercased like `month_year`.
+- `TranslatorExtension` gets `month_names()`: the twelve standalone month names (`LLLL`) in the UI language as a list from January, first letter uppercased like `month_year`.
 
 ### Templates
 
-- `src/Web/Shared/Calendar/month-nav.twig`: after the Today link, a `<form method="get" data-calendar-picker>` with `aria-label` "Go to month": hidden inputs for every non-null value of `query` (the employee filter), a `form-select form-select-sm` `monthOfYear` select with a visually hidden "Month" label, a `form-control form-control-sm` `number` input `year` (`min` 2000, `max` 2100, `required`) with a visually hidden "Year" label, and a `btn btn-sm btn-outline-primary` "Go" submit button. The nav's existing links and heading keep their markup. The wrapper gets `flex-wrap` so it wraps on narrow screens.
+- `src/Web/Shared/Calendar/month-nav.twig`: the nav gets `flex-wrap` and its Previous/Next buttons `text-nowrap`, so at 375 px the Today link wraps instead of the button labels. After the Today link, a `<form method="get" data-calendar-picker>` with `aria-label` "Go to month": hidden inputs for every non-null value of `query` (the employee filter), a `form-select form-select-sm` `monthOfYear` select with a visually hidden "Month" label, a `form-control form-control-sm` `number` input `year` (`min` 2000, `max` 2100, `required`) with a visually hidden "Year" label, and a `btn btn-sm btn-outline-primary` "Go" submit button. The nav's existing links and heading keep their markup. The wrapper gets `flex-wrap` so it wraps on narrow screens.
 - `src/Web/Shared/Calendar/month.twig`:
   - registers `CalendarAsset` and wraps everything in `<div class="calendar" data-calendar>`.
   - The legend items become `<span class="calendar-swatch {{ status.stripeClass() }}"></span>` plus the label.
-  - An `entry` macro renders `<button type="button" class="calendar-entry {{ entry.status.stripeClass() }}" data-bs-toggle="modal" data-bs-target="#calendar-modal" data-calendar-entries="{{ id }}" data-calendar-title="{{ t('Assignment details') }}">` with a visually hidden "Status:" text and two `calendar-entry-line` spans (the same texts as today).
+  - An `entry` macro renders `<button type="button" class="calendar-entry {{ entry.status.stripeClass() }}" data-bs-toggle="modal" data-bs-target="#calendar-modal" data-calendar-entries="{{ id }}" data-calendar-title="{{ t('Assignment details') }}">` with the visually hidden status label followed by a colon, as today, and two `calendar-entry-line` spans (the same texts as today).
   - Grid cells render every entry; entries after `day.visibleCount()` get the class `calendar-entry-extra`, and a day with `hiddenCount() > 0` gets a `calendar-more` button "+N more" (`btn btn-link btn-sm`) with `data-bs-toggle`, `data-bs-target`, `data-calendar-entries` listing every entry ID of the day separated by spaces, and `data-calendar-title` "weekday, Y-m-d".
   - The day list renders the same entry macro with `calendar-entry-full`, all entries.
-  - One `<template id="calendar-entry-{id}">` per entry from `MonthCalendar::entries()` with a `<section class="calendar-detail">`: `<h3 class="h6">` work item, `<dl class="row">` with Employee (only when `showEmployee`), Construction site, Start date, End date, Status (the status with its swatch).
+  - One `<template id="calendar-entry-{id}">` per entry from `MonthCalendar::entries()` with a `<section class="calendar-detail">`: `<h3 class="h6 fw-semibold mb-2">` work item, `<dl class="row mb-0">` with muted regular-weight labels (`fw-normal text-body-secondary`) for Employee (only when `showEmployee`), Construction site, Start date, End date, Status (the status with its swatch).
   - One modal `#calendar-modal` (`modal fade`, `tabindex="-1"`, `aria-labelledby="calendar-modal-title"`, `modal-dialog-scrollable modal-dialog-centered`), with an `h2.modal-title.h5#calendar-modal-title`, the `btn-close` with `aria-label` "Close" and an empty `modal-body`.
 - Both actions pass `entries` and use `requestedMonth()`. `src/Web/EmployeeCalendar/template.twig` and `src/Web/MyAssignmentsCalendar/template.twig` pass `entries` to the partial.
 
@@ -68,12 +68,12 @@ No new dependencies. It uses Bootstrap 5.3's modal and its `data-bs-toggle="moda
   - adds `calendar-enhanced` to every `[data-calendar]` right away (the script runs at the end of the body);
   - on `change` of a `[data-calendar-picker]` select, or of its year input when the form is valid, submits the form with `requestSubmit()`;
   - on `show.bs.modal` of `#calendar-modal`, sets the title from the trigger's `data-calendar-title` and fills the body with clones of `#calendar-entry-<id>` for each ID in `data-calendar-entries`. Bootstrap's data API returns focus to the trigger.
-- `calendar.css`: per-status `--calendar-accent` on `.calendar .status-*` from Bootstrap theme variables (Planned `--bs-secondary-color`, In progress `--bs-primary`, Overdue `--bs-danger`, Done `--bs-success`); `.calendar-entry` as a full-width left-aligned button with `background-color: var(--bs-tertiary-bg)` then `color-mix(in srgb, var(--calendar-accent) 12%, var(--bs-body-bg))`, a 1px `--bs-border-color` border, a 3px accent left border, body text colour, small font, hover and `:focus-visible` states using `--bs-focus-ring-color`; `.calendar-enhanced .calendar-entry-line` truncates with `text-overflow: ellipsis` except in `.calendar-entry-full`; `.calendar-enhanced .calendar-entry-extra` hidden and `.calendar-more` hidden unless `.calendar-enhanced`; `.calendar-swatch`; and the grid rules moved from `site.css` (`.work-calendar`, `.calendar-today`), with today using `--bs-primary` instead of `--app-amber`.
+- `calendar.css`: per-status `--calendar-accent` on `.calendar .status-*` from Bootstrap theme variables (Planned `--bs-secondary-color`, In progress `--bs-primary`, Overdue `--bs-danger`, Done `--bs-success`); `.calendar-entry` as a full-width left-aligned button with `background-color: var(--bs-tertiary-bg)` then `color-mix(in srgb, var(--calendar-accent) 10%, var(--bs-body-bg))`, no border except a 3px accent left border, body text colour, small font, hover and `:focus-visible` states using `--bs-focus-ring-color`; `.calendar-enhanced .calendar-entry-line` truncates with `text-overflow: ellipsis` except in `.calendar-entry-full`; `.calendar-enhanced .calendar-entry-extra` hidden and `.calendar-more` hidden unless `.calendar-enhanced`; `.calendar-swatch`; and the grid rules moved from `site.css` (`.work-calendar`, `.calendar-today`), with today using `--bs-primary` instead of `--app-amber`.
 - `assets/main/site.css` loses the `.work-calendar` rules (they move to `calendar.css`).
 
 ### Translations
 
-New messages in all six `messages/*/app.php` files, after "List": "Go to month", "Month", "Year", "Go", "Assignment details", "Close", "Status:" and "{count, plural, other{+# more}}" (with each language's plural forms).
+New messages in all six `messages/*/app.php` files, after "List": "Go to month", "Month", "Year", "Go", "Assignment details", "Close" and "{count, plural, other{+# more}}" (with each language's plural forms).
 
 ## 2.3 Decisions
 
@@ -86,33 +86,34 @@ All decided by the implementing session without a user interview, as instructed,
 5. **At most three entries per grid cell: two plus "+N more" when there are four or more.** A cell never grows past three rows, and "+1 more" never replaces a single entry that would have fitted. The day modal lists every entry of the day.
 6. **Phones keep the day list (agenda) below 768 px; the grid shows from 768 px.** A 7-column grid at 375 px leaves about 45 px per day, too small for any text. The agenda has room, so its cards show the full text and every entry.
 7. **Progressive enhancement by a `calendar-enhanced` class set by the script.** Without JavaScript nothing is hidden or cut: every entry and its full text stay visible. Rejected: hiding extra entries on the server, which would make them unreachable without JavaScript.
-8. **Colours from Bootstrap theme variables** (`--bs-tertiary-bg`, `--bs-body-bg`, `--bs-border-color`, `--bs-secondary-color`, `--bs-primary`, `--bs-danger`, `--bs-success`), with `color-mix()` for the light tint and a plain fallback, so the calendar follows any theme without its own palette. The calendar uses its own `--calendar-accent` instead of `site.css`'s `--app-status-color`, which belongs to the shared palette another session is changing.
+8. **Colours from Bootstrap theme variables** (`--bs-tertiary-bg`, `--bs-body-bg`, `--bs-border-color`, `--bs-secondary-color`, `--bs-primary`, `--bs-danger`, `--bs-success`), with `color-mix()` for the light tint (10%, 18% on hover) and a plain fallback; the cards have no outline border, only the tint and the status bar, so each card has one visual cue, so the calendar follows any theme without its own palette. The calendar uses its own `--calendar-accent` instead of `site.css`'s `--app-status-color`, which belongs to the shared palette another session is changing.
 9. **The modal shows the data the calendars already have,** plus the start and end dates, using existing labels (Employee, Construction site, Start date, End date, Status). No edit link, because employees can't edit and the Work calendar is read-only today.
 10. **Calendar styles and script in their own `CalendarAsset`,** registered by `month.twig`, like `ListingAsset` is registered by the search form. The grid rules move from `site.css` so the calendar has one stylesheet.
 11. **`month_names()` Twig function** in `TranslatorExtension`, next to `month_year()`, so the select shows the month names in the UI language.
+12. **A year without a month, or a month without a year, falls back to the current month** (2026-10-30, coordinator review), like any other invalid input, even when a valid `month` is also given. `year` and `monthOfYear` come only from the picker form; Previous, Next and Today keep producing `month=YYYY-MM`. The modal is filled only by cloning server-escaped `<template>` content and setting the title with `textContent`, never `innerHTML`.
 
 # Part 3 — Implementation TODO
 
 Read Part 1 and Part 2 before starting. Work through the tasks in order and tick each one when it is done.
 
-Baseline before starting: taken with `make test` at the start of block A.
+Baseline before starting: the suites on `main`, all green. After this spec: 294 unit and 824 integration tests, all green.
 
 ### A. Parsing and the day limit
 
-- [ ] A1. `MonthCalendar::requestedMonth()` and `MonthCalendar::entries()`, `weeks()` using `entries()`. Unit tests in `MonthCalendarTest`: picker parameters win over `month`, are joined and validated (valid, month `2`, month `13`, year `1999`, year `abc`, only one of the two given falls back to `month`), non-string values are ignored.
-- [ ] A2. `CalendarDay::visibleCount()` and `hiddenCount()`. Unit tests for 0, 1, 3, 4 and 7 entries.
-- [ ] A3. `month_names()` in `TranslatorExtension`. Covered by the picker page tests in English and one other language.
+- [x] A1. `MonthCalendar::requestedMonth()` and `MonthCalendar::entries()`, `weeks()` using `entries()`. Unit tests in `MonthCalendarTest`: picker parameters win over `month`, are joined and validated (valid, month `2`, month `13`, year `1999`, year `abc`, only one of the two given falls back to the current month even with a valid `month`), non-string values are ignored.
+- [x] A2. `CalendarDay::visibleCount()` and `hiddenCount()`. Unit tests for 0, 1, 3, 4 and 7 entries.
+- [x] A3. `month_names()` in `TranslatorExtension`. Covered by the picker page tests in English and one other language.
 
 ### B. Templates and assets
 
-- [ ] B1. `CalendarAsset`, `assets/calendar/calendar.css` and `calendar.js`; move the grid rules out of `site.css`.
-- [ ] B2. The month picker in `month-nav.twig` and both actions using `requestedMonth()`.
-- [ ] B3. Cards, "+N more", entry templates, legend swatches and the modal in `month.twig`; both actions and templates pass `entries`.
-- [ ] B4. Translations of the new messages in all six files.
-- [ ] B5. Update the integration tests that assert the old entry markup (`ManagerTeamPagesTest`, `MyAssignmentsCalendarPageTest`, `LanguageTest`) and add: the picker form with the current month selected and the employee kept as a hidden field; `?year=2030&monthOfYear=03` shows March 2030 and keeps `employee`; an invalid picker value shows the current month; cards are buttons with the status text and their lines; a day with four entries renders two visible ones, two `calendar-entry-extra` and "+2 more" with all four IDs; one `<template>` per assignment with its details (with Employee on the Work calendar and without on My work calendar); the modal markup; month names in the select follow the language.
+- [x] B1. `CalendarAsset`, `assets/calendar/calendar.css` and `calendar.js`; move the grid rules out of `site.css`.
+- [x] B2. The month picker in `month-nav.twig` and both actions using `requestedMonth()`.
+- [x] B3. Cards, "+N more", entry templates, legend swatches and the modal in `month.twig`; both actions and templates pass `entries`.
+- [x] B4. Translations of the new messages in all six files.
+- [x] B5. Update the integration tests that assert the old entry markup (`ManagerTeamPagesTest`, `MyAssignmentsCalendarPageTest`, `LanguageTest`) and add: the picker form with the current month selected and the employee kept as a hidden field; `?year=2030&monthOfYear=03` shows March 2030 and keeps `employee`; an invalid picker value shows the current month; cards are buttons with the status text and their lines; a day with four entries renders two visible ones, two `calendar-entry-extra` and "+2 more" with all four IDs; one `<template>` per assignment with its details (with Employee on the Work calendar and without on My work calendar); the modal markup; month names in the select follow the language.
 
 ### Z. Wrap-up
 
-- [ ] Z1. `make check` green.
-- [ ] Z2. Update `CLAUDE.md` (`src/Web/Shared/Calendar/` and the calendar asset) and the README if it describes the calendar.
-- [ ] Z3. Manual check in the running app at 375, 768 and 1280 px: Work calendar as admin and manager, My work calendar as employee: picker with and without changing the month, Previous/Next/Today, a card's modal by mouse and by keyboard, a busy day's "+N more", the phone agenda.
+- [x] Z1. `make check` green.
+- [x] Z2. Update `CLAUDE.md` (`src/Web/Shared/Calendar/` and the calendar asset) and the README if it describes the calendar.
+- [x] Z3. Manual check in the running app at 375, 768 and 1280 px: Work calendar as admin and manager, My work calendar as employee: picker with and without changing the month, Previous/Next/Today, a card's modal by mouse and by keyboard, a busy day's "+N more", the phone agenda.
